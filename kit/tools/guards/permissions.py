@@ -11,12 +11,16 @@
 
 Three levels. Local work is not this guard's business and passes untouched. Outward writes ask
 until their scope is authorised for the session. A short list always asks, whatever was
-authorised: pushes to the default branch, forced, mirrored, pruning or deleting pushes, merges,
-deletions, infrastructure tools, credentials, and granting itself.
+authorised: pushes to the default branch or to a remote the repository does not declare;
+forced, mirrored, pruning, deleting and all-branch pushes; merges; deletions; infrastructure
+tools; credentials; and anything that touches the authorisations themselves.
 
-Every segment of a chained command is judged on its own, and the command passes only if every
-segment does. Whatever goes wrong while deciding, the answer is ask: this guard never fails
-open.
+The guard is conservative by design. A session authorisation only covers a simple command the
+guard fully understands: a push or a change request that is the whole of its segment. A write
+hidden inside `sh -c`, `eval`, a subshell, a command substitution or any other construct the
+guard does not parse always asks. Every segment of a chained command is judged, the working
+directory is followed across `cd`, and whatever goes wrong while deciding, the answer is ask:
+this guard never fails open.
 
 Output formats:
     claude  the PreToolUse JSON Claude Code understands
@@ -38,22 +42,41 @@ GRANTS = os.environ.get("SDLC_GRANTS_DIR") or os.path.join(ROOT, "personal", "gr
 TTL = 3 * 24 * 3600
 FORMATS = ("claude", "json", "exit")
 
+# Judged on the command with its quotes and backslashes removed, so quoting cannot hide them.
 NEVER = [
     (r"\b(gh\s+pr|glab\s+mr)\s+merge\b", "merge"),
-    (r"\b(gh|glab)\s+api\b.*\bmerge\b", "merge"),
-    (r"(^|\s)(-X|--method|--request)\s*=?\s*['\"]?DELETE\b", "deletion"),
-    (r"\b(gh|glab)\s+(repo|release|issue|mr|pr)\s+delete\b", "deletion"),
+    (r"\b(gh|glab|curl)\b.*\bmerge\b", "merge"),
+    (r"(^|\s)(-X|--method|--request)\s*=?\s*delete\b", "deletion"),
+    (r"\b(gh|glab)\s+(repo|release|issue|mr|pr|api)\b.*\bdelete\b", "deletion"),
     (r"\b(kubectl|helm|terraform|pulumi|cdk\s+deploy|serverless\s+deploy|sam\s+deploy)\b",
      "infrastructure or production tool"),
     (r"\b(token|tokens|personal_access_tokens|deploy[-_]keys?)\b.*\b(create|new|add)\b", "credentials"),
     (r"\b(gh|glab)\s+auth\s+token\b", "credentials"),
-    (r"\bpermissions\.py\s+grant\b", "an authorisation must pass the person's own confirmation"),
+    (r"permissions\.py\b.*\b(grant|revoke)\b", "an authorisation must pass the person's own confirmation"),
+    (r"personal/grants\b", "the authorisations can only change through the person's own confirmation"),
 ]
-WRITE_METHOD = r"(^|\s)(-X|--method|--request)\s*=?\s*['\"]?(POST|PUT|PATCH)\b"
-IMPLICIT_POST = r"(^|\s)(-f|-F|--field|--raw-field|--input)(\s|=)"
+# Constructs the guard does not parse: a write inside them always asks.
+OPAQUE = re.compile(r"(\$\(|`|<\(|>\(|\beval\b|\b(sh|bash|zsh|dash|ksh|fish|pwsh|powershell)\s+(-\w*c|-c)\b|"
+                    r"\bxargs\b|\bexec\b|\bsource\b|^\s*\.\s|\bpython\d?\s+-c\b|\bperl\s+-e\b|\bnode\s+-e\b|"
+                    r"\bruby\s+-e\b|\benv\s+\S+=)", re.I)
+WRITE_HINT = re.compile(r"\bgit\b.*(?<!stash )\bpush\b|"
+                        r"\b(gh|glab)\b.*(\b(create|merge|delete|close|edit|comment|review|transfer|archive)\b|"
+                        r"(-X|--method|--request)\s*=?\s*(post|put|patch|delete)\b|\s(-f|-F|--field|--raw-field|--input)(\s|=))|"
+                        r"\bcurl\b.*((-X|--request)\s*=?\s*(post|put|patch|delete)\b|\s(-d|--data\S*|-F|--form)(\s|=))", re.I)
+WRITE_METHOD = re.compile(r"(^|\s)(-X|--method|--request)\s*=?\s*(post|put|patch)\b", re.I)
+IMPLICIT_POST = re.compile(r"(^|\s)(-f|-F|--field|--raw-field|--input)(\s|=)")
+CURL_DATA = re.compile(r"(^|\s)(-d|--data\S*|-F|--form)(\s|=)")
+
+READ_VERBS = re.compile(r"(get|list|search|read|fetch|query|view|show|describe|lookup|find|info|whoami|"
+                        r"resources|atlassianuserinfo|accessible)", re.I)
+WRITE_VERBS = re.compile(r"(create|edit|update|comment|transition|move|assign|add|link|push|open|close|"
+                         r"approve|label|write|execute|post|put|patch|set|upload|publish|send|merge|"
+                         r"delete|remove|destroy|archive)", re.I)
+DESTRUCTIVE = re.compile(r"(merge|delete|remove|destroy|archive|executedestructive)", re.I)
 TRACKER_TOOL = re.compile(r"(jira|issue|ticket|tracker|linear|youtrack)", re.I)
-TRACKER_WRITE = re.compile(r"(create|edit|update|comment|transition|move|assign|add|delete|remove|link)", re.I)
-TRACKER_DELETE = re.compile(r"(delete|remove)", re.I)
+CODE_TOOL = re.compile(r"(github|gitlab|bitbucket|pull_?request|merge_?request|\bpr\b|\bmr\b|repo|branch|commit)", re.I)
+FILE_TOOLS = ("write", "edit", "multiedit", "notebookedit", "str_replace_editor", "create_file", "replace",
+              "write_file")
 PUSH_DANGER = {"--force": "forced push", "-f": "forced push", "--force-with-lease": "forced push",
                "--force-if-includes": "forced push", "--mirror": "mirrored push",
                "--prune": "pruning push", "--delete": "deleting push", "-d": "deleting push",
@@ -80,7 +103,8 @@ def load(session):
     p = grants_path(session)
     if not session or not os.path.exists(p):
         return {"repo": [], "tracker": []}
-    data = json.load(io.open(p, encoding="utf-8"))
+    with io.open(p, encoding="utf-8") as f:
+        data = json.load(f)
     data.setdefault("repo", [])
     data.setdefault("tracker", [])
     return data
@@ -89,7 +113,8 @@ def load(session):
 def save(session, data):
     os.makedirs(GRANTS, exist_ok=True)
     path = grants_path(session)
-    io.open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2))
+    with io.open(path, "w", encoding="utf-8") as f:
+        f.write(json.dumps(data, indent=2))
     os.chmod(path, 0o600)
 
 
@@ -121,6 +146,16 @@ def current_branch(repo):
     return git(["rev-parse", "--abbrev-ref", "HEAD"], repo or ".")
 
 
+def remotes(repo):
+    names = (git(["remote"], repo or ".") or "").split()
+    urls = set()
+    for name in names:
+        url = git(["remote", "get-url", "--push", name], repo or ".")
+        if url:
+            urls.add(url)
+    return set(names), urls
+
+
 # ───────────────────────────── classification ─────────────────────────────
 
 def segments(command):
@@ -136,18 +171,25 @@ def words(segment):
         return segment.split()
 
 
+def program(token):
+    return os.path.basename(token).lower().replace(".exe", "")
+
+
 def classify_push(tokens, where):
     """tokens start right after `push`."""
     repo = toplevel(where)
     protected = default_branches(repo)
-    flags = [t for t in tokens if t.startswith("-")]
-    for flag in flags:
+    for flag in [t for t in tokens if t.startswith("-")]:
         name = flag.split("=", 1)[0]
         if name in PUSH_DANGER:
             return ("never", PUSH_DANGER[name], None)
         if re.fullmatch(r"-[a-zA-Z]{2,}", flag) and ("f" in flag or "d" in flag):
             return ("never", "forced or deleting push", None)
     positional = [t for t in tokens if not t.startswith("-")]
+    if positional:
+        names, urls = remotes(repo)
+        if positional[0] not in names and positional[0] not in urls:
+            return ("never", "push to a remote this repository does not declare", None)
     refspecs = positional[1:]
     for spec in refspecs:
         if spec.startswith("+"):
@@ -156,54 +198,85 @@ def classify_push(tokens, where):
             return ("never", "deleting push", None)
         target = spec.split(":", 1)[1] if ":" in spec else spec
         target = re.sub(r"^refs/heads/", "", target)
-        if target in protected or target == "HEAD" and current_branch(repo) in protected:
+        if target in protected or (target == "HEAD" and current_branch(repo) in protected):
             return ("never", "push to the default branch", None)
-    if not refspecs:
-        branch = current_branch(repo)
-        if branch in protected:
-            return ("never", "push to the default branch", None)
+    if not refspecs and current_branch(repo) in protected:
+        return ("never", "push to the default branch", None)
     return ("watched", "outward write to a repository", ("repo", repo))
 
 
-def classify_segment(segment, cwd):
-    for pattern, why in NEVER:
-        if re.search(pattern, segment):
-            return ("never", why, None)
+def classify_segment(segment, where):
+    """Return ((level, reason, scope), new working directory)."""
     tokens = words(segment)
-    where = cwd
-    if "git" in tokens:
-        i = tokens.index("git")
-        rest = tokens[i + 1:]
+    if not tokens:
+        return ("local", "", None), where
+    first = program(tokens[0])
+    if first in ("cd", "pushd") and len(tokens) <= 2:
+        target = os.path.expanduser(tokens[1]) if len(tokens) == 2 else os.path.expanduser("~")
+        return ("local", "", None), os.path.normpath(os.path.join(where, target))
+    if first == "git":
+        rest = tokens[1:]
         while rest and rest[0].startswith("-"):
             if rest[0] == "-C" and len(rest) > 1:
-                where = os.path.join(where, os.path.expanduser(rest[1]))
+                where = os.path.normpath(os.path.join(where, os.path.expanduser(rest[1])))
                 rest = rest[2:]
-            elif rest[0] in ("-c",) and len(rest) > 1:
+            elif rest[0] == "-c" and len(rest) > 1:
                 rest = rest[2:]
             else:
                 rest = rest[1:]
         if rest and rest[0] == "push":
-            return classify_push(rest[1:], where)
-    if re.search(r"\b(gh\s+pr|glab\s+mr)\s+create\b", segment):
-        return ("watched", "opening a change request", ("repo", toplevel(where)))
-    if re.search(r"\b(gh|glab)\s+api\b", segment) and (
-            re.search(WRITE_METHOD, segment) or re.search(IMPLICIT_POST, segment)):
-        return ("watched", "write through the code platform API", ("repo", toplevel(where)))
-    if re.search(r"\bcurl\b", segment) and (
-            re.search(WRITE_METHOD, segment) or re.search(r"(^|\s)(-d|--data\S*|-F|--form)(\s|=)", segment)):
-        return ("watched", "write to an external API", None)
-    return ("local", "", None)
+            return classify_push(rest[1:], where), where
+    if first in ("gh", "glab"):
+        if re.search(r"\b(pr|mr)\s+create\b", segment):
+            return ("watched", "opening a change request", ("repo", toplevel(where))), where
+        if len(tokens) > 1 and tokens[1] == "api" and (WRITE_METHOD.search(segment) or IMPLICIT_POST.search(segment)):
+            return ("watched", "write through the code platform API", ("repo", toplevel(where))), where
+        if len(tokens) > 1 and tokens[1] not in ("api", "auth", "status", "browse", "help", "version") and \
+                re.search(r"\b(create|edit|close|reopen|comment|review|ready|merge|delete|transfer|archive|lock)\b", segment):
+            return ("watched", "write to the code platform", ("repo", toplevel(where))), where
+    if first == "curl" and (WRITE_METHOD.search(segment) or CURL_DATA.search(segment)):
+        return ("watched", "write to an external API", None), where
+    return ("local", "", None), where
+
+
+def classify_shell(command, cwd):
+    flat = re.sub(r"['\"\\]", "", command)
+    for pattern, why in NEVER:
+        if re.search(pattern, flat, re.I):
+            return [("never", why, None)]
+    if OPAQUE.search(command) and WRITE_HINT.search(flat):
+        return [("never", "a write inside a construct the guard does not parse", None)]
+    verdicts, where = [], cwd
+    for seg in segments(command):
+        verdict, where = classify_segment(seg, where)
+        if verdict[0] == "local" and re.search(r"\bgit\b.*(?<!stash )\bpush\b", re.sub(r"['\"\\]", "", seg)):
+            verdict = ("never", "a push the guard could not read with certainty", None)
+        verdicts.append(verdict)
+    return verdicts
 
 
 def classify_tool(name, args):
-    if TRACKER_TOOL.search(name) and TRACKER_WRITE.search(name):
-        if TRACKER_DELETE.search(name):
-            return ("never", "deletion in the tracker", None)
+    lname = name.lower()
+    base = lname.rsplit("__", 1)[-1]
+    if base in FILE_TOOLS or lname in FILE_TOOLS:
+        path = str(args.get("file_path") or args.get("path") or args.get("notebook_path") or "")
+        if "personal/grants" in path.replace("\\", "/") or os.path.realpath(path).startswith(os.path.realpath(GRANTS)):
+            return ("never", "the authorisations can only change through the person's own confirmation", None)
+        return ("local", "", None)
+    if not lname.startswith("mcp__"):
+        return ("local", "", None)
+    if DESTRUCTIVE.search(base):
+        return ("never", "a merge or deletion through a connector", None)
+    if READ_VERBS.search(base) and not WRITE_VERBS.search(re.sub(r"read|execute", "", base)):
+        return ("local", "", None)
+    if not WRITE_VERBS.search(base):
+        return ("local", "", None)
+    if TRACKER_TOOL.search(lname) and not CODE_TOOL.search(lname):
         key = str(args.get("projectKey") or args.get("project") or args.get("issueKey") or
                   args.get("issueIdOrKey") or "")
         key = key.split("-")[0].upper() or None
         return ("watched", "write to the tracker", ("tracker", key))
-    return ("local", "", None)
+    return ("watched", "write through a connector", None)
 
 
 def decide(event):
@@ -221,7 +294,7 @@ def decide(event):
 
     command = args.get("command")
     if command:
-        verdicts = [classify_segment(s, cwd) for s in segments(str(command))]
+        verdicts = classify_shell(str(command), cwd)
     else:
         verdicts = [classify_tool(str(tool), args)]
 

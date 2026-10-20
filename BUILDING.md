@@ -103,7 +103,12 @@ Every guard follows the same contract, whatever assistant calls it.
   the person how to authorise the action and run it again.
 
 `bin/bootstrap.py sdlc` writes a working reference guard, `tools/guards/permissions.py`, with
-session-scoped authorisations and the list of actions that are never delegated.
+session-scoped authorisations and the list of actions that are never delegated. It is
+conservative: an authorisation covers only a simple command it reads completely, and a write
+inside `sh -c`, `eval`, a subshell or a command substitution always asks. It also watches the
+assistant's file tools, so not even the authorisations themselves can be written without the
+person's confirmation. Its tests, and those of the session start guard, are in
+`tools/guards/tests/`.
 
 ### The adapters
 
@@ -223,6 +228,7 @@ can just confirm it. Close with a summary to confirm before building anything.
 ├── sdlc-<org>/               the organisation's SDLC repository
 │   ├── AGENTS.md             rules for the assistant and the map of the repository
 │   ├── sdlc.yml              organisation, assistants, tools, scopes, GATE version
+│   ├── allowed_signers       SSH signing keys per person, when identity uses them
 │   ├── README.md             what it is, for people, in one page
 │   ├── ONBOARDING.md         how to start
 │   ├── PLAN.md               what is built now, what comes next, what is out of scope
@@ -244,7 +250,7 @@ can just confirm it. Close with a summary to confirm before building anything.
 │   │   └── tests/            the validator and generator, in both directions
 │   ├── products/
 │   │   ├── README.md         index of products and of their use-case catalogs
-│   │   ├── _template/        README.md · business-rules.md · use-cases.md
+│   │   ├── _template/        README.md · business-rules.md · use-cases.md · incidents/
 │   │   └── <product>/        context, rules, use cases and their automated flows
 │   ├── e2e/                  shared runner for the automated flows
 │   ├── tools/
@@ -414,7 +420,8 @@ dossier; applies the cross-cutting, layer, security and product rules with their
 sweeps for secrets, personal data in logs and unvalidated input; checks each criterion of the
 ticket. "What the change introduced" means the lines it adds or modifies, including an old
 problem on a line it modifies; something serious seen in passing on an untouched line, such as a
-secret, goes privately to the security custodian instead. It reports in order: what would block, recommendations, questions for product, and what
+secret, goes privately to the security custodian instead. It reports in order: what would block,
+recommendations, questions for product, and what
 has no rule but deserves a look. It offers to fix one at a time and hands rule-less patterns to
 `harvest`.
 
@@ -430,7 +437,8 @@ run.
 resolved, when the reviewer finishes or approves, when the pre-review leaves something without a
 rule, and when a postmortem closes. In phase one, when review happens outside the assistant, the
 instructions remind whoever closes the review to run it. A candidate drawn from a private
-pre-review is raised only if its author chooses, with its origin told as a pattern. It filters for patterns that will repeat, that do not exist
+pre-review is raised only if its author chooses, with its origin told as a pattern. It filters
+for patterns that will repeat, that do not exist
 yet and that were not discarded; drafts each candidate in the catalog format with its origin
 told as a pattern; lets the person choose which ones to raise; and publishes one change request
 per scope to its custodian. It also prepares the monthly harvest.
@@ -440,7 +448,8 @@ per scope to its custodian. It also prepares the monthly harvest.
 `review`, `operate`, `postmortem`, `refine`, `design` and `validate-outcome` are recorded in the
 plan as pending and built when phase one works with real people. Until `postmortem` exists,
 every incident still closes with a postmortem written from `method/templates/postmortem.md`,
-kept in `products/<product>/incidents/`, with its root cause handed to `harvest`. A leadership view of the team,
+kept in `products/<product>/incidents/`, with its root cause handed to `harvest`. A leadership
+view of the team,
 reading the tracker and the code platform, is optional and belongs to the third phase; it reads
 only, measures everyone with the same yardstick, and treats a number as a place to look, never
 as a verdict on a person.

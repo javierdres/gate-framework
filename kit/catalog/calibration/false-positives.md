@@ -17,10 +17,10 @@ id is the highest `FP-` number below, plus one:
 grep -Eo '^## FP-[0-9]{4}' calibration/false-positives.md | sort | tail -1
 ```
 
-Example, kept inside this code block so it never counts as an entry:
+Example, with letters instead of digits so it never counts as an entry:
 
 ```markdown
-## FP-0001 · Short title
+## FP-NNNN · Short title
 
 - What review raises: the claim the assistant makes.
 - Why it does not apply: the reason, in one sentence that will still serve next time.

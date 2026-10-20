@@ -25,7 +25,8 @@ session-start guard said setup stopped:
 
 ## 1. Requirements
 
-Run `tools/check-access.sh <profile>` and read what is missing: git, Python 3, and whatever
+Before the profile exists, run `tools/check-access.sh all`, which checks only what everyone
+needs; the profile's own checks run in step 4. Read what is missing: git, Python 3, and whatever
 `tools/access-checks.tsv` lists for the person's profile. For each thing missing, give the exact
 command for their operating system, step by step.
 
@@ -46,7 +47,8 @@ name, profiles and products in `personal/profile.md`, following `method/template
 
 ## 4. Access
 
-Read in `method/profiles.md` what their profile needs and explain why. Then, for each access
+Read in `method/profiles.md` what their profile needs and explain why, and run
+`tools/check-access.sh <profile>`. Then, for each access
 missing, one at a time: give the steps of its guide in `tools/guides/`, wait, and verify only
 that one before the next. Prefer company login and connectors over hand-made tokens, with the
 least privilege that works and an expiry. When an access depends on someone else, say who to

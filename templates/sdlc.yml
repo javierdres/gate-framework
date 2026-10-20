@@ -43,8 +43,11 @@ identity:
   # How the SDLC tells who a person is. platform is the strongest; declared
   # only guides, and the real control stays with the platform's permissions.
   method: platform          # platform | ssh-signing | declared
-  command: ""               # for platform, e.g. "gh api user --jq .login" or
-                            # "glab api user | python3 -c 'import json,sys;print(json.load(sys.stdin)[\"username\"])'"
+  # For platform: a command that prints the person's account, for example
+  #   gh api user --jq .login
+  #   glab api user | python3 -c 'import json, sys; print(json.load(sys.stdin)["username"])'
+  # Write it in single quotes if it contains double quotes.
+  command: ""
 
 tools:
   code_platform:

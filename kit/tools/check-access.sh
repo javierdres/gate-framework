@@ -29,7 +29,7 @@ limited() { if command -v perl >/dev/null 2>&1; then perl -e 'alarm shift; exec 
 ok=0; fail=0; report=""
 while IFS=$'\t' read -r who name cmd; do
   case "$who" in ''|\#*) continue ;; esac
-  [ "$who" = "all" ] || [ "$who" = "$PROFILE" ] || continue
+  [ "$who" = "all" ] || [ "$who" = "$PROFILE" ] || continue   # `all` as the profile runs only these
   if ( cd "$DIR/.." && limited bash -c "$cmd" ) </dev/null >/dev/null 2>&1; then
     ok=$((ok + 1)); report="$report  ✓  $name\n"
   else

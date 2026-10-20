@@ -36,6 +36,7 @@ REQUIRED = {
     "tooling.lint": (6, False),
     "tooling.static_analysis": (6, False),
     "tooling.tests": (6, False),
+    "tooling.extra_checks": (6, False),
     "data_sources.application_logs": (10, False),
     "data_sources.infrastructure_logs": (10, False),
     "data_sources.metrics": (10, False),
@@ -77,6 +78,10 @@ def empty(value):
 
 
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
+        print("usage: check_config.py [path to .gate/config.yml]\n\nReports what is filled, what blocks "
+              "the start, and which stage is waiting on each gap.")
+        return 0
     path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(".gate", "config.yml")
     if not os.path.exists(path):
         print("x no config at %s" % path)

@@ -37,9 +37,13 @@ that chains an authorised write with others that are not.
 
 ## How it works
 
-`tools/guards/permissions.py` runs before every shell command and every connector call, through
-the adapter of the person's assistant. It judges every segment of a chained command, and if it
-fails while deciding, it asks. Its tests are in `tools/guards/tests/`: run them after every
+`tools/guards/permissions.py` runs before every shell command, every connector call and every
+use of the assistant's file tools, through the adapter of the person's assistant. It judges
+every segment of a chained command and follows `cd` between them. It is conservative: an
+authorisation covers only a simple command it reads completely, so a write inside `sh -c`,
+`eval`, a subshell or a command substitution always asks, and so does a push to a remote the
+repository does not declare. The authorisations themselves can only change through the person's
+own confirmation. If it fails while deciding, it asks. Its tests are in `tools/guards/tests/`: run them after every
 change to the guard, because a guard that asks when it fails hides its own bugs. Authorising does
 not exempt anyone from the other rules: check whether something exists before creating it, and
 whatever is published remains the responsibility of whoever authorised it.

@@ -8,8 +8,10 @@
 # On the default branch it enforces what a code platform would:
 #   - no deletion and no rewrite (fast-forward only),
 #   - every new commit signed by a key listed in allowed_signers,
-#   - changes arrive as a merge commit carrying a `Reviewed-by: <identity>` trailer from a
-#     signer other than the merge's author, unless the repository is in formulation:
+#   - changes arrive as a merge commit signed by its reviewer, whose identity is the principal
+#     of that signature in allowed_signers, who signed none of the commits being merged, and
+#     whom the merge names in a `Reviewed-by: <identity>` trailer. Author fields are never
+#     trusted, because anyone can write them. Lifted only while the repository is in formulation:
 #       git config sdlc.formulation true     (set by the orchestrator, removed when it ends)
 #
 # allowed_signers is read from the default branch itself, so adding a person is a reviewed change.
@@ -40,13 +42,17 @@ done
 
 [ "$(git config --get --bool sdlc.formulation || echo false)" = "true" ] && exit 0
 
+signer() { git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile="$signers" log -1 --format=%GS "$1"; }
+
 for c in $(git rev-list --first-parent "$range"); do
   parents=$(git rev-list --parents -n 1 "$c" | wc -w)
   [ "$parents" -ge 3 ] || deny "commit ${c:0:8} reached the branch directly; changes arrive as a reviewed merge"
-  author="$(git log -1 --format=%ae "$c")"
+  merger="$(signer "$c")"
   reviewer="$(git log -1 --format=%B "$c" | sed -n 's/^Reviewed-by:[[:space:]]*//p' | head -1)"
   [ -n "$reviewer" ] || deny "merge ${c:0:8} has no Reviewed-by trailer"
-  [ "$reviewer" != "$author" ] || deny "merge ${c:0:8} was reviewed by its own author"
-  awk '{print $1}' "$signers" | grep -qxF "$reviewer" || deny "reviewer $reviewer is not in allowed_signers"
+  [ "$reviewer" = "$merger" ] || deny "merge ${c:0:8} names $reviewer as reviewer but is signed by $merger"
+  for b in $(git rev-list "$c^1..$c^2"); do
+    [ "$(signer "$b")" != "$merger" ] || deny "merge ${c:0:8} is signed by $merger, who also signed part of the change"
+  done
 done
 exit 0

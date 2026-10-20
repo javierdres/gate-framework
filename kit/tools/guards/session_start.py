@@ -11,8 +11,9 @@ session: whatever it cannot check, it says.
 Identity, declared in sdlc.yml under `identity:`:
     method: platform      runs identity.command (for example `gh api user --jq .login`) and
                           looks the answer up in the profiles table of GOVERNANCE.md
-    method: ssh-signing   the key in `git config user.signingkey` must appear in the SDLC's
-                          allowed_signers file next to the person's identity
+    method: ssh-signing   the person signs a fresh nonce with the key in `git config
+                          user.signingkey`, and the signature must verify against the SDLC's
+                          allowed_signers: holding the private key is what proves it
     method: declared      git's user.email, reported as not verified
 """
 import io
@@ -20,6 +21,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PERSONAL = os.path.join(ROOT, "personal")
@@ -43,19 +45,35 @@ def run(args, timeout=10, cwd=ROOT):
 
 
 def config_value(key, section=None):
-    """A flat read of sdlc.yml, enough for the few keys this guard needs."""
+    """A flat read of sdlc.yml, enough for the few keys this guard needs.
+
+    A value may be bare, in single quotes, or in double quotes with backslash escapes; a `#`
+    starts a comment only outside quotes.
+    """
     text = read(os.path.join(ROOT, "sdlc.yml"))
     if section:
         m = re.search(r"^%s:\n((?:[ \t]+.*\n?|\s*\n)*)" % re.escape(section), text, re.M)
         text = m.group(1) if m else ""
-    m = re.search(r"^\s*%s:\s*\"?([^\"\n#]*)" % re.escape(key), text, re.M)
-    return m.group(1).strip() if m else ""
+    m = re.search(r"^\s*%s:[ \t]*(.*)$" % re.escape(key), text, re.M)
+    if not m:
+        return ""
+    raw = m.group(1).strip()
+    if raw.startswith('"'):
+        q = re.match(r'"((?:[^"\\]|\\.)*)"', raw)
+        return re.sub(r"\\(.)", r"\1", q.group(1)) if q else ""
+    if raw.startswith("'"):
+        q = re.match(r"'([^']*)'", raw)
+        return q.group(1) if q else ""
+    return raw.split(" #", 1)[0].split("\t#", 1)[0].strip()
 
 
 def update():
-    code, branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    code, _ = run(["git", "rev-parse", "--git-dir"])
     if code:
         return "not a git repository yet"
+    code, branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    if code:
+        return "no commits yet"
     code, upstream = run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
     if code:
         return ("no upstream yet: once the SDLC exists on the code platform, push it once with "
@@ -75,7 +93,6 @@ def installation():
                    "tools/guards"])
     commit = stamp.split()[0]
     if last and commit != last:
-        _, newer = run(["git", "merge-base", "--is-ancestor", commit, last])
         return stamp, ("outdated: skills, adapters or guards changed since it was installed; run "
                        "tools/install.sh %s again" % (stamp.split()[1] if len(stamp.split()) > 1 else "<assistant>"))
     return stamp, "current"
@@ -91,17 +108,48 @@ def identity():
                 return out.splitlines()[0].strip(), True, "platform account"
         return None, False, "the platform command did not answer; check the platform login"
     if method == "ssh-signing":
-        _, key = run(["git", "config", "user.signingkey"])
-        if key and os.path.exists(os.path.expanduser(key)):
-            key = read(os.path.expanduser(key)).strip()
-        key_body = key.split()[1] if len(key.split()) > 1 else key
-        for line in read(os.path.join(ROOT, "allowed_signers")).splitlines():
-            parts = line.split()
-            if len(parts) >= 3 and not line.startswith("#") and key_body and key_body in parts:
-                return parts[0], True, "ssh signing key listed in allowed_signers"
-        return None, False, "the signing key is not in allowed_signers"
+        return ssh_identity()
     _, email = run(["git", "config", "user.email"])
     return email or None, False, "declared in git, not verified"
+
+
+def ssh_identity():
+    """Prove possession: sign a fresh nonce and verify it against allowed_signers."""
+    signers = os.path.join(ROOT, "allowed_signers")
+    _, key = run(["git", "config", "user.signingkey"])
+    if not key:
+        return None, False, "no signing key configured in git"
+    if not os.path.exists(signers):
+        return None, False, "allowed_signers is missing from the SDLC"
+    key = os.path.expanduser(key)
+    with tempfile.TemporaryDirectory() as tmp:
+        nonce = os.path.join(tmp, "nonce")
+        with io.open(nonce, "w") as f:
+            f.write("sdlc-identity %s %s\n" % (os.getpid(), os.urandom(16).hex()))
+        candidates = [key] + ([key[:-4]] if key.endswith(".pub") else [])
+        signed = False
+        for k in candidates:
+            if os.path.exists(k):
+                code, _ = run(["ssh-keygen", "-Y", "sign", "-f", k, "-n", "git", nonce], timeout=10, cwd=tmp)
+                if code == 0 and os.path.exists(nonce + ".sig"):
+                    signed = True
+                    break
+        if not signed:
+            return None, False, "could not sign with the configured key (no private key or agent)"
+        code, principal = run(["ssh-keygen", "-Y", "find-principals", "-s", nonce + ".sig", "-f", signers],
+                              timeout=10, cwd=tmp)
+        principal = principal.splitlines()[0].strip() if code == 0 and principal else ""
+        if not principal:
+            return None, False, "the signing key is not in allowed_signers"
+        try:
+            with io.open(nonce, "rb") as data:
+                p = subprocess.run(["ssh-keygen", "-Y", "verify", "-f", signers, "-I", principal, "-n", "git",
+                                    "-s", nonce + ".sig"], stdin=data, capture_output=True, timeout=10)
+        except Exception:
+            return None, False, "the signature could not be verified"
+        if p.returncode != 0:
+            return None, False, "the signature does not verify against allowed_signers"
+        return principal, True, "signed a fresh challenge with a key listed in allowed_signers"
 
 
 def profiles_for(who):

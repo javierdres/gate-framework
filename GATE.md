@@ -321,7 +321,9 @@ credentials.
 over a long session, the same way a person forgets to run a command. Permissions, session start
 and the person's log live in guards the environment executes, and a guard that fails asks
 instead of letting the action through. The hard controls stay on the platform: protected
-branches, mandatory approvals, the pipeline. A skill guides; it does not enforce.
+branches, mandatory approvals, the pipeline. A skill guides; it does not enforce. And a guard
+that does not fully understand an action asks: an authorisation covers only what the guard can
+read with certainty.
 
 **Verify before asserting.** No claim about how the system works rests on the assistant's
 memory or on documentation that may be stale. It is checked against the code, the data or the
@@ -450,19 +452,22 @@ someone decides.
 | `/operate` | 10 | Alert or person | Diagnosis grounded in sources | Alerts and incidents |
 | `/postmortem` | 10 | Incident closure | Timeline and root cause | Document |
 | `/validate-outcome` | 11 | `/deploy`, after the stage 2 window | Outcome against the original problem | Ticket |
-| `/harvest` | 12 | `/review` and `/postmortem` | Candidate rules and three lists | Catalog, rule by rule |
+| `/harvest` | 12 | `/review`, `/postmortem` and `/self-review`; the **person** who closes a review held outside the assistant | Candidate rules and three lists | Catalog, rule by rule |
 
 Every skill declares explicitly **what it does not do**. An assistant with no written limits
 invents them on the fly, and invents them differently every time.
 
 ### The five moments of human invocation
 
-People start the chain at five points, and only five: when the need is born (`/init`), when
-someone sits down to build (`/build`), when someone reviews (`/review`), when someone tests
-(`/verify`) and when someone deploys (`/deploy`). The framework chains everything else.
+Inside the cycle, people start the chain at five points, and only five: when the need is born
+(`/init`), when someone sits down to build (`/build`), when someone reviews (`/review`), when
+someone tests (`/verify`) and when someone deploys (`/deploy`). The framework chains everything
+else in the cycle.
 
-Before the cycle there are two more, each run once: when an organisation builds its SDLC
-(`/establish`) and when a person joins it (`/onboard`).
+Outside it, a person also starts the skills that do not belong to a stage: `/establish` once,
+when an organisation builds its SDLC; `/onboard` once per person; `/guide` and `/save` whenever
+they want; and `/harvest` when they close a review held outside the assistant, until `/review`
+is adopted and triggers it on its own.
 
 That matters because **mechanisms that depend on a person remembering to invoke them do not
 happen**. The classic symptom is an empty standards catalog next to changes carrying hundreds

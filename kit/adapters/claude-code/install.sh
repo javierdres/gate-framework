@@ -41,7 +41,7 @@ q = lambda name: shlex.quote(os.path.join(guards, name))
 wanted = {
     "SessionStart": (None, "python3 %s" % q("session_start.py")),
     "UserPromptSubmit": (None, "python3 %s" % q("log_reminder.py")),
-    "PreToolUse": ("Bash|mcp__.*", "python3 %s check --format claude" % q("permissions.py")),
+    "PreToolUse": ("Bash|mcp__.*|Write|Edit|MultiEdit|NotebookEdit", "python3 %s check --format claude" % q("permissions.py")),
 }
 for event, (matcher, command) in wanted.items():
     entries = hooks.setdefault(event, [])

@@ -31,6 +31,9 @@ class Guard(unittest.TestCase):
         cls.repo = os.path.join(cls.tmp, "repo")
         os.makedirs(cls.repo)
         sh(["git", "init", "-q", "-b", "main"], cls.repo)
+        cls.remote = os.path.join(cls.tmp, "remote.git")
+        sh(["git", "init", "-q", "--bare", cls.remote], cls.tmp)
+        sh(["git", "remote", "add", "origin", cls.remote], cls.repo)
         sh(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "x"], cls.repo)
         sh(["git", "checkout", "-q", "-b", "feature/x"], cls.repo)
         cls.repo = os.path.realpath(cls.repo)
@@ -103,6 +106,62 @@ class Guard(unittest.TestCase):
             d, r = self.decision(command, "s-all")
             self.assertEqual(d, "ask", command)
             self.assertIn(why, r, command)
+
+    def test_bypasses_found_in_review_all_ask(self):
+        """Every way the second simulation found to slip a write past the guard."""
+        self.grant("s-by", "repo", self.repo)
+        other = tempfile.mkdtemp()
+        sh(["git", "init", "-q"], other)
+        bypasses = [
+            "sh -c 'git push origin feature/x'",
+            "bash -c \"git push origin main\"",
+            "(git push origin main)",
+            "echo $(git push origin main)",
+            "echo `git push origin feature/x`",
+            "eval git push origin feature/x",
+            "/usr/bin/git push origin main",
+            "cd %s && git push origin x" % other,
+            "git push https://example.com/other/repo.git feature/x",
+            "python3 \"tools/guards/permissions.py\" 'grant' s-by repo /tmp",
+            "python3 tools/guards/perm''issions.py grant s-by repo /tmp",
+            "echo '{\"repo\": [\"/\"]}' > personal/grants/s-by.json",
+            "gh api -X delete repos/a/b",
+            "env GIT_TRACE=1 git push origin feature/x",
+        ]
+        for command in bypasses:
+            d, r = self.decision(command, "s-by")
+            self.assertEqual(d, "ask", command)
+            self.assertIn("Always asks", r, command)
+
+    def test_reads_are_not_slowed_down(self):
+        for c in ("gh api user | python3 -c 'import json,sys; print(1)'", "glab api projects/1",
+                  "git log --oneline | head", "cd /tmp && ls", "curl -s https://example.com | jq ."):
+            self.assertEqual(self.decision(c), (None, ""), c)
+
+    def test_file_tools_cannot_write_the_grants(self):
+        ev = {"tool_name": "Write", "tool_input": {"file_path": "/x/sdlc/personal/grants/s1.json"}, "session_id": "s1"}
+        out = self.run_guard(ev)[1]
+        self.assertEqual(out["decision"], "ask")
+        ev["tool_input"] = {"file_path": "/x/sdlc/README.md"}
+        self.assertIsNone(self.run_guard(ev)[1])
+
+    def test_connectors(self):
+        cases = {
+            "mcp__gitlab__merge_merge_request": ("ask", "merge or deletion"),
+            "mcp__github__create_pull_request": ("ask", "connector"),
+            "mcp__atlassian__executeWrite": ("ask", "connector"),
+            "mcp__atlassian__executeDestructive": ("ask", "merge or deletion"),
+            "mcp__atlassian__executeRead": (None, None),
+            "mcp__atlassian__getJiraIssue": (None, None),
+            "mcp__atlassian__searchJiraIssuesUsingJql": (None, None),
+        }
+        for name, (decision, why) in cases.items():
+            out = self.run_guard({"tool_name": name, "tool_input": {}, "session_id": "s-c"})[1]
+            if decision is None:
+                self.assertIsNone(out, name)
+            else:
+                self.assertEqual(out["decision"], decision, name)
+                self.assertIn(why, out["reason"], name)
 
     def test_bare_push_on_default_branch_always_asks(self):
         sh(["git", "checkout", "-q", "main"], self.repo)

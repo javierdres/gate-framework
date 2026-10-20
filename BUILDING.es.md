@@ -108,7 +108,12 @@ Todo guardia sigue el mismo contrato, lo llame el asistente que lo llame.
   motivo que le dice a la persona cómo autorizar la acción y volver a correrla.
 
 `bin/bootstrap.py sdlc` deja un guardia de referencia que funciona, `tools/guards/permissions.py`,
-con autorizaciones por sesión y la lista de acciones que nunca se delegan.
+con autorizaciones por sesión y la lista de acciones que nunca se delegan. Es conservador: una
+autorización cubre solo un comando simple que lee completo, y una escritura dentro de `sh -c`,
+`eval`, un subshell o una sustitución de comandos siempre pregunta. También vigila las
+herramientas de archivos del asistente, así que ni siquiera las autorizaciones se pueden escribir
+sin la confirmación de la persona. Sus pruebas, y las del guardia de inicio, están en
+`tools/guards/tests/`.
 
 ### Los adaptadores
 
@@ -232,6 +237,7 @@ construir nada.
 ├── sdlc-<org>/               el repositorio del SDLC de la organización
 │   ├── AGENTS.md             reglas para el asistente y mapa del repositorio
 │   ├── sdlc.yml              organización, asistentes, herramientas, ámbitos, versión de GATE
+│   ├── allowed_signers       llaves SSH de firma por persona, si la identidad las usa
 │   ├── README.md             qué es, para personas, en una página
 │   ├── ONBOARDING.md         cómo se empieza
 │   ├── PLAN.md               qué se construye ahora, qué sigue, qué queda fuera
@@ -253,7 +259,7 @@ construir nada.
 │   │   └── tests/            el validador y el generador, en los dos sentidos
 │   ├── products/
 │   │   ├── README.md         índice de productos y de sus catálogos de casos de uso
-│   │   ├── _template/        README.md · business-rules.md · use-cases.md
+│   │   ├── _template/        README.md · business-rules.md · use-cases.md · incidents/
 │   │   └── <producto>/       contexto, reglas, casos de uso y sus pruebas de flujo
 │   ├── e2e/                  el runner común de las pruebas de flujo
 │   ├── tools/

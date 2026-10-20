@@ -3,6 +3,38 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-10-20 · The guard and the review cannot be talked around
+
+An independent check of the previous release, on a clean clone, confirmed 28 of the 33 fixes
+working and found that the two controls that matter most could still be bypassed. This release
+closes them, with a test for every bypass found.
+
+**The permissions guard is conservative now.** A session authorisation covers only a simple
+command the guard reads completely. A write inside `sh -c`, `eval`, a subshell, a command
+substitution, `env` or `xargs` always asks; so does a push through a full path to git, a push
+after a `cd` into another repository, and a push to a remote the repository does not declare.
+Quotes can no longer hide a self-authorisation, the authorisations file cannot be written by any
+command or file tool, a lowercase `delete` is still a deletion, and connector calls are judged
+by what they do: merges and deletions always ask, other writes ask unless authorised, reads pass.
+The Claude Code adapter now sends the file tools to the guard too, and a freshly scaffolded SDLC
+has its guards active from the very first session, before anything is installed. Verified in a
+real Claude Code session, where `sh -c 'git push origin main'` was stopped.
+
+**The server hook trusts signatures, not text.** A merge reaching the default branch must be
+signed by the person its `Reviewed-by` trailer names, and that person must not have signed any
+of the commits being merged. Writing someone else's name in the trailer, or in the author field,
+no longer passes. The hook ships with its own test, eight cases on a throwaway server.
+
+**Identity is proved, not configured.** With SSH signing keys, the session start guard signs a
+fresh challenge with the person's key and verifies it against `allowed_signers`, so pointing git
+at someone else's public key gets nobody their profiles. The guard reads quoted values with
+escapes correctly, and has tests of its own.
+
+**Smaller fixes.** The false-positive example no longer counts as an entry; the project config
+template passes its own check; `--help` works in every script; only the chosen assistant's
+adapter is copied; onboarding runs the shared checks before the profile exists; products carry an
+`incidents/` folder; the moments of human invocation are described consistently.
+
 ## 2026-10-20 · Everything the simulation found, fixed
 
 A second test built the SDLC of an invented health software company from scratch with GATE

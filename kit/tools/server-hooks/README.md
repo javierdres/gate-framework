@@ -13,9 +13,11 @@ On the default branch only:
 - Every new commit signed with an SSH key listed in `allowed_signers`, which also gives the SDLC
   a verifiable identity per person without platform accounts (`identity.method: ssh-signing` in
   `sdlc.yml`).
-- Changes arrive as a merge commit with a `Reviewed-by: <identity>` trailer from a signer who is
-  not the merge's author. A review is then a branch, a conversation in its ticket, and a merge
-  that names who reviewed it.
+- Changes arrive as a merge commit signed by its reviewer: the signature's identity in
+  `allowed_signers` must match the merge's `Reviewed-by: <identity>` trailer, and that person
+  must not have signed any of the commits being merged. Author fields are never trusted, since
+  anyone can write them. A review is then a branch, a conversation in its ticket, and a merge
+  the reviewer signs.
 - During formulation, the orchestrator sets `git config sdlc.formulation true` in the bare
   repository and the review requirement is lifted. Removing it is part of ending formulation.
 
@@ -29,6 +31,12 @@ On the default branch only:
    `person@company.example namespaces="git" ssh-ed25519 AAAA...`. Adding someone is a reviewed
    change like any other.
 3. On the server: `cp tools/server-hooks/update <repo>.git/hooks/update && chmod +x` it.
+
+## Tests
+
+`bash tools/server-hooks/tests/test_update.sh` builds a throwaway server with two people and
+checks every case above, including a reviewer named but not signing, and a merge signed by
+someone who also wrote the change.
 
 ## What it cannot do
 

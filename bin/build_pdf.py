@@ -3,6 +3,11 @@
 import io, os, re, subprocess, sys, html
 import markdown
 
+if len(sys.argv) > 1 and sys.argv[1] in ("-h", "--help"):
+    print("usage: build_pdf.py [document.md]\n\nRenders the mermaid diagrams and writes _<document>.html, "
+          "ready to print to PDF. Defaults to GATE.md.")
+    sys.exit(0)
+
 D = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(D, sys.argv[1]) if len(sys.argv) > 1 else os.path.join(D, "GATE.md")
 BASE = os.path.splitext(os.path.basename(SRC))[0]

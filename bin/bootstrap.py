@@ -22,6 +22,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -87,6 +88,12 @@ SDLC_TEMPLATES = {
     "method/templates/ticket.md": "ticket.md",
     "method/templates/rule.md": "rule.md",
 }
+SDLC_INCIDENTS = """# Incidents
+
+One postmortem per incident of this product, written from `method/templates/postmortem.md`:
+`YYYY-MM-DD-short-name.md`. The timeline is rebuilt from the sources, not from memory, and the
+root cause goes to `harvest`.
+"""
 
 SDLC_README = """# {org} SDLC
 
@@ -106,8 +113,9 @@ SDLC_ONBOARDING = """# Onboarding
 2. Create a working folder, for example `~/Projects/{org}`, and clone this repository inside it,
    next to the repositories of your products.
 3. Open your assistant inside this repository the first time and say hello. `onboard` takes it
-   from there: requirements, installation, profile and access, one step at a time. Until the
-   installer runs, the guards are not active yet, so that first session only reads and installs.
+   from there: requirements, installation, profile and access, one step at a time. With Claude
+   Code the guards are active from that first session; with another assistant, they start once
+   the installer has wired its adapter, so that first session only reads and installs.
 4. From then on, open the assistant in the working folder, not inside this repository.
 
 You never paste a credential in the chat. Each access has a step-by-step guide in
@@ -165,6 +173,10 @@ def scaffold_sdlc(target, assistant, org):
         return 1
     org = org or os.path.basename(os.path.abspath(target)).replace("sdlc-", "") or "org"
     written = copy_tree(KIT, target)
+    for name in os.listdir(os.path.join(target, "adapters")):
+        folder = os.path.join(target, "adapters", name)
+        if os.path.isdir(folder) and name != assistant:
+            shutil.rmtree(folder)
 
     for dst, tpl in SDLC_TEMPLATES.items():
         src = os.path.join(HERE, "templates", tpl)
@@ -187,6 +199,7 @@ def scaffold_sdlc(target, assistant, org):
         "CODEOWNERS": "# Translates GOVERNANCE.md. During formulation, the orchestrator owns everything.\n* @<orchestrator>\n",
         ".gitignore": "personal/\n__pycache__/\n.DS_Store\n",
         "method/flows/.gitkeep": "",
+        "products/_template/incidents/README.md": SDLC_INCIDENTS,
         "method/chat-client/README.md": "# Chat-client package\n\nInstructions and context files for roles that work outside the terminal, and where to copy each one.\n",
     }
     for rel, content in extra.items():
@@ -216,6 +229,17 @@ def scaffold_sdlc(target, assistant, org):
         # Claude Code finds skills in .claude/skills/ of the folder it is opened in. Linking them
         # here makes /establish and /onboard available before anything is installed.
         io.open(os.path.join(target, "CLAUDE.md"), "w", encoding="utf-8").write("@AGENTS.md\n")
+        # The guards are active from the very first session opened inside the SDLC, before the
+        # installer runs: paths are relative to the project Claude Code was opened in.
+        guard = 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/%s"'
+        settings = {"hooks": {
+            "SessionStart": [{"hooks": [{"type": "command", "command": guard % "session_start.py"}]}],
+            "PreToolUse": [{"matcher": "Bash|mcp__.*|Write|Edit|MultiEdit|NotebookEdit",
+                            "hooks": [{"type": "command", "command": (guard % "permissions.py") + " check --format claude"}]}],
+        }}
+        os.makedirs(os.path.join(target, ".claude"), exist_ok=True)
+        io.open(os.path.join(target, ".claude", "settings.json"), "w", encoding="utf-8").write(
+            json.dumps(settings, indent=2) + "\n")
         os.makedirs(os.path.join(target, ".claude", "skills"), exist_ok=True)
         for name in ("establish", "onboard"):
             link = os.path.join(target, ".claude", "skills", name)
