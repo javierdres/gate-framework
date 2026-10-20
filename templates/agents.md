@@ -10,8 +10,8 @@ record it as out of scope or to replace something in "Next".
 
 ## While the SDLC is being built
 
-If `sdlc.yml` still has fields to be defined or `PLAN.md` has no objective, this SDLC is not
-built yet: offer the `establish` skill (`skills/establish/SKILL.md`) before anything else. If
+While `built` in `sdlc.yml` is empty, this SDLC is not built yet: offer the `establish` skill
+(`skills/establish/SKILL.md`) before anything else. If
 the person has no profile in `personal/profile.md`, offer `onboard`
 (`skills/onboard/SKILL.md`). The GATE version this SDLC was scaffolded from is in
 `gate-reference/`.

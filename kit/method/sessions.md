@@ -15,15 +15,17 @@ one line what it updated.
 
 ## Where and how
 
-One file per topic and start date: `personal/sessions/YYYY-MM-DD-topic.md`, following the
-template in GATE's `templates/session-log.md`. Short sentences. What can be read again in the
+One file per topic and start date: `personal/sessions/YYYY-MM-DD-topic.md`, following
+`method/templates/session-log.md`. Short sentences. What can be read again in the
 code, the tracker or the code platform is linked, not copied. Never credentials or clients'
 personal data.
 
 ## The index
 
 `personal/sessions/README.md` has two parts: **Open**, with the live critical and pending items,
-each linking to its summary; and **By topic**, one line per summary.
+each linking to its summary; and **By topic**, one line per summary. The headings can be in the
+organisation's language; the installer leaves a `<!-- sdlc:open -->` marker under the first one,
+and that marker is what the session start guard looks for, so keep it.
 
 ## When resuming
 

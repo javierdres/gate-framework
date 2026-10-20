@@ -9,7 +9,7 @@ set -euo pipefail
 # Instructions: CLAUDE.md in the working folder imports the neutral AGENTS.md files.
 MARK="<!-- sdlc:$NAME -->"
 if ! grep -qF "$MARK" "$WORK/CLAUDE.md" 2>/dev/null; then
-  [ -e "$WORK/CLAUDE.md" ] && cp -p "$WORK/CLAUDE.md" "$WORK/CLAUDE.md.bak-$STAMP"
+  if [ -e "$WORK/CLAUDE.md" ]; then cp -p "$WORK/CLAUDE.md" "$WORK/CLAUDE.md.bak-$STAMP"; fi
   {
     echo ""
     echo "$MARK"
@@ -30,17 +30,18 @@ done
 
 # Guards: merged into the working folder's settings, never duplicated.
 SETTINGS="$WORK/.claude/settings.json"
-[ -e "$SETTINGS" ] && cp -p "$SETTINGS" "$SETTINGS.bak-$STAMP"
-python3 - "$SETTINGS" "$SDLC" <<'PY'
-import io, json, os, sys
-path, sdlc = sys.argv[1], sys.argv[2]
+python3 - "$SETTINGS" "$SDLC" "$STAMP" <<'PY'
+import io, json, os, shlex, shutil, sys
+path, sdlc, stamp = sys.argv[1], sys.argv[2], sys.argv[3]
 data = json.load(io.open(path, encoding="utf-8")) if os.path.exists(path) else {}
+before = json.dumps(data, sort_keys=True)
 hooks = data.setdefault("hooks", {})
 guards = os.path.join(sdlc, "tools", "guards")
+q = lambda name: shlex.quote(os.path.join(guards, name))
 wanted = {
-    "SessionStart": (None, "python3 %s/session_start.py" % guards),
-    "UserPromptSubmit": (None, "python3 %s/log_reminder.py" % guards),
-    "PreToolUse": ("Bash|mcp__.*", "python3 %s/permissions.py check --format claude" % guards),
+    "SessionStart": (None, "python3 %s" % q("session_start.py")),
+    "UserPromptSubmit": (None, "python3 %s" % q("log_reminder.py")),
+    "PreToolUse": ("Bash|mcp__.*", "python3 %s check --format claude" % q("permissions.py")),
 }
 for event, (matcher, command) in wanted.items():
     entries = hooks.setdefault(event, [])
@@ -50,6 +51,10 @@ for event, (matcher, command) in wanted.items():
     if matcher:
         entry["matcher"] = matcher
     entries.append(entry)
-io.open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2) + "\n")
+if json.dumps(data, sort_keys=True) != before:
+    if os.path.exists(path):
+        shutil.copy2(path, "%s.bak-%s" % (path, stamp))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    io.open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2) + "\n")
 PY
 echo "OK  Claude Code adapter: CLAUDE.md, skills and guards in $WORK"

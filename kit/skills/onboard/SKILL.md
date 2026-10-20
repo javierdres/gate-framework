@@ -6,7 +6,7 @@ description: Leaves a person ready to work in this organisation's SDLC: requirem
 # onboard
 
 You leave one person ready to work. This skill implements the `/onboard` contract in
-`gate-reference/contracts/onboard.md`. The orchestrator adapts it during `establish`.
+`gate-reference/skills/onboard/SKILL.md`. The orchestrator adapts it during `establish`.
 
 ## The map
 
@@ -25,9 +25,9 @@ session-start guard said setup stopped:
 
 ## 1. Requirements
 
-Check what the SDLC needs on this machine: git, Python 3, and whatever `tools/` and the person's
-profile use. For each thing missing, give the exact command for their operating system, step by
-step.
+Run `tools/check-access.sh <profile>` and read what is missing: git, Python 3, and whatever
+`tools/access-checks.tsv` lists for the person's profile. For each thing missing, give the exact
+command for their operating system, step by step.
 
 ## 2. Installation
 
@@ -38,10 +38,11 @@ assistant in the working folder, not inside this repository.
 
 ## 3. Profile
 
-Identify the person by their verified account on the code platform or the tracker, never by the
-name they type. Read their row in the profiles table of `GOVERNANCE.md` and offer only the
-profiles enabled there. Save name, profiles and products in `personal/profile.md`, following
-`method/templates/profile.md`.
+Identify the person the way `identity` in `sdlc.yml` says (platform account, SSH signing key or,
+as a last resort, declared), never by the name they type. When the identity is only declared,
+say so: the profiles then guide, and the real control is the platform's permissions. Read their
+row in the profiles table of `GOVERNANCE.md` and offer only the profiles enabled there. Save
+name, profiles and products in `personal/profile.md`, following `method/templates/profile.md`.
 
 ## 4. Access
 

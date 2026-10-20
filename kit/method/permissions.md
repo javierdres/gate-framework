@@ -7,7 +7,8 @@ how often the person is asked.
 
 Local work follows the permission mode the person chose in their assistant: reading, editing,
 running tests, building, local commits, and querying the code platform, the tracker or the
-production source of truth.
+production source of truth. Edits made with the assistant's file tools are local too, so they
+follow that mode and not this guard.
 
 ## Asks until a scope is authorised
 
@@ -29,14 +30,16 @@ after three days.
 
 ## Always asks
 
-Whatever was authorised: production, merges (they need the reviewer's approval in force),
-forced pushes or pushes that delete branches, deletions on the code platform or the tracker,
-infrastructure tools, generating credentials, and any command that chains an authorised write
-with others that are not.
+Whatever was authorised: pushes to the default branch, forced, mirrored or pruning pushes and
+pushes that delete branches, merges (they need the reviewer's approval in force), deletions on
+the code platform or the tracker, infrastructure tools, generating credentials, and any command
+that chains an authorised write with others that are not.
 
 ## How it works
 
 `tools/guards/permissions.py` runs before every shell command and every connector call, through
-the adapter of the person's assistant. If it fails while deciding, it asks. Authorising does
+the adapter of the person's assistant. It judges every segment of a chained command, and if it
+fails while deciding, it asks. Its tests are in `tools/guards/tests/`: run them after every
+change to the guard, because a guard that asks when it fails hides its own bugs. Authorising does
 not exempt anyone from the other rules: check whether something exists before creating it, and
 whatever is published remains the responsibility of whoever authorised it.

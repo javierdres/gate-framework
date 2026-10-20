@@ -56,7 +56,7 @@ It returns the most for what it costs and forces nobody else to change how they 
 Both together. An assisted review that does not harvest leaves the cycle open.
 
 - [ ] `/review` implemented, designed to run several times
-- [ ] `/harvest` triggered by `/review`, never by a person
+- [ ] `/harvest` triggered by `/review`, `/postmortem` and `/self-review`; where review happens outside the assistant, the instructions remind whoever closes it to run it
 - [ ] Confirmed that whoever builds does not review their own change
 
 ## 5. Functional verification

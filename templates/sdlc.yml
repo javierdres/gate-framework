@@ -9,6 +9,10 @@ gate:
   # request that also reviews the departures listed in GATE.md.
   version: ""
 
+# The date /establish finished the final verification. While it is empty, the
+# instructions offer establish at the start of every session.
+built: ""
+
 organisation:
   name: ""
   short_name: ""            # used in sdlc-<short_name> and in headings
@@ -16,8 +20,8 @@ organisation:
   language: ""              # e.g. "es-CL"; technical terms kept in English
   regulatory_context: ""    # personal, health or financial data; standards
 
+# Names never go here: who holds each role is only in GOVERNANCE.md.
 orchestrator:
-  role_holder: ""           # verifiable identity, e.g. "@user" on the code platform
   phase: formulation        # formulation | operation
   exit_criteria:            # observable, checked on the review date
     - "A person other than the orchestrator installed the SDLC alone"
@@ -34,6 +38,13 @@ assistants:
     hooks: true             # false means the platform fallback is in use
     connectors: []          # tracker, documentation, observability
   chat_client: ""           # for roles outside the terminal; empty if none
+
+identity:
+  # How the SDLC tells who a person is. platform is the strongest; declared
+  # only guides, and the real control stays with the platform's permissions.
+  method: platform          # platform | ssh-signing | declared
+  command: ""               # for platform, e.g. "gh api user --jq .login" or
+                            # "glab api user | python3 -c 'import json,sys;print(json.load(sys.stdin)[\"username\"])'"
 
 tools:
   code_platform:
@@ -65,8 +76,7 @@ products:
   # Only the pilot ones to start with. A folder is created when someone works
   # on the product, not before.
   - id: ""
-    product_owner: ""
-    repositories: []
+    repositories: []          # the product owner, by role, is in GOVERNANCE.md
     test_environments: []   # never production
 
 out_of_scope: []

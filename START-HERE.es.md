@@ -142,6 +142,11 @@ Al cerrar el incidente, `/postmortem` reconstruye la línea de tiempo **desde la
 desde la memoria de quien estuvo de turno, y separa la causa raíz de los factores que
 contribuyeron.
 
+Mientras la organización no tiene `/operate` ni `/postmortem`, que llegan en su segunda fase, el
+camino es el mismo a mano: se diagnostica desde la fuente de verdad, filtrando por ambiente, y se
+cierra con un postmortem escrito desde la plantilla, guardado junto al producto afectado y con su
+causa raíz entregada a `/harvest`.
+
 ### Qué obtienes
 
 Un diagnóstico con evidencia, un postmortem con línea de tiempo trazable, y la causa raíz

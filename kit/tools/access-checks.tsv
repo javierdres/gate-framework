@@ -1,0 +1,7 @@
+# profile	name	command
+# One check per line, separated by tabs. `all` applies to every profile.
+# /establish replaces the examples with the checks of this organisation.
+all	git installed	command -v git
+all	Python 3 installed	command -v python3
+all	SDLC remote reachable	git ls-remote --exit-code origin HEAD
+all	personal/ ignored by version control	git check-ignore -q personal/profile.md

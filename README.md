@@ -66,11 +66,11 @@ and section 7 (the actors, and the line between what the AI does and what people
 ├── GATE.md             The full framework
 ├── CONTRIBUTING.md     How the framework itself changes
 ├── CHANGELOG.md        What changed, and why
-├── skills/             The 18 skill contracts: 2 foundation, 14 cycle, 2 cross-cutting
+├── skills/             The 20 skill contracts: 3 foundation, 1 support, 14 cycle, 2 cross-cutting
 ├── templates/          SDLC config, instructions, governance, plan, product, use cases,
 │                       dossier, decision record, QA script, postmortem, rule, log
-├── kit/                What bootstrap.py copies into a new SDLC: guards, installer,
-│                       adapters, method
+├── kit/                What bootstrap.py copies into a new SDLC: the catalog, guards and
+│                       their tests, installer, access checker, adapters, server hooks, method
 ├── adoption/           How to roll it out, step by step
 ├── bin/
 │   ├── bootstrap.py    Scaffolds the organisation's SDLC, a catalog, or a project's config
@@ -95,7 +95,7 @@ formats. What is specific to an assistant lives in its adapter.
 
 ## The skills
 
-Two foundation skills, fourteen cycle skills and two cross-cutting ones. Each declares in its
+Three foundation skills, one support skill, fourteen cycle skills and two cross-cutting ones. Each declares in its
 frontmatter who triggers it, what it triggers, which gate it has, who owns that gate, what it
 writes outside and what it consults.
 

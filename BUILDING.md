@@ -125,6 +125,9 @@ version in `sdlc.yml`.
 | Any other | Whatever file it loads every session, pointing to `AGENTS.md` | Whatever it loads on demand | Its pre-action mechanism, or the platform fallback above |
 
 Only the Claude Code adapter has been verified end to end, and `bin/bootstrap.py` writes it.
+It was verified on Claude Code 2.1.304 in a real session: the instructions load through
+`CLAUDE.md`, the session start guard's context arrives, `establish` and `onboard` are found, and
+the permissions guard stops a push to the default branch even when the shell tool is allowed.
 The other rows are starting points taken from each platform's public documentation, not yet
 verified on a real installation. If you verify one, contribute it.
 
@@ -147,6 +150,8 @@ to the SDLC repository.
 | Which assistant, or assistants | The one the building roles already use. Record the version |
 | Name of the repository | `sdlc-<org>` |
 | Code platform, tracker, production source of truth | What the organisation already uses. One source of truth per question |
+| How a person is identified | Their account on the code platform. Without platform accounts, an SSH signing key listed in the SDLC. Declared identity only as a last resort, and said so |
+| How the main branch is protected | The platform's protected branches and mandatory approvals. Without them, the server-side hook in `tools/server-hooks/` |
 | Who holds each role | The orchestrator covers every custodian role that has nobody yet |
 | Profiles enabled per person | Building profiles for everyone; product, operations and leadership by name |
 | Pilot products | Two or three, where a product owner is willing to take part |
@@ -181,8 +186,10 @@ can just confirm it. Close with a summary to confirm before building anything.
 
 - Who orchestrates, and who holds each role in GATE.md section 7. Who covers a missing role in
   the meantime.
-- For each person: their verifiable identity (account on the code platform or the tracker) and
-  the profiles enabled for them.
+- For each person: their verifiable identity (account on the code platform or the tracker, or
+  the SSH signing key they will use) and the profiles enabled for them.
+- Whether the code platform has protected branches and change requests. If it does not, the
+  SDLC uses the server-side hook and signed commits instead.
 
 **The tools**
 
@@ -233,7 +240,8 @@ can just confirm it. Close with a summary to confirm before building anything.
 │   │   ├── rules/hard/       blocking rules, each with its scope
 │   │   ├── rules/soft/       suggestions, each with its scope
 │   │   ├── calibration/      false-positives.md, with no approval needed
-│   │   └── bin/              format validator and catalog generator
+│   │   ├── bin/              format validator and catalog generator
+│   │   └── tests/            the validator and generator, in both directions
 │   ├── products/
 │   │   ├── README.md         index of products and of their use-case catalogs
 │   │   ├── _template/        README.md · business-rules.md · use-cases.md
@@ -242,7 +250,9 @@ can just confirm it. Close with a summary to confirm before building anything.
 │   ├── tools/
 │   │   ├── install.sh        idempotent installer
 │   │   ├── check-access.sh   requirements and access per profile
-│   │   ├── guards/           permissions, session start, log reminder
+│   │   ├── access-checks.tsv the checks each profile needs
+│   │   ├── guards/           permissions, session start, log reminder, with tests
+│   │   ├── server-hooks/     for a git server with no protected branches
 │   │   ├── clients/          one small API client per system
 │   │   └── guides/           step-by-step access guides
 │   ├── skills/               one folder per skill, each with its SKILL.md
@@ -391,7 +401,10 @@ business rules in force, similar tickets, and the code if there is access. It wr
 criteria as Given, When, Then, one per behaviour. It proposes the use cases the requirement adds
 or changes and asks the product owner to validate each one. It shows a "ready for development"
 checklist, drafts the ticket in the team's format, creates it only on confirmation, and prepares
-the handover. It must also work from a chat client with a tracker connector.
+the handover. It must also work from a chat client with a tracker connector. When the product
+owner works only there, the validated cases live in the ticket, and whoever builds the change
+adds them to the product's catalog with that ticket as their origin. In phase one the ticket
+also carries the dossier: `method/templates/ticket.md` has a section per stage.
 
 **`self-review`** implements `/self-review`. It never publishes, reviews only what the change
 introduced, and gives every finding a file, a line, a rule and a reason; what was discarded is
@@ -399,7 +412,9 @@ not raised again. It reads the diff against the base, the layer, the product, th
 dossier; applies the cross-cutting, layer, security and product rules with their discards
 (candidates as recommendations); runs lint, tests and the automated flows the change touches;
 sweeps for secrets, personal data in logs and unvalidated input; checks each criterion of the
-ticket. It reports in order: what would block, recommendations, questions for product, and what
+ticket. "What the change introduced" means the lines it adds or modifies, including an old
+problem on a line it modifies; something serious seen in passing on an untouched line, such as a
+secret, goes privately to the security custodian instead. It reports in order: what would block, recommendations, questions for product, and what
 has no rule but deserves a look. It offers to fix one at a time and hands rule-less patterns to
 `harvest`.
 
@@ -413,7 +428,9 @@ run.
 
 **`harvest`** implements `/harvest`. It runs on its own when the threads of a change request are
 resolved, when the reviewer finishes or approves, when the pre-review leaves something without a
-rule, and when a postmortem closes. It filters for patterns that will repeat, that do not exist
+rule, and when a postmortem closes. In phase one, when review happens outside the assistant, the
+instructions remind whoever closes the review to run it. A candidate drawn from a private
+pre-review is raised only if its author chooses, with its origin told as a pattern. It filters for patterns that will repeat, that do not exist
 yet and that were not discarded; drafts each candidate in the catalog format with its origin
 told as a pattern; lets the person choose which ones to raise; and publishes one change request
 per scope to its custodian. It also prepares the monthly harvest.
@@ -421,7 +438,9 @@ per scope to its custodian. It also prepares the monthly harvest.
 ### Later phases
 
 `review`, `operate`, `postmortem`, `refine`, `design` and `validate-outcome` are recorded in the
-plan as pending and built when phase one works with real people. A leadership view of the team,
+plan as pending and built when phase one works with real people. Until `postmortem` exists,
+every incident still closes with a postmortem written from `method/templates/postmortem.md`,
+kept in `products/<product>/incidents/`, with its root cause handed to `harvest`. A leadership view of the team,
 reading the tracker and the code platform, is optional and belongs to the third phase; it reads
 only, measures everyone with the same yardstick, and treats a number as a place to look, never
 as a verdict on a person.
@@ -460,12 +479,14 @@ standard library, with no dependencies.
 5. The empty catalog, with its format, its scopes and its false-positive record.
 6. The product template and the folders of the pilot products.
 7. `AGENTS.md` of the repository, and `GATE.md` with the version and the first departures.
+   Create the SDLC repository on the code platform and push it once with its upstream
+   (`git push -u origin main`), with the orchestrator's OK.
 8. Installer, guards, access checker, API clients and access guides.
 9. The adapter for the chosen assistant.
 10. The entry skills: `onboard`, `guide` and `save`.
 11. The phase one skills: `define`, `self-review`, `harvest`, and `e2e` with its runner.
 12. README and ONBOARDING.
-13. The final verification.
+13. The final verification. When it closes, write today's date in `built` in `sdlc.yml`.
 
 ---
 
@@ -475,7 +496,7 @@ standard library, with no dependencies.
   SDLC VERIFICATION
   ──────────────────────────────────────────────────────────
   ○  No file carries credentials or client data
-  ○  Only GOVERNANCE.md has people's names
+  ○  Only GOVERNANCE.md has names (CODEOWNERS, accounts only)
   ○  personal/ is ignored by version control
   ○  The installer runs twice without duplicating anything
   ○  The assistant loads AGENTS.md in a fresh session
@@ -485,6 +506,8 @@ standard library, with no dependencies.
   ○  An outward write asks; after authorising, it does not
   ○  Production and merges ask even when authorised
   ○  A failing guard asks instead of letting through
+  ○  The guard and catalog tests pass
+  ○  Session start reports identity, profiles and access
   ○  define produces a test ticket ready for development
   ○  self-review reviews a test change against the catalog
   ○  harvest proposes a candidate from a correction
@@ -515,6 +538,15 @@ outward writes go through a script that asks. The plan says so, so nobody assume
 
 **What if the tracker or the observability platform has no connector?** The API clients in
 `tools/clients/` read each person's own credential. They are small on purpose.
+
+**Our git server has no protected branches or merge requests.** Use `tools/server-hooks/`: it
+keeps the main branch fast-forward only, requires every commit to be signed by a key listed in
+`allowed_signers`, and requires changes to arrive as a merge reviewed by someone else. The same
+keys give the SDLC a verifiable identity per person.
+
+**Can we write the formats in our own language?** The documents, yes. The keys the guards and
+validators read (the rule frontmatter, `sdlc.yml`, the `<!-- sdlc:open -->` marker of the log)
+stay in English, because translating them makes a check fail in silence.
 
 **Can product work without the code platform?** Yes. Through a chat client with the role's
 package and a tracker connector, plus a read-only access to the code of their own if the

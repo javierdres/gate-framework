@@ -26,14 +26,14 @@ if [ "$WORK" = "$HOME" ]; then
   exit 1
 fi
 
-backup() { [ -e "$1" ] && cp -p "$1" "$1.bak-$STAMP" || true; }
+backup() { if [ -e "$1" ]; then cp -p "$1" "$1.bak-$STAMP"; fi; }
 
 # 1. personal/: profile, preferences, grants and log. Ignored by version control.
 mkdir -p "$SDLC/personal/sessions" "$SDLC/personal/grants"
 chmod 700 "$SDLC/personal/grants"
 [ -e "$SDLC/personal/profile.md" ] || : > "$SDLC/personal/profile.md"
 [ -e "$SDLC/personal/preferences.md" ] || printf '# My preferences\n' > "$SDLC/personal/preferences.md"
-[ -e "$SDLC/personal/sessions/README.md" ] || printf '# Work log\n\n## Open\n\n## By topic\n' \
+[ -e "$SDLC/personal/sessions/README.md" ] || printf '# Work log\n\n## Open\n<!-- sdlc:open -->\n\n## By topic\n' \
   > "$SDLC/personal/sessions/README.md"
 grep -qx 'personal/' "$SDLC/.gitignore" 2>/dev/null || echo 'personal/' >> "$SDLC/.gitignore"
 
@@ -59,6 +59,10 @@ else
   echo "  Follow $NAME/adapters/README.md to wire instructions, skills and guards,"
   echo "  then run the final verification."
 fi
+
+# 4. The stamp the session start guard compares against, to tell when this install is outdated.
+COMMIT="$(git -C "$SDLC" log -1 --format=%H -- skills adapters tools/install.sh tools/guards 2>/dev/null || true)"
+printf '%s %s\n' "${COMMIT:-unknown}" "$ASSISTANT" > "$SDLC/personal/.installed"
 
 echo "OK  $NAME installed in $WORK for $ASSISTANT"
 echo "    Open your assistant in $WORK (not inside $NAME) and say hello."

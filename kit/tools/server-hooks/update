@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Javier Núñez
+#
+# Server-side `update` hook for a plain git server with no protected branches or merge requests.
+# Install it in the bare repository: cp update <repo>.git/hooks/update && chmod +x it.
+#
+# On the default branch it enforces what a code platform would:
+#   - no deletion and no rewrite (fast-forward only),
+#   - every new commit signed by a key listed in allowed_signers,
+#   - changes arrive as a merge commit carrying a `Reviewed-by: <identity>` trailer from a
+#     signer other than the merge's author, unless the repository is in formulation:
+#       git config sdlc.formulation true     (set by the orchestrator, removed when it ends)
+#
+# allowed_signers is read from the default branch itself, so adding a person is a reviewed change.
+set -euo pipefail
+
+ref="$1"; old="$2"; new="$3"
+zero="0000000000000000000000000000000000000000"
+default="refs/heads/$(git config --get sdlc.defaultbranch || echo main)"
+
+[ "$ref" = "$default" ] || exit 0
+
+deny() { echo "x $default: $1" >&2; exit 1; }
+
+[ "$new" = "$zero" ] && deny "the default branch cannot be deleted"
+if [ "$old" != "$zero" ] && ! git merge-base --is-ancestor "$old" "$new"; then
+  deny "rewriting history is not allowed (fast-forward only)"
+fi
+
+signers="$(mktemp)"; trap 'rm -f "$signers"' EXIT
+src="$new"; [ "$old" != "$zero" ] && src="$old"
+git show "$src:allowed_signers" > "$signers" 2>/dev/null || deny "allowed_signers is missing from the branch"
+
+range="$new"; [ "$old" != "$zero" ] && range="$old..$new"
+for c in $(git rev-list "$range"); do
+  git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile="$signers" verify-commit "$c" >/dev/null 2>&1 \
+    || deny "commit ${c:0:8} is not signed by a key in allowed_signers"
+done
+
+[ "$(git config --get --bool sdlc.formulation || echo false)" = "true" ] && exit 0
+
+for c in $(git rev-list --first-parent "$range"); do
+  parents=$(git rev-list --parents -n 1 "$c" | wc -w)
+  [ "$parents" -ge 3 ] || deny "commit ${c:0:8} reached the branch directly; changes arrive as a reviewed merge"
+  author="$(git log -1 --format=%ae "$c")"
+  reviewer="$(git log -1 --format=%B "$c" | sed -n 's/^Reviewed-by:[[:space:]]*//p' | head -1)"
+  [ -n "$reviewer" ] || deny "merge ${c:0:8} has no Reviewed-by trailer"
+  [ "$reviewer" != "$author" ] || deny "merge ${c:0:8} was reviewed by its own author"
+  awk '{print $1}' "$signers" | grep -qxF "$reviewer" || deny "reviewer $reviewer is not in allowed_signers"
+done
+exit 0

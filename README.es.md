@@ -67,11 +67,11 @@ existente y cómo resuelvo una incidencia.
 ├── GATE.md             El framework completo
 ├── CONTRIBUTING.md     Cómo cambia el framework mismo
 ├── CHANGELOG.md        Qué cambió y por qué
-├── skills/             Los 18 contratos de skills: 2 de fundación, 14 de ciclo, 2 transversales
+├── skills/             Los 20 contratos de skills: 3 de fundación, 1 de apoyo, 14 de ciclo, 2 transversales
 ├── templates/          Config del SDLC, instrucciones, gobierno, plan, producto, casos de uso,
 │                       expediente, decisión, guion de QA, postmortem, regla, bitácora
-├── kit/                Lo que bootstrap.py copia en un SDLC nuevo: guardias, instalador,
-│                       adaptadores, método
+├── kit/                Lo que bootstrap.py copia en un SDLC nuevo: el catálogo, guardias y
+│                       sus pruebas, instalador, verificador, adaptadores, hooks de servidor, método
 ├── adoption/           Cómo implantarlo, paso a paso
 ├── bin/
 │   ├── bootstrap.py    Arma el SDLC de la organización, un catálogo o la config de un proyecto
@@ -96,7 +96,7 @@ escriben una vez en formatos neutrales. Lo propio de cada asistente vive en su a
 
 ## Las skills
 
-Dos de fundación, catorce de ciclo y dos transversales. Cada una declara en su frontmatter quién
+Tres de fundación, una de apoyo, catorce de ciclo y dos transversales. Cada una declara en su frontmatter quién
 la gatilla, a quién gatilla, qué gate tiene, quién lo habilita, qué escribe fuera y qué consulta.
 
 ```

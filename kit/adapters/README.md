@@ -33,7 +33,7 @@ end to end; the others come from each platform's public documentation:
 
 | Assistant | Instructions | Skills | Guards |
 | --- | --- | --- | --- |
-| Claude Code | `CLAUDE.md` importing `@<sdlc>/AGENTS.md` | `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse`. Automated by `claude-code/install.sh` |
+| Claude Code | `CLAUDE.md` importing `@<sdlc>/AGENTS.md` | `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse`. Automated by `claude-code/install.sh`, verified on 2.1.304 |
 | Gemini CLI | `GEMINI.md`, or `AGENTS.md` set as the context file name | Its skills folder | `.gemini/settings.json`, before-tool and session events. Hooks may need enabling |
 | Kiro | A steering file in `.kiro/steering/` pointing to `AGENTS.md` | `.kiro/skills/` | Kiro CLI hooks on pre-tool use and session start; names differ between major versions |
 | Codex CLI | Reads `AGENTS.md` natively | Its skills folder | Its hook configuration, where the installed version supports it |

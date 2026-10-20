@@ -130,7 +130,10 @@ anota esa versión en `sdlc.yml`.
 | Cualquier otro | El archivo que cargue en cada sesión, apuntando a `AGENTS.md` | Lo que cargue cuando se necesita | Su mecanismo previo a una acción, o el respaldo en la plataforma descrito arriba |
 
 Solo el adaptador de Claude Code está verificado de punta a punta, y lo escribe
-`bin/bootstrap.py`. Las demás filas son puntos de partida sacados de la documentación pública de
+`bin/bootstrap.py`. Se verificó en Claude Code 2.1.304, en una sesión real: las instrucciones
+cargan a través de `CLAUDE.md`, llega el contexto del guardia de inicio, encuentra `establish` y
+`onboard`, y el guardia de permisos detiene un push a la rama por defecto aunque la terminal esté
+autorizada. Las demás filas son puntos de partida sacados de la documentación pública de
 cada plataforma, todavía sin verificar en una instalación real. Si verificas uno, apórtalo.
 
 Quienes no trabajan en una terminal, producto casi siempre, usan un **cliente de chat** con un
@@ -153,6 +156,8 @@ cambiar después con un cambio al repositorio del SDLC.
 | Qué asistente, o cuáles | El que ya usan los roles que construyen. Se anota la versión |
 | Nombre del repositorio | `sdlc-<org>` |
 | Plataforma de código, herramienta de tickets y fuente de verdad de producción | Las que la organización ya usa. Una sola fuente de verdad por pregunta |
+| Cómo se identifica a una persona | Su cuenta en la plataforma de código. Sin cuentas de plataforma, una llave SSH de firma registrada en el SDLC. La identidad declarada, solo como último recurso y diciéndolo |
+| Cómo se protege la rama principal | Las ramas protegidas y las aprobaciones obligatorias de la plataforma. Sin ellas, el hook de servidor de `tools/server-hooks/` |
 | Quién ocupa cada rol | El orquestador cubre todo rol de responsable que todavía no tenga a nadie |
 | Perfiles habilitados por persona | Perfiles de construcción para todos; producto, operación y liderazgo por nombre |
 | Productos del piloto | Dos o tres, donde haya un product owner dispuesto a participar |
@@ -190,7 +195,10 @@ construir nada.
 - Quién orquesta y quién ocupa cada rol de la sección 7 de GATE.md. Quién cubre un rol vacío
   mientras tanto.
 - Por cada persona: su identidad verificable (su cuenta en la plataforma de código o en la
-  herramienta de tickets) y los perfiles que tiene habilitados.
+  herramienta de tickets, o la llave SSH de firma que va a usar) y los perfiles que tiene
+  habilitados.
+- Si la plataforma de código tiene ramas protegidas y merge requests. Si no los tiene, el SDLC
+  usa el hook de servidor y los commits firmados.
 
 **Las herramientas**
 
@@ -241,7 +249,8 @@ construir nada.
 │   │   ├── rules/hard/       reglas que bloquean, cada una con su ámbito
 │   │   ├── rules/soft/       recomendaciones, cada una con su ámbito
 │   │   ├── calibration/      false-positives.md, que no necesita aprobación
-│   │   └── bin/              validador de formato y generador del catálogo
+│   │   ├── bin/              validador de formato y generador del catálogo
+│   │   └── tests/            el validador y el generador, en los dos sentidos
 │   ├── products/
 │   │   ├── README.md         índice de productos y de sus catálogos de casos de uso
 │   │   ├── _template/        README.md · business-rules.md · use-cases.md
@@ -250,7 +259,9 @@ construir nada.
 │   ├── tools/
 │   │   ├── install.sh        instalador idempotente
 │   │   ├── check-access.sh   requisitos y accesos por perfil
-│   │   ├── guards/           permisos, inicio de sesión, recordatorio de la bitácora
+│   │   ├── access-checks.tsv las verificaciones que necesita cada perfil
+│   │   ├── guards/           permisos, inicio de sesión, bitácora, con sus pruebas
+│   │   ├── server-hooks/     para un servidor git sin ramas protegidas
 │   │   ├── clients/          un cliente de API pequeño por sistema
 │   │   └── guides/           guías de acceso paso a paso
 │   ├── skills/               una carpeta por skill, cada una con su SKILL.md
@@ -401,7 +412,10 @@ aceptación como Dado, Cuando, Entonces, uno por comportamiento. Propone los cas
 requerimiento agrega o cambia y le pide al product owner validarlos uno por uno. Muestra la lista
 de «listo para desarrollo», redacta el ticket en el formato del equipo, lo crea solo con
 confirmación y prepara el traspaso. Tiene que funcionar también desde un cliente de chat con un
-conector de tickets.
+conector de tickets. Cuando el product owner trabaja solo ahí, los casos validados quedan en el
+ticket, y quien construye el cambio los suma al catálogo del producto con ese ticket como
+origen. En la fase uno el ticket también hace de expediente: `method/templates/ticket.md` trae
+una sección por etapa.
 
 **`self-review`** implementa `/self-review`. No publica nada, revisa solo lo que introdujo el
 cambio y cada hallazgo lleva archivo, línea, regla y motivo; lo descartado no se vuelve a
@@ -409,6 +423,9 @@ levantar. Lee el diff contra la rama base, la capa, el producto, el ticket y su 
 las reglas transversales, de la capa, de seguridad y del producto con sus descartes (las
 candidatas como recomendación); corre lint, tests y las pruebas de flujo que toca el cambio;
 barre secretos, datos personales en logs y entradas sin validar; revisa cada criterio del ticket.
+«Lo que introdujo el cambio» son las líneas que agrega o modifica, incluido un problema antiguo
+en una línea que modifica; algo grave que se ve al pasar en una línea no tocada, como un secreto,
+va en privado al responsable de seguridad.
 Reporta en orden: lo que bloquearía, las recomendaciones, las preguntas para producto y lo que no
 tiene regla pero vale mirar. Ofrece corregir de a uno y le pasa a `harvest` los patrones sin
 regla.
@@ -423,7 +440,10 @@ repositorio, las claves nunca en el chat y evidencia local de cada corrida.
 
 **`harvest`** implementa `/harvest`. Corre sola cuando se resuelven los hilos de un merge
 request, cuando el revisor termina o aprueba, cuando la revisión previa deja algo sin regla y
-cuando se cierra un postmortem. Filtra los patrones que se van a repetir, que no existen todavía y
+cuando se cierra un postmortem. En la fase uno, cuando la revisión ocurre fuera del asistente,
+las instrucciones le recuerdan correrla a quien cierra la revisión, y una candidata que sale de
+una revisión previa, que es privada, se levanta solo si su autor quiere, con el origen contado
+como patrón. Filtra los patrones que se van a repetir, que no existen todavía y
 que no fueron descartados; redacta cada candidata en el formato del catálogo con su origen
 contado como patrón; deja que la persona elija cuáles se levantan, y publica un merge request por
 ámbito a su responsable. También prepara la cosecha mensual.
@@ -431,7 +451,10 @@ contado como patrón; deja que la persona elija cuáles se levantan, y publica u
 ### Fases siguientes
 
 `review`, `operate`, `postmortem`, `refine`, `design` y `validate-outcome` quedan anotadas en el
-plan como pendientes y se construyen cuando la fase uno funcione con personas reales. Una vista
+plan como pendientes y se construyen cuando la fase uno funcione con personas reales. Mientras no
+exista `postmortem`, todo incidente igual se cierra con un postmortem escrito desde
+`method/templates/postmortem.md`, guardado en `products/<producto>/incidents/` y con su causa raíz
+entregada a `harvest`. Una vista
 del equipo para liderazgo, que lea la herramienta de tickets y la plataforma de código, es
 opcional y corresponde a la tercera fase: solo lee, mide a todos con la misma vara y trata un
 número como un lugar donde mirar, nunca como un juicio sobre una persona.
@@ -469,13 +492,15 @@ y la biblioteca estándar de Python, sin dependencias.
    y el paquete del cliente de chat si algún rol lo necesita.
 5. El catálogo vacío, con su formato, sus ámbitos y su registro de descartes.
 6. La plantilla de productos y las carpetas de los productos del piloto.
-7. El `AGENTS.md` del repositorio, y `GATE.md` con la versión y las primeras diferencias.
+7. El `AGENTS.md` del repositorio, y `GATE.md` con la versión y las primeras diferencias. Se crea
+   el repositorio del SDLC en la plataforma de código y se sube una vez con su upstream
+   (`git push -u origin main`), con el OK del orquestador.
 8. Instalador, guardias, verificador de accesos, clientes de API y guías de acceso.
 9. El adaptador del asistente elegido.
 10. Las skills de entrada: `onboard`, `guide` y `save`.
 11. Las skills de la fase uno: `define`, `self-review`, `harvest`, y `e2e` con su runner.
 12. README y ONBOARDING.
-13. La verificación final.
+13. La verificación final. Al cerrarla, se anota la fecha del día en `built` de `sdlc.yml`.
 
 ---
 
@@ -485,7 +510,7 @@ y la biblioteca estándar de Python, sin dependencias.
   VERIFICACIÓN DEL SDLC
   ──────────────────────────────────────────────────────────
   ○  Ningún archivo trae credenciales ni datos de clientes
-  ○  Solo GOVERNANCE.md tiene nombres de personas
+  ○  Solo GOVERNANCE.md tiene nombres (CODEOWNERS, solo cuentas)
   ○  personal/ está ignorado por el control de versiones
   ○  El instalador corre dos veces sin duplicar nada
   ○  El asistente carga AGENTS.md en una sesión nueva
@@ -495,6 +520,8 @@ y la biblioteca estándar de Python, sin dependencias.
   ○  Una escritura hacia afuera pide OK; tras autorizar, no
   ○  Producción y merges piden OK aunque haya autorización
   ○  Un guardia que falla pregunta en vez de dejar pasar
+  ○  Las pruebas de los guardias y del catálogo pasan
+  ○  El inicio de sesión informa identidad, perfiles y accesos
   ○  define produce un ticket de prueba listo para desarrollo
   ○  self-review revisa un cambio de prueba contra el catálogo
   ○  harvest propone una candidata desde una corrección
@@ -526,6 +553,16 @@ que nadie suponga otra cosa.
 
 **¿Y si la herramienta de tickets o la de observabilidad no tienen conector?** Los clientes de
 API de `tools/clients/` leen la credencial propia de cada persona. Son pequeños a propósito.
+
+**Nuestro servidor git no tiene ramas protegidas ni merge requests.** Usa `tools/server-hooks/`:
+mantiene la rama principal solo con avance rápido, exige que cada commit esté firmado con una
+llave registrada en `allowed_signers` y exige que los cambios lleguen como un merge revisado por
+otra persona. Las mismas llaves le dan al SDLC una identidad verificable por persona.
+
+**¿Podemos escribir los formatos en nuestro idioma?** Los documentos, sí. Las claves que leen
+los guardias y los validadores (el frontmatter de las reglas, `sdlc.yml`, la marca
+`<!-- sdlc:open -->` de la bitácora) se quedan en inglés, porque al traducirlas una verificación
+falla sin avisar.
 
 **¿Producto puede trabajar sin la plataforma de código?** Sí. Desde un cliente de chat con el
 paquete de su rol y un conector a la herramienta de tickets, y con un acceso propio de solo

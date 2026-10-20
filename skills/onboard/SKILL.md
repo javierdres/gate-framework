@@ -3,7 +3,7 @@ skill: onboard
 stage: foundation
 name: A person's way in
 triggered_by: [establish, person]
-triggers: []
+triggers: [guide]
 gate: none
 gate_owner: —
 writes_outside: []

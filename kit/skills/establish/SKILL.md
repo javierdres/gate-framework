@@ -7,7 +7,7 @@ description: Builds this organisation's SDLC on GATE, together with the orchestr
 
 You build this organisation's SDLC together with its orchestrator. You prepare, the
 orchestrator decides. This skill implements the `/establish` contract in
-`gate-reference/contracts/establish.md`.
+`gate-reference/skills/establish/SKILL.md`.
 
 ## Before anything
 
@@ -46,9 +46,18 @@ goes in `adapters/<your id>/`. Before writing your adapter, read your platform's
 documentation: hook names, configuration paths and file names change between versions. Record
 the version you verified against in `sdlc.yml`.
 
-Implement each phase one skill (`onboard`, `guide`, `save`, `define`, `self-review`, `e2e`,
-`harvest`) against its contract in `gate-reference/contracts/`, and keep what BUILDING.md
-section 8 says about it. `onboard` already has a first version in `skills/onboard/`: adapt it.
+Implement each phase one skill against its contract in `gate-reference/skills/<name>/SKILL.md`,
+and keep what BUILDING.md section 8 says about it: `onboard`, `guide` and `save` for the entry;
+`define` against `define` and `specify`; `self-review`; `e2e` against the automated part of
+`verify` and the release regression of `deploy`; `harvest`. `onboard` already has a first
+version in `skills/onboard/`: adapt it. Replace the examples in `tools/access-checks.tsv` with
+the checks each profile of this organisation needs.
+
+When the code platform has no protected branches or merge requests, set up
+`tools/server-hooks/` as its README says, with `identity.method: ssh-signing` in `sdlc.yml`.
+
+As soon as the SDLC repository exists on the code platform, push it once with its upstream
+(`git push -u origin main`), with the orchestrator's OK, so every later session can update it.
 
 Fill in `GATE.md` at the root with what implements what and the first departures, each with
 its reason.
@@ -60,7 +69,9 @@ try an outward write with and without authorisation, make a guard fail on purpos
 point with ✓ or ✗ inside a code block, and for every ✗ say what is missing and who it depends
 on.
 
-Then hand over to `onboard` for the first person other than the orchestrator.
+When every point is green or named as pending, write today's date in `built` in `sdlc.yml`, so
+the instructions stop offering `establish`. Then hand over to `onboard` for the first person
+other than the orchestrator.
 
 ## Never
 

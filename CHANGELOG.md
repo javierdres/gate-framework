@@ -3,6 +3,52 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-10-20 · Everything the simulation found, fixed
+
+A second test built the SDLC of an invented health software company from scratch with GATE
+alone, and used it across the whole cycle. The method held and the SDLC added real value, but
+the test found 33 problems in the kit and the documents. This release fixes all of them.
+
+**The permissions guard.** Rewritten. It judges every segment of a chained command, always asks
+for pushes to the default branch and for forced, mirrored, pruning, deleting and all-branch
+pushes, sees implicit API writes, and can no longer fail open: an empty input, a broken input or
+a malformed option all end in asking. It ships with tests that check the reason as well as the
+decision.
+
+**The catalog.** Moved from strings inside `bootstrap.py` to real files in `kit/catalog/`, with a
+shared parser. The validator now rejects an empty origin, unknown scopes, a severity that does
+not match its folder, unknown statuses, invalid dates and a hard rule without exceptions, and
+accepts multi-line lists and quoted values. The generator strips quotes and counts by folder.
+`catalog.json` is generated locally and ignored, so two change requests never conflict on it. The
+rule template passes its own validator. Tests cover both directions.
+
+**The session start guard.** It now detects a missing or outdated installation, reports a missing
+upstream instead of failing to pull, identifies the person by platform account, SSH signing key
+or declared email, hands over the profiles enabled for them, runs the access check, and finds the
+open items of the log in any language through a marker.
+
+**Identity and platforms without protection.** An SSH signing key listed in the SDLC is now a
+verifiable identity. `kit/tools/server-hooks/update` gives a plain git server what a code
+platform would: no rewrites of the main branch, signed commits, and merges reviewed by someone
+other than their author, lifted only during formulation.
+
+**Missing pieces.** Contracts for `guide` and `save`; `tools/check-access.sh` with its
+per-profile checks; a ticket template that carries the dossier in phase one; a copy of GATE in
+`gate-reference/` with its own paths, so no link inside it breaks; `built` in `sdlc.yml`, so the
+instructions stop offering `establish` once the SDLC is verified; the push with upstream as a
+build step.
+
+**Clarified rules.** "What the change introduced" now has a border: the lines it adds or
+modifies, including an old problem on a line it modifies, and a private channel to security for
+something serious seen in passing. Harvest has two primary and two secondary sources, and in
+phase one the person who closes a review runs it. Incidents close with a postmortem even before
+`/operate` and `/postmortem` exist. Machine keys stay in English. Templates name roles, never
+people.
+
+**The installer and the adapter.** The adapter backs up a settings file only when it changes,
+quotes every path, and the installer stamps the version it installed. The Claude Code adapter
+was verified in a real session on Claude Code 2.1.304.
+
 ## 2026-10-20 · /establish works from the first minute
 
 The previous release told the orchestrator to scaffold the SDLC and run `/establish`, but a

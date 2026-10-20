@@ -138,6 +138,11 @@ The fix itself goes through path B, because a fix is a change.
 When the incident closes, `/postmortem` rebuilds the timeline **from the sources**, not from
 the memory of whoever was on call, and separates the root cause from the contributing factors.
 
+Before an organisation has `/operate` and `/postmortem`, which come in its second phase, the
+path is the same by hand: diagnose from the source of truth, filtered by environment, and close
+with a postmortem written from the template, kept next to the affected product, with its root
+cause handed to `/harvest`.
+
 ### What you get
 
 A diagnosis backed by evidence, a postmortem with a traceable timeline, and the root cause fed

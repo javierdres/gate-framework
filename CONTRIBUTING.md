@@ -44,8 +44,14 @@ Run the validator. It checks the contracts are complete and the trigger chain cl
 python3 bin/validate.py
 ```
 
-If you touched `kit/` or `bin/bootstrap.py`, scaffold a throwaway SDLC and check that its
-catalog validates and that its installer runs twice without duplicating anything.
+If you touched `kit/` or `bin/bootstrap.py`, run the kit's tests, then scaffold a throwaway SDLC
+and check that its catalog validates and that its installer runs twice without duplicating
+anything.
+
+```
+python3 kit/tools/guards/tests/test_permissions.py
+python3 kit/catalog/tests/test_catalog.py
+```
 
 ```
 python3 bin/bootstrap.py sdlc /tmp/sdlc-test --assistant claude-code --org test

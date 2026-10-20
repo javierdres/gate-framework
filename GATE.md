@@ -150,7 +150,7 @@ as everywhere else: the assistant prepares, the orchestrator decides.
    nobody knows is marked "to be defined" and never invented. It closes with a summary the
    orchestrator confirms.
 2. **The layers, in order.** Skeleton, governance and plan, method, empty catalog, products,
-   persistent instructions, guards and scripts, entry skills, cycle skills, adapter. Each layer
+   persistent instructions, guards and scripts, adapter, entry skills, cycle skills. Each layer
    is shown before the next starts, and nothing reaches a shared system without the
    orchestrator's approval.
 3. **The verification.** A fixed checklist run at the end. Each point is reported as passed or
@@ -198,6 +198,12 @@ everyone else, and each custodian starts approving their own scope.
 installation, profile, access and a short live demonstration on their own data. It offers only
 the profiles enabled for that person's verified identity, sets up each access one at a time
 with the least privilege that works, and never asks for or accepts a credential in the chat.
+
+Identity comes from the strongest source the organisation has. An account on the code platform
+or the tracker is the usual one. Without platform accounts, an SSH signing key listed in the
+SDLC works, and a server-side hook can then require every commit to be signed by it. A name a
+person merely declares is the last resort, and the SDLC says so: the profiles then guide, and
+the real control is whatever the platform enforces.
 
 A person who does not work in the repository, product most often, gets in through a chat client
 with connectors and a read-only access of their own. The SDLC adapts the entry to the role.
@@ -275,6 +281,11 @@ flowchart LR
 
 Nothing on that line is rewritten. Each stage adds and none re-asks. That is the point: context
 stops being rebuilt at every handover.
+
+An organisation that has not adopted `/init` yet, which is the usual case in its first phase,
+lets the ticket carry the dossier: each stage adds its section to the ticket, and the ticket
+template already has them. When `/init` arrives, the content moves to its own dossier and the
+ticket links to it.
 
 The dossier is also the audit record. It answers what was asked for, which standard was
 applied, who approved each step, and on what evidence.
@@ -388,7 +399,7 @@ A requirement that collides with a rule in force is caught before the first line
 
 ## 6. The skills, named
 
-Two foundation skills, fourteen cycle skills and two cross-cutting ones. The names are GATE's
+Three foundation skills, one support skill, fourteen cycle skills and two cross-cutting ones. The names are GATE's
 proposal; what is not negotiable is each one's contract: who triggers it, what it takes in,
 what it delivers, and where it stops to ask.
 
@@ -424,6 +435,8 @@ someone decides.
 |---|---|---|---|---|
 | `/establish` | Foundation | **Orchestrator** | The organisation's SDLC, built and verified on the chosen assistant | The SDLC repository |
 | `/onboard` | Foundation | **Person**, or `/establish` for the first one | A person ready to work: profile, access verified, a first demonstration | Nothing shared |
+| `/guide` | Foundation | **Person**, or `/onboard` at the welcome | What the SDLC does for that profile, and what the person can ask for today | Nothing |
+| `/save` | Support | **Person** | Something worth keeping, put where whoever looks for it will find it | The SDLC repository, by change request |
 | `/init` | 0 | **Person** | Dossier opened and classified by type of work | Ticket |
 | `/define` | 1 | `/init` | Problem, context, data classification | Ticket |
 | `/specify` | 2 | `/define` | Acceptance and compliance criteria | Ticket |
@@ -837,8 +850,13 @@ criteria from stage 2. It runs the automated flows of the use cases the change t
 checks that the cases the ticket added are in the product's catalog and automated. And it
 drafts the change proposal and the functional verification script.
 
-It reviews **what the change introduced**, not the system it lands on. Whatever was already
-there is not a finding of this change, neither as a finding nor as a pending item.
+It reviews **what the change introduced**, not the system it lands on: the lines the change adds
+or modifies. A problem that was already there counts when the change modifies the very line
+that carries it, because the change is shipping it again; on a line the change does not touch,
+it is not a finding of this change, neither as a finding nor as a pending item. The one
+exception is something that cannot wait, such as a secret or exposed personal data seen in
+passing: it goes privately to the security custodian, outside the review, and never into the
+change's thread.
 
 **Gate.** The author approves every output into a shared system.
 
@@ -945,6 +963,13 @@ dashboard number. It drafts the postmortem with the timeline rebuilt from the so
 from the memory of whoever was on call. And it prepares the recovery drill script, comparing
 the real result against the committed window.
 
+#### Before `/operate` and `/postmortem` exist
+
+An organisation in its first phase still closes every incident with a postmortem: written from
+the template, with the timeline rebuilt from the sources, kept next to the product it affected,
+and with its root cause handed to `/harvest`. The skills make it faster; the obligation does not
+wait for them.
+
 #### Securing operations
 
 Five conditions. None is exotic and almost none is met in full.
@@ -988,8 +1013,16 @@ a root cause, and is lost just as easily.
 
 ### Stage 12 · Learning
 
-Make what was learned outlive the conversation or the shift where it appeared. **Two sources,
-one destination.**
+Make what was learned outlive the conversation or the shift where it appeared. **Two primary
+sources, two secondary ones, one destination.** The primary sources are the resolved threads of
+a review and the root cause of an incident. The secondary ones are a pre-review finding that no
+rule covers and a correction made during a session; they are raised only if the person chooses
+to, and a pre-review, being private, contributes its pattern and never its record.
+
+`/harvest` runs on its own when a review closes, when a postmortem closes and when a pre-review
+leaves something without a rule. Where review happens outside the assistant, as it usually does
+before `/review` is adopted, the person who closes the review runs it, and the SDLC's
+instructions remind them.
 
 ```mermaid
 flowchart TD
@@ -1157,7 +1190,7 @@ date. Until they are met, the organisation has a project in construction, not an
   expiry, stored on the person's machine with restricted permissions. Never in a repository and
   never in a chat. A team token destroys the traceability of who approved what.
 - An identity the SDLC can verify a person against: their account on the code platform or the
-  tracker, not the name they type.
+  tracker, or an SSH signing key listed in the SDLC, never the name they type.
 - For the roles that build and review, a local copy of every repository the cycle touches,
   including the organisation's SDLC. Roles that do not work in the repository get in through
   their own tools, with a read-only access of their own.
@@ -1165,6 +1198,9 @@ date. Until they are met, the organisation has a project in construction, not an
 - A low-friction place to record false positives, outside the rule approval process. If
   recording a false positive cost an approval, nobody would record one.
 - A branch convention that links to the ticket, so traceability resolves without asking.
+- A main branch nobody rewrites and nothing reaches without another person's review. Code
+  platforms give it with protected branches and mandatory approvals; on a plain git server, a
+  server-side hook that requires signed commits and a reviewed merge does the same.
 - A correlation id propagated end to end, and a declared retention period.
 - A place for the dossier to live, readable by people and by machine.
 
@@ -1242,6 +1278,9 @@ already answered, and the chain breaks without anyone noticing.
 
 **The formulation with no exit.** The orchestrator keeps approving everything for good, and the
 SDLC becomes one person's project with a team's name on it.
+
+**Machine keys translated.** The keys of the formats the guards and validators read stay in
+English whatever language the documents use. Translating them makes a check fail in silence.
 
 **The SDLC tied to one assistant.** Instructions, skills and guards written in one vendor's
 format and nowhere else. Changing assistant means rebuilding the house instead of swapping an

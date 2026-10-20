@@ -3,7 +3,7 @@ skill: self-review
 stage: 6
 name: Pre-review
 triggered_by: [build]
-triggers: [verify]
+triggers: [verify, harvest]
 gate: author gate
 gate_owner: The builder, over their own work
 writes_outside: [change proposal, QA script]
@@ -36,7 +36,7 @@ A branch ready. Access to every repository the change touches.
 
 ## What it does NOT do
 
-- Never publishes findings to any shared system.
+- Never publishes findings to any shared system. The change proposal and the verification script are published only on the author's approval.
 - Does not merge.
 - Does not replace human review.
 
@@ -48,4 +48,4 @@ A branch ready. Access to every repository the change touches.
 
 **Reads:** The implemented change.
 
-**Writes:** Findings resolved, a linked change proposal, a published verification script.
+**Writes:** Findings resolved, and, on the author's approval, a change proposal and a verification script.

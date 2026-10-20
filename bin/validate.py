@@ -82,9 +82,9 @@ def main():
 
         stage = front.get("stage", "")
         cross = stage == "cross-cutting"
-        foundation = stage == "foundation"
+        foundation = stage in ("foundation", "support")
         if not cross and not foundation and not (stage.isdigit() and 0 <= int(stage) <= 12):
-            error(where, "invalid stage: '%s' (0 to 12, 'foundation' or 'cross-cutting')" % stage)
+            error(where, "invalid stage: '%s' (0 to 12, 'foundation', 'support' or 'cross-cutting')" % stage)
         if front.get("gate") != "none" and front.get("gate_owner", "—") == "—":
             error(where, "declares a gate but no owner for it")
         if front.get("gate") == "none" and front.get("gate_owner", "—") != "—":
@@ -129,7 +129,7 @@ def main():
     human = [n for n, f in fronts.items()
              if "person" in as_list(f.get("triggered_by", ""))]
     print("    Human invocation: %s" % ", ".join("/%s" % h for h in sorted(human)))
-    order = {"foundation": -1}
+    order = {"foundation": -1, "support": 98}
     gates = [(int(f["stage"]) if f["stage"].isdigit() else order.get(f["stage"], 99),
               n, f["gate"], f["gate_owner"])
              for n, f in fronts.items() if f.get("gate") != "none"]
