@@ -622,6 +622,43 @@ def scaffold_sdlc(target, assistant, org):
         io.open(path, "w", encoding="utf-8").write(content)
         written += 1
 
+    # The reference travels with the SDLC, so /establish works offline and against the exact
+    # version the SDLC was scaffolded from.
+    reference = {
+        "gate-reference/GATE.md": "GATE.md",
+        "gate-reference/BUILDING.md": "BUILDING.md",
+        "gate-reference/BUILDING.es.md": "BUILDING.es.md",
+    }
+    for name in sorted(os.listdir(os.path.join(HERE, "skills"))):
+        contract = os.path.join("skills", name, "SKILL.md")
+        if os.path.exists(os.path.join(HERE, contract)):
+            reference["gate-reference/contracts/%s.md" % name] = contract
+    for dst, src in reference.items():
+        path = os.path.join(target, dst)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        io.open(path, "wb").write(io.open(os.path.join(HERE, src), "rb").read())
+        written += 1
+    io.open(os.path.join(target, "gate-reference", "README.md"), "w", encoding="utf-8").write(
+        "# GATE reference\n\nA copy of GATE at commit `%s`, the version this SDLC was "
+        "scaffolded from: the framework, the build guide and the skill contracts. Read only; "
+        "moving to a newer GATE replaces this folder and updates `GATE.md` at the root.\n" % version)
+    written += 1
+
+    if assistant == "claude-code":
+        # Claude Code finds skills in .claude/skills/ of the folder it is opened in. Linking them
+        # here makes /establish and /onboard available before anything is installed.
+        io.open(os.path.join(target, "CLAUDE.md"), "w", encoding="utf-8").write("@AGENTS.md\n")
+        os.makedirs(os.path.join(target, ".claude", "skills"), exist_ok=True)
+        for name in ("establish", "onboard"):
+            link = os.path.join(target, ".claude", "skills", name)
+            try:
+                os.symlink(os.path.join("..", "..", "skills", name), link)
+            except OSError:
+                src = os.path.join(target, "skills", name, "SKILL.md")
+                os.makedirs(link, exist_ok=True)
+                io.open(os.path.join(link, "SKILL.md"), "wb").write(io.open(src, "rb").read())
+        written += 2
+
     scaffold_catalog(os.path.join(target, "catalog"), quiet=True)
     io.open(os.path.join(target, "catalog", "scopes.md"), "w", encoding="utf-8").write(SDLC_SCOPES)
     written += len(CATALOG_FILES) + 1
@@ -630,12 +667,15 @@ def scaffold_sdlc(target, assistant, org):
           % (org, target, written, version, assistant))
     print()
     print("    Next, with your assistant open inside %s:" % target)
-    print("      run /establish, which interviews you and fills in every layer")
-    print("      following BUILDING.md, then runs the final verification.")
-    if assistant not in ("claude-code",):
-        print()
-        print("    There is no automatic adapter for %s yet. /establish writes it" % assistant)
-        print("    from adapters/README.md and your assistant's current documentation.")
+    if assistant == "claude-code":
+        print("      run /establish. It interviews you, builds every layer following")
+        print("      gate-reference/BUILDING.md and closes with the final verification.")
+    else:
+        print("      ask it to read AGENTS.md and run the establish skill in")
+        print("      skills/establish/SKILL.md. If your assistant loads skills from")
+        print("      another folder, point it there first; adapters/README.md says how.")
+        print("      /establish then writes the adapter for %s from its current" % assistant)
+        print("      documentation, and the final verification proves it works.")
     return 0
 
 

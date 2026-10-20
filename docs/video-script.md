@@ -3,6 +3,10 @@
 The video (`nunez.info/init`, 91 seconds) has no audio. This is the text to record over it,
 with the timing of each scene.
 
+The current video predates section 2 of GATE.md, the orchestrator and `/establish`. The scene
+"The foundation" below goes between "The thesis" and "The journey" the next time the video is
+recorded; until then the video covers the cycle only.
+
 A comfortable pace is about 2.5 words per second. Each block is measured to sit inside its
 scene with room to spare, leaving silence at the end.
 
@@ -31,6 +35,13 @@ scene with room to spare, leaving silence at the end.
 > Assistance that stops where judgement begins.
 >
 > GATE adds no capability to the assistant. It orders the ones it already has.
+
+**New scene, about 0:10 · The foundation**
+
+> GATE is not the SDLC a company runs. It is what a company builds its own SDLC from.
+>
+> An orchestrator chooses the AI assistant, answers an interview, and GATE builds the SDLC with
+> them, layer by layer, until a verification comes out green.
 
 **0:28 – 0:42 · The journey**
 

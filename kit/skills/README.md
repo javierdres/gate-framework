@@ -6,7 +6,8 @@ instructions. Each one implements a contract from GATE's `skills/`.
 
 | Skill | Implements | Phase | Status |
 | --- | --- | --- | --- |
-| `onboard` | `/onboard` | Entry | pending |
+| `establish` | `/establish` | Foundation | first version, from GATE |
+| `onboard` | `/onboard` | Entry | first version, from GATE; adapt it |
 | `guide` | Explains the SDLC to each profile | Entry | pending |
 | `save` | Keeps something where it belongs | Entry | pending |
 | `define` | `/define` and `/specify` | 1 | pending |

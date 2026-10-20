@@ -38,9 +38,10 @@ adapter. Open your assistant inside it and run `/establish`: it interviews you, 
 layer following [BUILDING.md](BUILDING.md), and closes with a verification you can read point
 by point.
 
-`--assistant` takes `claude-code`, `gemini-cli`, `kiro`, `codex` or `other`. Claude Code has an
-automatic adapter; for the rest, `/establish` writes it from your assistant's current
-documentation.
+`--assistant` takes `claude-code`, `gemini-cli`, `kiro`, `codex` or `other`. Claude Code has a
+verified adapter and finds `/establish` as soon as it opens the folder. For the rest, ask the
+assistant to read `AGENTS.md` and run `skills/establish/SKILL.md`; it writes its own adapter
+from its platform's current documentation. Those adapters are not verified yet.
 
 ## Where to start reading
 

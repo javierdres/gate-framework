@@ -3,6 +3,19 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-10-20 · /establish works from the first minute
+
+The previous release told the orchestrator to scaffold the SDLC and run `/establish`, but a
+fresh scaffold had no such skill, nothing registered where an assistant looks for skills, and
+no copy of the guide the skill follows. The first step failed.
+
+`bootstrap.py sdlc` now writes executable `establish` and `onboard` skills in the open
+`SKILL.md` format, copies GATE, BUILDING and every contract into `gate-reference/`, and for
+Claude Code registers both skills inside the SDLC itself. `AGENTS.md` tells any other assistant
+to offer `establish` while the SDLC is not built. The adapters for assistants other than Claude
+Code are now marked as unverified starting points, and the video script carries the scene the
+current video lacks.
+
 ## 2026-10-20 · The foundation an orchestrator builds from
 
 GATE was put into practice: a real organisation built its SDLC on it and ran it for six weeks.

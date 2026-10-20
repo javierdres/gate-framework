@@ -28,7 +28,8 @@ names change between versions. Then:
 | Guards | Its hooks before a tool runs and at session start, and how it reads a decision. `permissions.py check` answers in three formats: `claude` (structured), `json` (`{"decision", "reason"}`) and `exit` (0 lets through, 2 blocks with the reason on stderr) |
 | Connectors | How it declares Model Context Protocol servers |
 
-Starting points, to be checked against the version in use:
+Starting points, to be checked against the version in use. Only Claude Code has been verified
+end to end; the others come from each platform's public documentation:
 
 | Assistant | Instructions | Skills | Guards |
 | --- | --- | --- | --- |

@@ -129,6 +129,10 @@ anota esa versión en `sdlc.yml`.
 | Codex CLI | Lee `AGENTS.md` directamente | Su carpeta de skills, en el mismo formato | Su configuración de hooks, si la versión instalada la soporta |
 | Cualquier otro | El archivo que cargue en cada sesión, apuntando a `AGENTS.md` | Lo que cargue cuando se necesita | Su mecanismo previo a una acción, o el respaldo en la plataforma descrito arriba |
 
+Solo el adaptador de Claude Code está verificado de punta a punta, y lo escribe
+`bin/bootstrap.py`. Las demás filas son puntos de partida sacados de la documentación pública de
+cada plataforma, todavía sin verificar en una instalación real. Si verificas uno, apórtalo.
+
 Quienes no trabajan en una terminal, producto casi siempre, usan un **cliente de chat** con un
 proyecto o espacio de trabajo: las instrucciones de su rol, los archivos de contexto que
 necesita y un conector a la herramienta de tickets. El SDLC guarda ese paquete en
@@ -226,6 +230,7 @@ construir nada.
 │   ├── GOVERNANCE.md         roles, quién aprueba qué, quién ocupa cada rol
 │   ├── CODEOWNERS            el gobierno traducido a la plataforma de código
 │   ├── GATE.md               la versión de GATE que implementa y dónde se aparta
+│   ├── gate-reference/       copia de solo lectura de GATE: framework, esta guía, contratos
 │   ├── method/               ciclo, perfiles, permisos, bitácora, inicio de sesión,
 │   │   ├── flows/            estilo de escritura, un diagrama por perfil
 │   │   ├── chat-client/      el paquete para los roles que trabajan fuera de la terminal
@@ -456,8 +461,9 @@ y la biblioteca estándar de Python, sin dependencias.
 2. El esqueleto del repositorio, con `personal/` ignorado por el control de versiones. `python3
    bin/bootstrap.py sdlc <ruta> --assistant <id> --org <nombre corto>` lo escribe: la
    estructura, los archivos base desde las plantillas, el catálogo vacío con su validador, los
-   tres guardias, el instalador y, para Claude Code, su adaptador. `/establish` completa y
-   escribe el resto.
+   tres guardias, el instalador, una copia de GATE en `gate-reference/`, primeras versiones de
+   las skills `establish` y `onboard` y, para Claude Code, su adaptador con las dos skills ya
+   registradas. `/establish` completa y escribe el resto.
 3. `sdlc.yml`, `GOVERNANCE.md`, `CODEOWNERS` y `PLAN.md`, a partir de la entrevista.
 4. El método: README, perfiles, permisos, bitácora, estilo, inicio de sesión, flujos, plantillas,
    y el paquete del cliente de chat si algún rol lo necesita.

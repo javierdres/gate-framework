@@ -124,6 +124,10 @@ version in `sdlc.yml`.
 | Codex CLI | Reads `AGENTS.md` natively | Its skills folder, in the same format | Its hook configuration, where the installed version supports it |
 | Any other | Whatever file it loads every session, pointing to `AGENTS.md` | Whatever it loads on demand | Its pre-action mechanism, or the platform fallback above |
 
+Only the Claude Code adapter has been verified end to end, and `bin/bootstrap.py` writes it.
+The other rows are starting points taken from each platform's public documentation, not yet
+verified on a real installation. If you verify one, contribute it.
+
 People who do not work in a terminal, product most often, use a **chat client** with a project
 or workspace: the instructions for their role, the context files they need and a connector to
 the tracker. The SDLC keeps that package in `method/chat-client/` and says what to copy where.
@@ -218,6 +222,7 @@ can just confirm it. Close with a summary to confirm before building anything.
 │   ├── GOVERNANCE.md         roles, who approves what, who holds each role
 │   ├── CODEOWNERS            governance translated to the code platform
 │   ├── GATE.md               the GATE version implemented and where this SDLC departs
+│   ├── gate-reference/       read-only copy of GATE: framework, this guide, contracts
 │   ├── method/               cycle, profiles, permissions, log, session start,
 │   │   ├── flows/            writing style, one diagram per profile
 │   │   ├── chat-client/      the package for roles that work outside the terminal
@@ -446,7 +451,9 @@ standard library, with no dependencies.
 2. The skeleton of the repository, with `personal/` ignored by version control. `python3
    bin/bootstrap.py sdlc <path> --assistant <id> --org <short name>` writes it: the structure,
    the base files from the templates, the empty catalog with its validator, the three guards,
-   the installer and, for Claude Code, its adapter. `/establish` fills in and writes the rest.
+   the installer, a copy of GATE in `gate-reference/`, first versions of the `establish` and
+   `onboard` skills and, for Claude Code, its adapter with both skills already registered.
+   `/establish` fills in and writes the rest.
 3. `sdlc.yml`, `GOVERNANCE.md`, `CODEOWNERS` and `PLAN.md`, from the interview.
 4. The method: README, profiles, permissions, log, style, session start, flows, templates, and
    the chat-client package if a role needs it.

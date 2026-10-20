@@ -39,8 +39,10 @@ entrevista, construye cada capa siguiendo [BUILDING.es.md](BUILDING.es.md) y cie
 verificación que puedes leer punto por punto.
 
 `--assistant` acepta `claude-code`, `gemini-cli`, `kiro`, `codex` u `other`. Claude Code tiene
-adaptador automático; para los demás, `/establish` lo escribe a partir de la documentación
-actual de tu asistente.
+un adaptador verificado y encuentra `/establish` apenas abre la carpeta. Para los demás, pídele
+al asistente que lea `AGENTS.md` y corra `skills/establish/SKILL.md`; él escribe su propio
+adaptador a partir de la documentación actual de su plataforma. Esos adaptadores todavía no
+están verificados.
 
 ## Por dónde empezar a leer
 
