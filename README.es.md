@@ -59,12 +59,6 @@ existente y cómo resuelvo una incidencia.
 (el orquestador y cómo se construye el SDLC), la 3 (la puerta de entrada y el expediente) y la 7
 (los actores, y la línea entre lo que hace la IA y lo que hacen las personas).
 
-## En 95 segundos
-
-[docs/GATE.webm](docs/GATE.webm) recorre el ciclo: el problema, los cinco momentos de invocación
-humana, la línea entre lo que hace la IA y lo que hacen las personas, y el lazo de aprendizaje.
-Sin audio; el guion está en [docs/video-script.md](docs/video-script.md).
-
 ## Qué contiene
 
 ```
@@ -85,9 +79,7 @@ Sin audio; el guion está en [docs/video-script.md](docs/video-script.md).
 │   ├── check_config.py Reporta qué le falta al .gate/config.yml de un proyecto
 │   └── build_pdf.py    Regenera el PDF desde el Markdown
 └── docs/
-    ├── GATE.pdf        El documento en PDF
-    ├── GATE.webm       Explicativo de 95 segundos, sin audio
-    └── video-script.md Guion de narración de ese video
+    └── GATE.pdf        El documento en PDF
 ```
 
 ## Qué no contiene, a propósito

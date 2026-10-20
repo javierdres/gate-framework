@@ -13,8 +13,8 @@ no copy of the guide the skill follows. The first step failed.
 `SKILL.md` format, copies GATE, BUILDING and every contract into `gate-reference/`, and for
 Claude Code registers both skills inside the SDLC itself. `AGENTS.md` tells any other assistant
 to offer `establish` while the SDLC is not built. The adapters for assistants other than Claude
-Code are now marked as unverified starting points, and the video script carries the scene the
-current video lacks.
+Code are now marked as unverified starting points. The explainer video, its script and its
+poster are gone: they described an older GATE and added nothing the documents do not say.
 
 ## 2026-10-20 · The foundation an orchestrator builds from
 

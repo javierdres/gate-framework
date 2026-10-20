@@ -58,12 +58,6 @@ incident.
 orchestrator and how the SDLC gets built), section 3 (the single entry point and the dossier)
 and section 7 (the actors, and the line between what the AI does and what people do).
 
-## In 95 seconds
-
-[docs/GATE.webm](docs/GATE.webm) walks through the cycle: the problem, the five moments of
-human invocation, the line between what the AI does and what people do, and the learning loop.
-No audio; the narration script is in [docs/video-script.md](docs/video-script.md).
-
 ## What is here
 
 ```
@@ -84,9 +78,7 @@ No audio; the narration script is in [docs/video-script.md](docs/video-script.md
 │   ├── check_config.py Reports what a project's .gate/config.yml is missing
 │   └── build_pdf.py    Regenerates the PDF from the Markdown
 └── docs/
-    ├── GATE.pdf        The document as PDF
-    ├── GATE.webm       95-second explainer, no audio
-    └── video-script.md Narration script for that video
+    └── GATE.pdf        The document as PDF
 ```
 
 ## What is deliberately not here
