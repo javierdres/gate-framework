@@ -5,10 +5,12 @@
 **An AI-assisted SDLC framework.** A software development life cycle that defines the stages,
 their inputs and outputs, the human control points and the actors of each one.
 
-Technical reference document, agnostic of company, domain, language and platform.
+Technical reference document, agnostic of company, domain, language, platform and AI assistant.
 
-It covers the whole journey: from someone raising a need to the system running in production,
-with the organisation having learned something from doing it.
+It is the foundation an orchestrator uses to build their own organisation's SDLC, with the AI
+assistant the organisation chooses. It covers the whole journey: from building that SDLC, to
+someone raising a need, to the system running in production, with the organisation having
+learned something from doing it.
 
 Assistance that stops where judgement begins.
 
@@ -34,6 +36,20 @@ mechanisms that turn every decision and every incident into a reusable standard.
 The gain does not come from the assistant doing more. It comes from what it does sticking,
 chaining into the next step, and not depending on someone remembering.
 
+### A foundation for building your own SDLC
+
+GATE is not the SDLC an organisation runs. It is what an organisation builds its own SDLC
+from.
+
+The framework defines the stages, the skill contracts, the gates and the line between the
+machine and the people, and it is the same for everybody. Each organisation's SDLC is a project
+of its own: a repository holding its method, its standards catalog, the context of its
+products, its skill implementations, its governance and the way each person gets in. GATE
+explains; the organisation's SDLC applies.
+
+That project has an owner from the first day, the **orchestrator**, and it can be built with
+whichever AI assistant the organisation chooses. Section 2 says how.
+
 ### What kind of framework this is, and what it does not replace
 
 GATE is an **SDLC**: it describes the life cycle of a software product, from the need to
@@ -56,7 +72,151 @@ alternatives to them.
 
 ---
 
-## 2. Stage 0: the single entry point
+## 2. Before stage 0: the orchestrator builds the SDLC
+
+Every other section of this document assumes an SDLC that already exists. This one is about
+how it comes to exist, and it is where any organisation starts.
+
+```mermaid
+flowchart TD
+    O(["ORCHESTRATOR<br/>chooses the assistant<br/>and answers the interview"]) --> E["<b>/establish</b><br/>interview · confirmed summary"]
+    E --> L["Builds the SDLC layer by layer<br/>each layer shown before the next"]
+    L --> V{"Final verification<br/>every point green<br/>or named as pending"}
+    V --> F["<b>Formulation</b><br/>the orchestrator approves<br/>exit criteria written"]
+    F --> N["<b>/onboard</b><br/>each person gets in<br/>with their own access"]
+    N --> X{"Exit criteria met?"}
+    X -->|yes| R(["<b>Operation</b><br/>custodians approve<br/>incompatibilities hold for all"])
+    X -->|"no, by the review date"| Q["Review the approach<br/>before building more"]
+
+    style R fill:#d7f0e9,stroke:#00b49c
+```
+
+### The orchestrator
+
+The first role, named before anything else is built. The orchestrator builds the
+organisation's SDLC together with the assistant, chooses which assistant the organisation
+uses, assigns roles and profiles, and decides when the SDLC is ready to run.
+
+The profile is short: authority in the organisation to assign roles, and enough technical
+judgement to reject a well-written proposal from the assistant. In a small company it is
+usually whoever leads engineering; in a consultancy, whoever leads the engagement. They do not
+need to know every tool in advance. They need to answer questions about the organisation, and
+decide.
+
+### The assistant is the orchestrator's choice
+
+GATE does not depend on a particular AI assistant. Any assistant that meets these conditions
+can carry an SDLC built on it:
+
+| Capability | What the SDLC uses it for | If the assistant lacks it |
+|---|---|---|
+| **Persistent instructions** loaded in every session | The rules that always apply and the map of the repository | Not viable: without it every session starts from zero |
+| **On-demand skills** | One per skill contract in section 6 | Instruction files per task, invoked by name. Worse, still viable |
+| **Repository and shell access** | Reading the code, running checks and tests | Not viable for the building roles. Product can still work through a chat client with connectors |
+| **Hooks** before an action and at session start | Enforcing permissions, loading context, keeping the log | The platform carries the load: read-only credentials for the assistant, protected branches, and writes through a script that asks. Weaker, and the SDLC must say so |
+| **Connectors** to the tracker and the observability platform | Reading tickets and production data | Small API clients in the SDLC repository, reading each person's own credential |
+
+The SDLC is written once, in neutral formats, and a thin adapter wires it to the assistant
+that was chosen:
+
+- **Instructions** live in `AGENTS.md`, the convention most assistants read. Where an assistant
+  expects another file name, the adapter is a one-line file that points to it.
+- **Skills** follow the open `SKILL.md` format: a folder per skill, a name, a description that
+  says when to use it, and plain instructions.
+- **Guards** are plain scripts that read the intended action as JSON on standard input and
+  answer allow, ask or deny. Most assistants with hooks already run scripts that way; the
+  adapter only registers them on the right events.
+- **Connectors** use the Model Context Protocol where the assistant supports it, and the
+  repository's API clients where it does not.
+
+An organisation can run more than one assistant over the same SDLC. Each one gets its adapter,
+while the method, the catalog and the products stay single.
+
+The choice is recorded in the SDLC's configuration and in its governance, with the version it
+was verified against. Changing assistant later is a decision like any other: the orchestrator
+takes it, the adapter is rebuilt and the final verification runs again.
+
+### How the SDLC gets built
+
+`/establish` is the first skill and the only one that runs before stage 0. The same line holds
+as everywhere else: the assistant prepares, the orchestrator decides.
+
+1. **The interview.** Before writing a single file the assistant asks, a few questions at a
+   time: the organisation and what it builds, the assistant it will run on, who holds each
+   role, which tool plays each part (code repository, tracker, production source of truth,
+   pipeline), the products the pilot starts with, the technical layers worth a rule scope, the
+   test environments, the profiles enabled per person, what should work first and by when, and
+   what the organisation has already decided not to do. Every question has a default; what
+   nobody knows is marked "to be defined" and never invented. It closes with a summary the
+   orchestrator confirms.
+2. **The layers, in order.** Skeleton, governance and plan, method, empty catalog, products,
+   persistent instructions, guards and scripts, entry skills, cycle skills, adapter. Each layer
+   is shown before the next starts, and nothing reaches a shared system without the
+   orchestrator's approval.
+3. **The verification.** A fixed checklist run at the end. Each point is reported as passed or
+   failed, and every failure says what is missing and who it depends on.
+
+[BUILDING.md](BUILDING.md) is the complete guide `/establish` follows: the decisions the
+orchestrator takes and their defaults, the assistant adapters, the interview, the repository
+structure, what every base file holds, the guards, the order, the checklist and the questions
+that always come up. It is written so that an orchestrator can build the SDLC by reading it,
+and so that any capable assistant can build it by following it.
+
+### What the organisation's SDLC holds
+
+| Part | What it answers |
+|---|---|
+| Persistent instructions | The rules that always apply, and where everything is |
+| Plan | What is being built now, what comes next, what is out of scope |
+| Governance | The roles, who approves what, who holds each role today |
+| Method | The cycle as this organisation runs it: profiles, permissions, the person's log, session start, templates |
+| Catalog | The rules by scope, each scope with its false-positive record |
+| Products | The context of each product, its business rules, its use cases and their automated flows |
+| Tools | Installer, access checker, guards, API clients and step-by-step access guides |
+| Skills | The implementations of the contracts in section 6, plus the entry skills |
+| Adapters | What wires all of the above to the chosen assistant |
+| Personal | Each person's profile, preferences and log, ignored by version control |
+
+### The formulation phase
+
+While the SDLC is being built, the three incompatibilities in section 7 cannot hold: one
+person proposes, approves and merges. GATE accepts that on two conditions. The phase is
+declared in governance, and its exit is written before it starts.
+
+The exit is observable and has a review date. A reasonable default: a person other than the
+orchestrator installed the SDLC on their own and has their access verified; a product owner
+used it on a real requirement; a builder took one of those without product questions; and a
+rule harvested from real work entered the catalog. If none of that has happened by the review
+date, the approach is reviewed before anything else is built.
+
+From the day formulation ends, the orchestrator is bound by the same incompatibilities as
+everyone else, and each custodian starts approving their own scope.
+
+### Each person's way in
+
+`/onboard` is the second skill outside the cycle, and every person runs it once: requirements,
+installation, profile, access and a short live demonstration on their own data. It offers only
+the profiles enabled for that person's verified identity, sets up each access one at a time
+with the least privilege that works, and never asks for or accepts a credential in the chat.
+
+A person who does not work in the repository, product most often, gets in through a chat client
+with connectors and a read-only access of their own. The SDLC adapts the entry to the role.
+
+### How the SDLC stays tied to GATE
+
+The organisation's SDLC declares the version of GATE it implements, pinned to a commit, and
+keeps a short map of which stage or principle each of its parts implements and where it
+departs from the framework.
+
+The departures are the useful part, because each one is either a local decision or a lesson
+GATE has not learned yet. Lessons travel up the way a rule travels from a project to the
+organisation: proposed as a candidate, with the origin told as a pattern and nothing that
+belongs to the organisation. GATE never links to an organisation's SDLC, which is private by
+nature. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 3. Stage 0: the single entry point
 
 GATE has **one door**. A person raises a need, a request or a new project, and everything
 else chains from there.
@@ -129,7 +289,7 @@ with no owner. The gates are the product, not the obstacle.
 
 ---
 
-## 3. Principles
+## 4. Principles
 
 They apply to every stage. An implementation that breaks one stops being GATE.
 
@@ -137,13 +297,41 @@ They apply to every stage. An implementation that breaks one stops being GATE.
 correlating, drafting, checking. Every consequential decision belongs to a person, and is taken
 on something already written down.
 
-**Nothing runs unattended into shared systems.** Publishing a comment, opening a change,
-writing in a ticket, touching an environment, silencing an alert. All of it is shown first and
-executed on explicit approval, one at a time. Approving one thing does not authorise the rest.
+**Nothing runs unattended into shared systems, and the person decides how far to delegate.**
+Publishing a comment, opening a change, writing in a ticket, touching an environment, silencing
+an alert. By default all of it is shown first and executed on explicit approval. After the
+first approval in a scope, such as one repository or one tracker project, the person may
+authorise that scope for the rest of the session. The assistant can never authorise itself,
+and the authorisation ends with the session. A short list is never delegated, whatever was
+authorised: production, merges, deletions, rewriting history, and anything to do with
+credentials.
+
+**What must hold is enforced by the environment, not by the prompt.** An instruction fades
+over a long session, the same way a person forgets to run a command. Permissions, session start
+and the person's log live in guards the environment executes, and a guard that fails asks
+instead of letting the action through. The hard controls stay on the platform: protected
+branches, mandatory approvals, the pipeline. A skill guides; it does not enforce.
 
 **Verify before asserting.** No claim about how the system works rests on the assistant's
 memory or on documentation that may be stale. It is checked against the code, the data or the
-environment. If it could not be checked, that gets said.
+environment, and against what is actually deployed rather than whatever copy happens to be
+checked out. If it could not be checked, that gets said.
+
+**Roles, not names.** Every document names the role. Names live in a single table, and a
+person is identified by their verified account, never by what they type. When someone rotates,
+one row changes and nothing else.
+
+**Nobody does another person's part.** What depends on someone else is asked of them, in the
+ticket where it lives, and the work carries on with what is one's own. Doing it for them hides
+the dependency, and the next time it fails the same way.
+
+**Write for whoever decides.** An artefact meant for a person is short, plain, and carries
+nothing the reader does not already know. Text that reads like machine output loses its reader
+before it reaches the point.
+
+**One session, one workspace.** Several assistant sessions may work on the same repository at
+once. Each works on its own isolated copy, and re-reads the shared state before claiming that
+something does not exist.
 
 **Every rule shows where it came from.** A standard with no link to the discussion or incident
 that produced it is someone's opinion in the shape of a norm.
@@ -163,11 +351,12 @@ happen.
 
 **The dossier is the only source of context.** What is not in the dossier does not exist for
 the next stage. That forces the context to be written down instead of living in the head of
-whoever was in the meeting.
+whoever was in the meeting. The ticket stays the place where other people look: it links to
+the dossier, and anything that changes a task is written in that task's ticket.
 
 ---
 
-## 4. The cycle
+## 5. The cycle
 
 ```mermaid
 flowchart LR
@@ -197,11 +386,14 @@ A requirement that collides with a rule in force is caught before the first line
 
 ---
 
-## 5. The skills, named
+## 6. The skills, named
 
-Fourteen cycle skills and two cross-cutting ones. The names are GATE's proposal; what is not
-negotiable is each one's contract: who triggers it, what it takes in, what it delivers, and
-where it stops to ask.
+Two foundation skills, fourteen cycle skills and two cross-cutting ones. The names are GATE's
+proposal; what is not negotiable is each one's contract: who triggers it, what it takes in,
+what it delivers, and where it stops to ask.
+
+Each contract is independent of the assistant. Implementing it is the organisation's part, in
+the open `SKILL.md` format, with the assistant the orchestrator chose.
 
 ```mermaid
 flowchart TD
@@ -230,16 +422,18 @@ someone decides.
 
 | Skill | Stage | Triggered by | Delivers | Writes outside, on approval |
 |---|---|---|---|---|
+| `/establish` | Foundation | **Orchestrator** | The organisation's SDLC, built and verified on the chosen assistant | The SDLC repository |
+| `/onboard` | Foundation | **Person**, or `/establish` for the first one | A person ready to work: profile, access verified, a first demonstration | Nothing shared |
 | `/init` | 0 | **Person** | Dossier opened and classified by type of work | Ticket |
 | `/define` | 1 | `/init` | Problem, context, data classification | Ticket |
 | `/specify` | 2 | `/define` | Acceptance and compliance criteria | Ticket |
 | `/refine` | 3 | `/specify` | Components, risks with owners, test and observability plans | Subtasks |
 | `/design` | 4 | `/refine` | Contrasted alternatives and a recorded decision | Decision record |
 | `/build` | 5 | **Person** | The change, implemented, instrumented and tested | Repositories |
-| `/self-review` | 6 | `/build` | Private findings, change proposal, QA script | Change and script |
+| `/self-review` | 6 | `/build` | Private findings, affected flows run, change proposal, QA script | Change and script |
 | `/review` | 7 | **Person**, several times | Thread answers and its own findings | Comments, one by one |
-| `/verify` | 8 | **Person**, with the `/self-review` script | Result per criterion | Nothing |
-| `/deploy` | 9 | **Person** | Post-deployment check against the criteria | Production |
+| `/verify` | 8 | **Person**, with the `/self-review` script | Automated flows run and a result per criterion | Nothing |
+| `/deploy` | 9 | **Person** | Full regression before release, post-deployment check against the criteria | Production |
 | `/operate` | 10 | Alert or person | Diagnosis grounded in sources | Alerts and incidents |
 | `/postmortem` | 10 | Incident closure | Timeline and root cause | Document |
 | `/validate-outcome` | 11 | `/deploy`, after the stage 2 window | Outcome against the original problem | Ticket |
@@ -253,6 +447,9 @@ invents them on the fly, and invents them differently every time.
 People start the chain at five points, and only five: when the need is born (`/init`), when
 someone sits down to build (`/build`), when someone reviews (`/review`), when someone tests
 (`/verify`) and when someone deploys (`/deploy`). The framework chains everything else.
+
+Before the cycle there are two more, each run once: when an organisation builds its SDLC
+(`/establish`) and when a person joins it (`/onboard`).
 
 That matters because **mechanisms that depend on a person remembering to invoke them do not
 happen**. The classic symptom is an empty standards catalog next to changes carrying hundreds
@@ -269,7 +466,7 @@ Two capabilities belong to no single stage and several stages consult them:
 
 ---
 
-## 6. The actors
+## 7. The actors
 
 ### The line between the AI and the people
 
@@ -310,12 +507,13 @@ flowchart LR
 The loop between those two boxes is the framework. The machine never crosses into the second
 one, and a person never has to do the first one by hand.
 
-### The eight roles
+### The nine roles
 
 Roles, not job titles. One person can hold several.
 
 | Role | What they clear | Profile |
 |---|---|---|
+| **Orchestrator** | Section 2: builds the SDLC, chooses the assistant, assigns roles and profiles, and decides when formulation ends | Authority to assign roles and judgement to reject the assistant's proposal. Bound by the incompatibilities once formulation ends |
 | **Requester** | Nothing. They raise the need | Knows the problem first hand. Needs no technical profile |
 | **Product owner** | Gates 1, 2 and 11 | Decides what gets built and what does not. Can take being told their hypothesis failed |
 | **Engineering lead** | Gates 3 and 4 | Architecture judgement and memory of the system. Able to reject a well-written proposal |
@@ -350,7 +548,7 @@ without contrast, approved by the person who wrote it, is a decision nobody took
 | 5 · Development | Implements, instruments, writes tests | Directs and corrects | Builder |
 | 6 · Pre-review | Reviews in private, drafts the proposal and QA script | Approves each publication | Builder |
 | 7 · Change review | Answers threads, raises findings, harvests | Confirms each finding before it is published | Reviewer |
-| 8 · Verification | Drafts the script | Runs it and records results | Verifier |
+| 8 · Verification | Runs the automated flows, drafts the script for the rest | Runs the script, reads the results and signs each criterion | Verifier |
 | 9 · Deployment | Compares against criteria, proposes rollback | Authorises every action on production | Operations |
 | 10 · Operations | Diagnoses with evidence, drafts the postmortem | Decides what gets touched and what gets alerted | Operations |
 | 11 · Validation | Measures the outcome against the original problem | Decides to close, iterate or roll back | Product |
@@ -358,7 +556,7 @@ without contrast, approved by the person who wrote it, is a decision nobody took
 
 ### How many people
 
-Thirteen stages and eight roles do not mean thirteen people. Roles concentrate, and the three
+Thirteen stages and nine roles do not mean thirteen people. Roles concentrate, and the three
 incompatibilities are what set the floor.
 
 **Viable minimum: three people.** One in product, and two engineers who alternate: when one
@@ -373,8 +571,8 @@ person asking is not the person approving.
 for approvals. When a product needs more people, split it into two cycles with separate
 dossiers rather than fattening one.
 
-A traditional cycle covering the same ground usually spreads these eight roles across eight or
-ten people, with a context handover at every step. The reduction does not come from anyone
+A traditional cycle covering the same ground usually spreads these roles across eight or ten
+people, with a context handover at every step. The reduction does not come from anyone
 working more: it comes from context travelling in the dossier instead of being rebuilt in
 every handover meeting.
 
@@ -389,7 +587,7 @@ them is not applying GATE: it is automating its own bias, faster than before.
 
 ---
 
-## 7. Scopes: one framework, many contexts
+## 8. Scopes: one framework, many contexts
 
 An organisation rarely has one product. It has products, services, internal tools and the odd
 isolated system that shares nothing with the rest. And a consultancy has several organisations
@@ -398,30 +596,39 @@ at once.
 GATE is the same door for all of them. What changes is not the cycle: it is **where each thing
 lives**.
 
-### The four levels
+### The five levels
 
 ```mermaid
 flowchart TD
     F["<b>THE FRAMEWORK</b><br/>stages · skill contracts · templates<br/>gates · role incompatibilities"]
-    O["<b>THE ORGANISATION</b><br/>standards catalog · false-positive record<br/>skill implementations · custodians<br/>regulatory context"]
+    O["<b>THE ORGANISATION'S SDLC</b><br/>method · catalog · false positives<br/>skill implementations · adapters<br/>custodians · regulatory context"]
     P["<b>THE PROJECT</b><br/>how this codebase is built · data sources<br/>project-scoped rules"]
     W["<b>THE WORK ITEM</b><br/>one dossier"]
+    H["<b>THE PERSON</b><br/>profile · preferences<br/>own credentials · work log"]
 
     F -->|"read-only,<br/>pinned to a version"| O
     O -->|"one catalog,<br/>however many projects"| P
     P -->|"one per piece<br/>of work"| W
+    H -.->|"works within,<br/>never shared"| O
 
     style F fill:#eef7fb,stroke:#5a86a8
     style O fill:#d7f0e9,stroke:#00b49c
     style W fill:#f6f2f0,stroke:#a98b7d
+    style H fill:#fdf3e6,stroke:#c98b00
 ```
 
 | Level | What lives there | How many |
 |---|---|---|
 | Framework | The method: stages, contracts, templates, gates | One, for everybody |
-| Organisation | Catalog, false positives, skill implementations, custodians | One per organisation |
+| Organisation | Its SDLC repository: method, catalog, false positives, product context, skill implementations, assistant adapters, custodians | One per organisation |
 | Project | How that codebase is built, its data sources, its own rules | One per product or service |
 | Work item | The dossier | One per piece of work |
+| Person | Profile, preferences, personal credentials and the log of their own work | One per person, on their own machine |
+
+The person's level is what lets someone pick a topic up again a week later without rebuilding
+it. The assistant keeps the log on its own, a short summary per topic with what was decided,
+what is pending and where everything is, and reads it before resuming. It lives on the person's
+machine, is ignored by version control, and points to the tickets rather than copying them.
 
 **One catalog per organisation, not one per project.** This is the decision that matters most.
 With a catalog per project, a rule learned in one never reaches another, and the compounding
@@ -495,6 +702,8 @@ Four things **never** cross an organisation boundary, and this is not a preferen
 - **Credentials.** Personal, per person, per organisation.
 - **The project definition.** It describes a codebase that belongs to someone.
 
+The person's level does not travel at all: it never leaves that person's machine.
+
 For a consultancy this is the line that keeps one client's material out of another's. It is
 worth stating in the contract, not just in a document.
 
@@ -534,7 +743,7 @@ the next change to that project rather than on a report.
 
 ---
 
-## 8. The stages
+## 9. The stages
 
 ### Stage 1 · Definition
 
@@ -562,7 +771,14 @@ the compliance requirements that follow from the data classification: retention,
 encryption, minimisation, data subject rights. And it points out which criteria will need
 instrumentation, so stage 3 accounts for it.
 
-**Gate.** A non-functional criterion without a number goes back.
+It also proposes the **use cases** the requirement adds or changes: what the product's users do
+every day and must not break, written in business language. Product validates each one, and
+the validated cases go into the product's catalog of use cases. They are the bridge to stage 8,
+where each one becomes an automated flow. A requirement that changes no journey says so, with
+its reason.
+
+**Gate.** A non-functional criterion without a number goes back. A use case product has not
+validated does not become a test.
 
 ### Stage 3 · Refinement
 
@@ -617,10 +833,14 @@ It runs a full hard-rule pass if the change touches authentication, authorisatio
 isolation or sensitive data. It cross-checks the artefacts that travel together: migrations
 with their changelog entry, instrumentation with the plan, documentation with the code. It
 compares **the whole branch against the base**, not just the latest commits, against the
-criteria from stage 2. And it drafts the change proposal and the functional verification
-script.
+criteria from stage 2. It runs the automated flows of the use cases the change touches, and
+checks that the cases the ticket added are in the product's catalog and automated. And it
+drafts the change proposal and the functional verification script.
 
-**Gate.** The author approves every output into a shared system, one at a time.
+It reviews **what the change introduced**, not the system it lands on. Whatever was already
+there is not a finding of this change, neither as a finding nor as a pending item.
+
+**Gate.** The author approves every output into a shared system.
 
 ### Stage 7 · Change review
 
@@ -633,7 +853,11 @@ suggestion from another reviewer against the actual code before backing it or pu
 raises findings with severity, file and line, and with the rule id when the finding comes from
 the catalog: without that id nobody can go and argue with the rule, and arguing with it is how
 the standard improves. It consults the false-positive record before raising something already
-rejected.
+rejected. It checks that the change is up to date with its target branch and raises conflicts
+or drift as a request to rebase.
+
+A push clears the reviewer's approval. The branch is updated first and the review is asked for
+afterwards, and nothing merges without an approval that is still in force.
 
 **Gate.** Every finding is presented with an explicit counterfactual question — whether it
 really applies here or is a false positive — and is published only on confirmation.
@@ -645,17 +869,34 @@ really applies here or is a false positive — and is published only on confirma
 
 ### Stage 8 · Functional verification
 
-Check against the criteria from stage 2, on the running system. The assistant drafts the
-script; it neither runs it nor signs it off.
+Check against the criteria from stage 2, on the running system. There are two kinds of check
+and one rule for both: the assistant may run them, but it never signs them off.
 
-A good script does six things: one checkbox per **verifiable result** rather than per case, so
+**Automated flows.** Each validated use case from stage 2 is a test that walks the application
+from the outside, the way a person would, against a deployed test environment. The assistant
+runs them on the machine of whoever is verifying, with that person's own configuration, which
+never travels and never sits in a shared pipeline. Five rules keep them honest:
+
+- Never against production. A list of allowed hosts stops the run before anything opens.
+- Nothing with a real cost or effect, such as charging, buying, signing or writing to a third
+  party, leaves a test unless the environment simulates it and that run authorises it.
+- The case comes from what product defined, not from what the code does today. A test written
+  by reading the code freezes its bugs as expected behaviour.
+- Few flows, the critical ones. A false red is fixed or switched off the same day, because one
+  flaky test teaches the team to stop looking at all of them.
+- A test that never ran is not delivered as done. Every run leaves local evidence of who ran
+  it, against what, and with what result.
+
+**The manual script.** For whatever cannot be automated, the assistant drafts a script for a
+person to run. A good script does six things: one checkbox per **verifiable result** rather than per case, so
 a failure points at what failed; one block per affected component, naming what to look at on
 each screen; the precondition written as a check the tester can perform, with what to do if it
 is not met; steps executable with the tools they already have; known false alarms stated up
 front; and what to do with whatever cannot be tested in that environment, which is to leave it
 unchecked and note it, never mark it failed.
 
-**Gate.** A stage 2 criterion left unverified blocks deployment.
+**Gate.** A stage 2 criterion left unverified blocks deployment. The verifier signs each
+criterion, whoever ran the check.
 
 ### Stage 9 · Deployment and post-deployment check
 
@@ -668,7 +909,8 @@ carry a number. It watches the window afterwards for deviations from the previou
 not from an invented threshold. On detecting a deviation it presents the evidence and
 **proposes** a rollback; the decision is human.
 
-**Precondition.** A rollback procedure that has been exercised, not merely documented.
+**Preconditions.** A rollback procedure that has been exercised, not merely documented. And
+before each release, every automated flow of the product runs; a regression blocks the release.
 
 ### Stage 10 · Operations, SRE and continuity
 
@@ -795,7 +1037,7 @@ does not need the stage, and usually has the problem of never switching anything
 
 ---
 
-## 9. Effect on the organisation
+## 10. Effect on the organisation
 
 ### Where the time goes today
 
@@ -875,7 +1117,7 @@ its own bias.
 
 ---
 
-## 10. What improves, and how to check it
+## 11. What improves, and how to check it
 
 Without indicators, this is a well-written opinion.
 
@@ -898,13 +1140,27 @@ detected by your own instrumentation before a user reports them.
 stopped happening. A catalog that does not grow means stage 12 is not running, whatever the
 other eleven say.
 
+**Judgement at the gates.** The share of drafts each gate rejects or corrects. A gate that
+never rejects anything has become a ceremony, and the judgement the framework moved the
+bottleneck to is no longer being exercised.
+
+**The SDLC itself.** The formulation exit criteria from section 2, checked on their review
+date. Until they are met, the organisation has a project in construction, not an SDLC in use.
+
 ---
 
-## 11. Preconditions
+## 12. Preconditions
 
-- Personal credentials per person, never shared. A team token destroys the traceability of who
-  approved what.
-- A local copy of every repository the cycle touches, including the standards one.
+- An orchestrator, named, and an AI assistant chosen by them that meets the conditions in
+  section 2.
+- Personal credentials per person, never shared, with the least privilege that works and an
+  expiry, stored on the person's machine with restricted permissions. Never in a repository and
+  never in a chat. A team token destroys the traceability of who approved what.
+- An identity the SDLC can verify a person against: their account on the code platform or the
+  tracker, not the name they type.
+- For the roles that build and review, a local copy of every repository the cycle touches,
+  including the organisation's SDLC. Roles that do not work in the repository get in through
+  their own tools, with a read-only access of their own.
 - A catalog readable by machine, versioned, with a format validator.
 - A low-friction place to record false positives, outside the rule approval process. If
   recording a false positive cost an approval, nobody would record one.
@@ -914,33 +1170,43 @@ other eleven say.
 
 ---
 
-## 12. Adoption
+## 13. Adoption
 
 In this order. Each step works without the ones after it, and none requires the previous one to
 be perfect.
 
+0. **The orchestrator builds the SDLC.** `/establish`, on the assistant the orchestrator chose,
+   with the formulation phase declared and its exit written. See section 2 and
+   [BUILDING.md](BUILDING.md).
 1. **The standards catalog, empty.** With a rule format, a validator and a generated catalog.
    Empty on purpose: a set copied from an industry guide describes whoever copied it.
-2. **The pre-review.** It returns the most for what it costs and forces nobody else to change
+2. **Each person's way in.** `/onboard`, with the profiles enabled per person and access
+   verified one at a time. Nothing else runs for someone whose access is not green.
+3. **The pre-review.** It returns the most for what it costs and forces nobody else to change
    how they work.
-3. **The change review, with harvesting inside it.** Both together. An assisted review that
+4. **The change review, with harvesting inside it.** Both together. An assisted review that
    does not harvest leaves the cycle open.
-4. **The functional verification script.** Cheap, and it draws a clear line between review and
-   QA.
-5. **Refinement and design.** Once the catalog holds rules worth consulting before settling an
+5. **Functional verification.** The product's use cases, validated by product, automated as
+   flows, plus the manual script for the rest. It draws a clear line between review and QA.
+6. **Refinement and design.** Once the catalog holds rules worth consulting before settling an
    architecture.
-6. **Operations and SRE.** Requires the data sources to exist and be trustworthy, usually the
+7. **Operations and SRE.** Requires the data sources to exist and be trustworthy, usually the
    longest work of all.
-7. **Stage 0, definition and requirements.** They depend on product picking up the habit, and
+8. **Stage 0, definition and requirements.** They depend on product picking up the habit, and
    that cannot be decreed.
-8. **Outcome validation.** Last, because it needs trustworthy business data and the willingness
+9. **Outcome validation.** Last, because it needs trustworthy business data and the willingness
    to record that a hypothesis failed.
 
-The framework pays from step 2. There is no need to wait for the whole thing.
+The framework pays from step 3. There is no need to wait for the whole thing.
+
+The order is by phase as well as by step. The first phase is product and building: a product
+owner who defines and hands over with quality, and a builder who takes it and builds with the
+team's rules. Operations and security come second, and visibility for leadership third. A
+phase opens when the previous one works with real people.
 
 ---
 
-## 13. Anti-patterns
+## 14. Anti-patterns
 
 **The assistant that acts on its own.** Publishes, opens changes or touches environments
 without approval. One visible mistake is enough for the team to lose trust and go back to doing
@@ -973,6 +1239,28 @@ well-written guess, which is worse than none.
 
 **The abandoned dossier.** If one stage stops writing to it, the next one asks again what was
 already answered, and the chain breaks without anyone noticing.
+
+**The formulation with no exit.** The orchestrator keeps approving everything for good, and the
+SDLC becomes one person's project with a team's name on it.
+
+**The SDLC tied to one assistant.** Instructions, skills and guards written in one vendor's
+format and nowhere else. Changing assistant means rebuilding the house instead of swapping an
+adapter.
+
+**The gate that never says no.** Approvals arrive in seconds and nothing is ever corrected. The
+assistant's fluency is doing the judging.
+
+**Controls written only as instructions.** A rule in the prompt with nothing in the environment
+to enforce it holds until the session gets long.
+
+**The test that reads the code.** A flow written from what the code does today freezes its bugs
+as expected behaviour.
+
+**The false red left on.** One flaky test, and the team stops looking at all of them.
+
+**Building more instead of putting it to use.** New skills and new products before the first
+phase works with real people. The plan says what is out of scope precisely so this does not
+happen.
 
 ---
 

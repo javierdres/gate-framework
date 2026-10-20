@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Javier Núñez
-"""Scaffold what a team needs before it can run GATE for the first time.
+"""Scaffold what an organisation needs before it can run GATE for the first time.
 
-Two subcommands:
+Three subcommands:
 
-    bootstrap.py catalog <path>    create the standards catalog repository
+    bootstrap.py sdlc <path> [--assistant <id>] [--org <short name>]
+                                   create the organisation's SDLC repository
+    bootstrap.py catalog <path>    create a standalone standards catalog repository
     bootstrap.py config <path>     drop .gate/config.yml into a project
 
-The catalog is identical for anyone starting out, so there is no reason to
-build it by hand. The config is filled in with whatever can be read off the
-repository, and leaves the rest for /init to ask about.
+`sdlc` is where an orchestrator starts: it writes the whole skeleton that
+/establish then fills in from the interview, with the empty catalog inside it,
+the neutral guards and the adapter for the chosen assistant (claude-code,
+gemini-cli, kiro, codex or other). The catalog is identical for anyone starting
+out, so there is no reason to build it by hand. The config is filled in with
+whatever can be read off the repository, and leaves the rest for /init to ask
+about.
 """
 import io
 import json
@@ -452,7 +458,7 @@ CATALOG_FILES = {
 }
 
 
-def scaffold_catalog(target):
+def scaffold_catalog(target, quiet=False):
     if os.path.exists(target) and os.listdir(target):
         print("x %s exists and is not empty. Refusing to write over it." % target)
         return 1
@@ -462,6 +468,8 @@ def scaffold_catalog(target):
         io.open(path, "w", encoding="utf-8").write(content)
         if rel.startswith("bin/"):
             os.chmod(path, 0o755)
+    if quiet:
+        return 0
     print("OK  standards catalog scaffolded at %s" % target)
     print()
     print("    %d files. Next:" % len(CATALOG_FILES))
@@ -472,6 +480,162 @@ def scaffold_catalog(target):
     print("    Then point your project's .gate/config.yml at it:")
     print("      organisation.catalog:         <this repository's URL>")
     print("      organisation.false_positives: <that URL>/calibration/false-positives.md")
+    return 0
+
+
+# ───────────────────────────── the organisation's SDLC ──────────────────────
+
+ASSISTANTS = ("claude-code", "gemini-cli", "kiro", "codex", "other")
+
+SDLC_TEMPLATES = {
+    "AGENTS.md": "agents.md",
+    "GOVERNANCE.md": "governance.md",
+    "PLAN.md": "plan.md",
+    "products/_template/README.md": "product.md",
+    "products/_template/business-rules.md": "business-rules.md",
+    "products/_template/use-cases.md": "use-cases.md",
+    "method/templates/dossier.md": "dossier.md",
+    "method/templates/design-decision.md": "design-decision.md",
+    "method/templates/postmortem.md": "postmortem.md",
+    "method/templates/qa-script.md": "qa-script.md",
+    "method/templates/session-log.md": "session-log.md",
+    "method/templates/profile.md": "profile.md",
+}
+
+SDLC_README = """# {org} SDLC
+
+How {org} works with an AI assistant across the software life cycle: product, building,
+operations, security and leadership. Built on [GATE](https://github.com/javierdres/gate-framework):
+the assistant prepares, people decide.
+
+To start, see [ONBOARDING.md](ONBOARDING.md). What is being built now is in [PLAN.md](PLAN.md),
+and who approves what is in [GOVERNANCE.md](GOVERNANCE.md).
+"""
+
+SDLC_ONBOARDING = """# Onboarding
+
+1. Create a working folder, for example `~/Projects/{org}`, and clone this repository inside it,
+   next to the repositories of your products.
+2. Open your assistant inside this repository the first time and say hello. `onboard` takes it
+   from there: requirements, installation, profile and access, one step at a time.
+3. From then on, open the assistant in the working folder, not inside this repository.
+
+You never paste a credential in the chat. Each access has a step-by-step guide in
+`tools/guides/`.
+
+## Skills
+
+See [skills/README.md](skills/README.md).
+"""
+
+SDLC_GATE_MAP = """# GATE in this SDLC
+
+Implements GATE at commit `{version}`. Moving to a newer one is a change request to this file
+that also reviews the departures below.
+
+## What implements what
+
+| GATE | Here |
+| --- | --- |
+| Section 2, the orchestrator and `/establish` | This repository, `sdlc.yml`, `GOVERNANCE.md` |
+| `/onboard` | `skills/onboard`, `tools/install.sh`, `tools/guides/` |
+| Permissions principle | `method/permissions.md`, `tools/guards/permissions.py` |
+| Environment-enforced controls | `tools/guards/`, `adapters/`, protected main branch |
+| The person's level | `personal/`, `method/sessions.md` |
+| Stage 2 use cases, stage 8 flows, stage 9 regression | `products/<product>/use-cases.md`, `e2e/`, `skills/e2e` |
+| Stage 12 and the catalog | `catalog/`, `skills/harvest` |
+
+## Departures
+
+Each one is a local decision or a lesson GATE has not learned yet. A lesson is proposed to GATE
+as a candidate, told as a pattern, with nothing that belongs to the organisation.
+
+| Departure | Why | Proposed to GATE? |
+| --- | --- | --- |
+"""
+
+SDLC_SCOPES = """# Scopes
+
+Every rule declares one scope in its `scope` field. A rule is born in the scope where it was
+learned and becomes cross-cutting once it is shown to apply in a second place.
+
+| Scope | Custodian (role) |
+| --- | --- |
+| cross-cutting | Every custodian |
+| product | Custodian of product |
+| security | Custodian of security |
+| operations | Custodian of operations |
+"""
+
+
+def gate_version():
+    v = run(["git", "rev-parse", "--short", "HEAD"], HERE)
+    return v or "to be defined"
+
+
+def scaffold_sdlc(target, assistant, org):
+    if os.path.exists(target) and os.listdir(target):
+        print("x %s exists and is not empty. Refusing to write over it." % target)
+        return 1
+    if assistant not in ASSISTANTS:
+        print("x unknown assistant '%s'. One of: %s" % (assistant, ", ".join(ASSISTANTS)))
+        return 1
+    org = org or os.path.basename(os.path.abspath(target)).replace("sdlc-", "") or "org"
+    kit = os.path.join(HERE, "kit")
+    written = 0
+
+    for base, _, files in os.walk(kit):
+        for f in files:
+            src = os.path.join(base, f)
+            dst = os.path.join(target, os.path.relpath(src, kit))
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            io.open(dst, "wb").write(io.open(src, "rb").read())
+            os.chmod(dst, os.stat(src).st_mode)
+            written += 1
+
+    for dst, tpl in SDLC_TEMPLATES.items():
+        src = os.path.join(HERE, "templates", tpl)
+        path = os.path.join(target, dst)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        text = io.open(src, encoding="utf-8").read().replace("<Organisation>", org)
+        io.open(path, "w", encoding="utf-8").write(text)
+        written += 1
+
+    version = gate_version()
+    config = io.open(os.path.join(HERE, "templates", "sdlc.yml"), encoding="utf-8").read()
+    config = re.sub(r'^(  version:) ""', r'\1 "%s"' % version, config, count=1, flags=re.M)
+    config = re.sub(r'^(  short_name:) ""', r'\1 "%s"' % org, config, count=1, flags=re.M)
+    config = re.sub(r'^(  - id:) ""(\s+# claude-code)', r'\1 "%s"\2' % assistant, config, count=1, flags=re.M)
+    extra = {
+        "sdlc.yml": config,
+        "README.md": SDLC_README.format(org=org),
+        "ONBOARDING.md": SDLC_ONBOARDING.format(org=org),
+        "GATE.md": SDLC_GATE_MAP.format(version=version),
+        "CODEOWNERS": "# Translates GOVERNANCE.md. During formulation, the orchestrator owns everything.\n* @<orchestrator>\n",
+        ".gitignore": "personal/\n__pycache__/\n.DS_Store\n",
+        "method/flows/.gitkeep": "",
+        "method/chat-client/README.md": "# Chat-client package\n\nInstructions and context files for roles that work outside the terminal, and where to copy each one.\n",
+    }
+    for rel, content in extra.items():
+        path = os.path.join(target, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        io.open(path, "w", encoding="utf-8").write(content)
+        written += 1
+
+    scaffold_catalog(os.path.join(target, "catalog"), quiet=True)
+    io.open(os.path.join(target, "catalog", "scopes.md"), "w", encoding="utf-8").write(SDLC_SCOPES)
+    written += len(CATALOG_FILES) + 1
+
+    print("OK  SDLC for %s scaffolded at %s (%d files, GATE %s, assistant %s)"
+          % (org, target, written, version, assistant))
+    print()
+    print("    Next, with your assistant open inside %s:" % target)
+    print("      run /establish, which interviews you and fills in every layer")
+    print("      following BUILDING.md, then runs the final verification.")
+    if assistant not in ("claude-code",):
+        print()
+        print("    There is no automatic adapter for %s yet. /establish writes it" % assistant)
+        print("    from adapters/README.md and your assistant's current documentation.")
     return 0
 
 
@@ -582,11 +746,21 @@ def scaffold_config(project):
     return 0
 
 
+def option(name, default=""):
+    if name in sys.argv:
+        i = sys.argv.index(name)
+        if i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+    return default
+
+
 def main():
-    if len(sys.argv) < 3 or sys.argv[1] not in ("catalog", "config"):
+    if len(sys.argv) < 3 or sys.argv[1] not in ("sdlc", "catalog", "config"):
         print(__doc__.strip())
         return 2
     action, path = sys.argv[1], sys.argv[2]
+    if action == "sdlc":
+        return scaffold_sdlc(path, option("--assistant", "other"), option("--org"))
     if action == "catalog":
         return scaffold_catalog(path)
     if not os.path.isdir(path):

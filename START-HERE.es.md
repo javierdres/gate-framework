@@ -7,6 +7,11 @@ y **en qué se diferencia de cómo trabajas hoy**.
 
 Si solo vas a leer una cosa sobre GATE, lee esta.
 
+**Antes de cualquiera de estas, el SDLC de la organización tiene que existir.** Si todavía no
+existe, eres el orquestador y empiezas en [BUILDING.es.md](BUILDING.es.md): `python3
+bin/bootstrap.py sdlc` y después `/establish` en el asistente que elegiste. Luego cada persona se
+suma con `/onboard`. Todo lo que sigue supone que eso ya está hecho.
+
 ---
 
 ## A. Un proyecto nuevo
@@ -192,11 +197,13 @@ burocracia sin retorno. Por eso lo dispara la revisión y no la memoria de algui
 
 No necesitas el framework completo. El piso es más bajo de lo que parece:
 
+- Un orquestador, y un asistente de IA elegido por él que cargue instrucciones persistentes y skills
 - Tres personas que cumplan las [tres incompatibilidades de rol](GATE.md#the-three-incompatibilities)
 - Credenciales personales por persona
 - Una convención de ramas que enlace con el ticket
-- Un repositorio de estándares vacío con su validador de formato
+- Un catálogo de estándares vacío con su validador de formato, que escribe `bootstrap.py sdlc`
 
-Con eso corres el paso 2 de la [adopción](adoption/README.md), que es la revisión previa, y ya
+Con eso construyes el SDLC y llegas al paso 3 de la [adopción](adoption/README.md), que es la
+revisión previa, y ya
 estás obteniendo valor. Las fuentes de datos, la reversión ensayada y los indicadores de
 negocio llegan en los pasos siguientes.

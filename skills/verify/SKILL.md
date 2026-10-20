@@ -22,7 +22,10 @@ The change deployed to a test environment. The script drafted in stage 6.
 
 ## What it does
 
-- Writes the script with one checkbox per verifiable result, not one per case, so a failure points at what failed.
+- Runs the automated flows of the product's validated use cases, against a deployed test environment, on the machine of whoever verifies and with that person's own configuration.
+- Refuses to run against a host that is not on the allowlist, and cuts any real-world effect (charging, buying, signing, writing to third parties) unless the environment simulates it and the run authorises it.
+- Leaves local evidence of every run: who ran it, against what, and the result. A flow that never ran is not delivered as done.
+- For whatever cannot be automated, writes the script with one checkbox per verifiable result, not one per case, so a failure points at what failed.
 - One block per affected component, naming what to look at on each screen.
 - The precondition written as a check the tester can perform, with what to do if it is not met.
 - Steps executable with the tools the tester already has.
@@ -31,8 +34,9 @@ The change deployed to a test environment. The script drafted in stage 6.
 
 ## What it does NOT do
 
-- Does not run the tests.
-- Does not sign off on any criterion.
+- Does not sign off on any criterion. The verifier does, whoever ran the check.
+- Never runs against production.
+- Does not write a flow from what the code does today. The case comes from what product validated.
 
 ## Gate
 
@@ -40,6 +44,6 @@ The change deployed to a test environment. The script drafted in stage 6.
 
 ## Dossier
 
-**Reads:** The verification script.
+**Reads:** The validated use cases of the product, and the verification script.
 
-**Writes:** A result per criterion.
+**Writes:** The flows run and their evidence, and a result per criterion.

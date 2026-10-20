@@ -21,7 +21,7 @@ for i, b in enumerate(bloques, 1):
     io.open(mmd, "w", encoding="utf-8").write(b)
     if not os.path.exists(svg):
         r = subprocess.run(
-            ["npx", "-y", "-p", "@mermaid-js/mermaid-cli", "mmdc",
+            ["npx", "-y", "-p", "@mermaid-js/mermaid-cli@11.4.2", "mmdc",
              "-i", mmd, "-o", svg, "-b", "white", "-w", "1400"],
             capture_output=True, text=True)
         if not os.path.exists(svg):

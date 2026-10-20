@@ -18,7 +18,8 @@ Observed problem, context, constraints. Data classification with its justificati
 
 ## 2 · Requirements
 Functional acceptance criteria. Non-functional criteria, **with numbers**. Compliance
-requirements. The window after which stage 11 can validate.
+requirements. The window after which stage 11 can validate. Use cases added or changed, each
+validated by product with its date, or "no use cases" with the reason.
 
 ## 3 · Refinement
 Subtasks. Affected components. Risks, each with an owner. Test plan. Observability plan.
@@ -31,16 +32,18 @@ would have to change to revisit it.
 Proposed changes. Instrumentation added. Tests written.
 
 ## 6 · Pre-review
-Findings resolved before exposure. Verification script published.
+Findings resolved before exposure. Automated flows of the affected use cases, with environment
+and result. Verification script published.
 
 ## 7 · Change review
 Threads and their outcome. Findings published. Decisions going to stage 12.
 
 ## 8 · Functional verification
-Result per stage 2 criterion.
+Automated flows run, with who ran them, against what and the result. Result per stage 2
+criterion, signed by the verifier.
 
 ## 9 · Deployment
-Manual steps executed. Post-deployment check against the non-functional criteria.
+Full regression of the product before release. Manual steps executed. Post-deployment check against the non-functional criteria.
 
 ## 10 · Operations
 Incidents. Root causes. Recovery drill results.

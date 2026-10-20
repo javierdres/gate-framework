@@ -29,7 +29,10 @@ A branch ready. Access to every repository the change touches.
 - Runs a full hard-rule pass if the change touches authentication, authorisation, tenant isolation, or the data stage 1 classified as sensitive.
 - Cross-checks the artefacts that travel together: migrations with their changelog entry, instrumentation with the plan, documentation with the code it describes.
 - Compares the whole branch against the base, not just the latest commits, against the criteria from stage 2.
+- Reviews only what the change introduced. What was already there is not a finding of this change.
+- Runs the automated flows of the use cases the change touches, and checks that the cases the ticket added are in the product's catalog and automated.
 - Drafts the change proposal and the functional verification script.
+- Hands whatever has no rule but deserves one to /harvest, as a suggestion.
 
 ## What it does NOT do
 

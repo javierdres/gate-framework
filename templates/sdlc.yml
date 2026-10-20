@@ -1,0 +1,72 @@
+# sdlc.yml — the organisation's SDLC, declared
+#
+# Lives at the root of the organisation's SDLC repository. /establish writes it
+# from the interview, and every skill reads it instead of asking again.
+# Whatever nobody knows yet is left as "to be defined", never invented.
+
+gate:
+  # The GATE commit this SDLC implements. Moving to a new one is a change
+  # request that also reviews the departures listed in GATE.md.
+  version: ""
+
+organisation:
+  name: ""
+  short_name: ""            # used in sdlc-<short_name> and in headings
+  builds: ""                # own products, internal systems, integrations...
+  language: ""              # e.g. "es-CL"; technical terms kept in English
+  regulatory_context: ""    # personal, health or financial data; standards
+
+orchestrator:
+  role_holder: ""           # verifiable identity, e.g. "@user" on the code platform
+  phase: formulation        # formulation | operation
+  exit_criteria:            # observable, checked on the review date
+    - "A person other than the orchestrator installed the SDLC alone"
+    - "A product owner used it on a real requirement"
+    - "A builder took one of those without product questions"
+    - "A rule harvested from real work entered the catalog"
+  review_date: ""           # YYYY-MM-DD
+
+assistants:
+  # One entry per assistant the orchestrator enabled. Each has its adapter
+  # in adapters/<id>/ and is verified on its own.
+  - id: ""                  # claude-code | gemini-cli | kiro | codex | other
+    version: ""             # the version the adapter was verified against
+    hooks: true             # false means the platform fallback is in use
+    connectors: []          # tracker, documentation, observability
+  chat_client: ""           # for roles outside the terminal; empty if none
+
+tools:
+  code_platform:
+    name: ""
+    group: ""
+    auth: ""                # company login | ssh | personal token
+    protected_branches: true
+  tracker:
+    name: ""
+    projects: []
+    connector: false
+    story_format: ""
+  production_source_of_truth:
+    name: ""
+    environments: []        # and how they are told apart in the data
+  pipeline: ""
+  documentation: ""
+  operating_systems: []
+
+scopes:
+  # Rule scopes of the catalog. Cross-cutting, product, security and
+  # operations always exist; add one per technical layer the team has.
+  - cross-cutting
+  - product
+  - security
+  - operations
+
+products:
+  # Only the pilot ones to start with. A folder is created when someone works
+  # on the product, not before.
+  - id: ""
+    product_owner: ""
+    repositories: []
+    test_environments: []   # never production
+
+out_of_scope: []

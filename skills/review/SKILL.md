@@ -27,6 +27,9 @@ An open change proposal. Access to every repository the ticket touches.
 - Raises its own findings with severity, file and line, and with the catalog rule id when the finding comes from there. Without that id nobody can go and argue with the rule.
 - Consults the false-positive record before raising something the team already rejected.
 - Watches the blast radius across components.
+- Checks the change is up to date with its target branch, and raises conflicts or drift as a request to rebase.
+- Reviews only what the change introduced. What was already there is not raised.
+- Reminds that a push clears the approval: the branch is updated first, the review asked for afterwards.
 - Triggers /harvest on every pass, over the threads resolved since the last one.
 
 ## What it does NOT do

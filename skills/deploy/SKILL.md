@@ -22,6 +22,7 @@ Stage 8 approved. Instrumentation deployed. A rollback procedure that has been e
 
 ## What it does
 
+- Before each release, runs every automated flow of the product. A regression blocks the release.
 - Gathers and presents whatever manual steps the deployment requires, instead of letting them surface during the window.
 - Compares observed behaviour against the non-functional criteria from stage 2, using the data sources from stage 10.
 - Watches the window after deployment for deviations from the previous baseline, not from an invented threshold.
