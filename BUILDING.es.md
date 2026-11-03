@@ -35,6 +35,10 @@ Instrucciones para el asistente que construye el SDLC:
   entre versiones.
 - Los nombres de las skills van cortos y en inglés. Todo lo demás, en el idioma de la
   organización.
+- **Nada va a la configuración global del asistente.** Instrucciones, skills y guardias se
+  instalan en la carpeta de trabajo, para que este SDLC nunca choque con otro en el mismo
+  computador (sección 8 de GATE). Los archivos de credenciales llevan la organización en el
+  nombre.
 - El catálogo arranca vacío, salvo los ejemplos marcados como tales, y se llena con lo que le
   pase a este equipo.
 - Al terminar, corre la verificación de la sección 11 y reporta lo que quedó en verde, lo que no
@@ -522,6 +526,7 @@ y la biblioteca estándar de Python, sin dependencias.
   ○  El asistente carga AGENTS.md en una sesión nueva
   ○  Abrir el asistente en la carpeta de trabajo muestra el menú
   ○  El asistente encuentra las skills
+  ○  No se escribió nada en la configuración global del asistente
   ○  onboard deja en verde los accesos del perfil del piloto
   ○  Una escritura hacia afuera pide OK; tras autorizar, no
   ○  Producción y merges piden OK aunque haya autorización

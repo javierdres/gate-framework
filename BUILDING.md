@@ -34,6 +34,9 @@ Instructions for the assistant building the SDLC:
 - When you wire your own platform, **read its current documentation** rather than relying on
   memory. Hook names, configuration paths and file names change between versions.
 - Skill names are short and in English. Everything else is in the organisation's language.
+- **Nothing goes into the assistant's global configuration.** Instructions, skills and guards
+  are installed in the working folder, so this SDLC never collides with another one on the same
+  machine (GATE section 8). Credential files carry the organisation in their name.
 - The catalog starts empty, apart from examples marked as such. It fills with what happens to
   this team.
 - At the end, run the verification in section 11 and report what passed, what did not and why.
@@ -511,6 +514,7 @@ standard library, with no dependencies.
   ○  The assistant loads AGENTS.md in a fresh session
   ○  Opening the assistant in the working folder shows the menu
   ○  The skills are found by the assistant
+  ○  Nothing was written to the assistant's global configuration
   ○  onboard leaves the pilot profile's access green
   ○  An outward write asks; after authorising, it does not
   ○  Production and merges ask even when authorised

@@ -26,6 +26,17 @@ if [ "$WORK" = "$HOME" ]; then
   exit 1
 fi
 
+# The working folder inside another repository (a home folder under version control, say) makes
+# the assistant treat every working folder below it as one project, and some assistants share
+# their automatic memory across it. Not fatal, but the person has to know (GATE section 8).
+ENCLOSING="$(git -C "$WORK" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -n "$ENCLOSING" ]; then
+  echo "! $WORK is inside the repository $ENCLOSING."
+  echo "  The assistant may share state, such as its memory, with every other folder in it,"
+  echo "  including another organisation's SDLC. Move the working folder out, or remove that"
+  echo "  repository if it was not meant to be there."
+fi
+
 backup() { if [ -e "$1" ]; then cp -p "$1" "$1.bak-$STAMP"; fi; }
 
 # 1. personal/: profile, preferences, grants and log. Ignored by version control.

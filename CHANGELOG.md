@@ -3,6 +3,29 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-11-03 · Several SDLCs on one machine
+
+A person often carries more than one SDLC on the same computer, and an SDLC built on GATE had
+installed its skills in the assistant's global configuration. They showed up in every folder,
+including unrelated work, and two SDLCs with a skill of the same name competed for it. GATE's
+own adapter already installed in the working folder, but the rule was never written down, so
+nothing stopped an SDLC from drifting away from it.
+
+**The rule is now explicit.** Everything an organisation's SDLC installs lives in its working
+folder, never in the assistant's global configuration. Section 8 of GATE explains why, the
+building guide lists it among the instructions for the assistant, the adapters guide repeats it
+for any new adapter, and the final verification checks it.
+
+**Where the assistant is opened matters, and now it says why.** Verified on Claude Code
+2.1.314: project skills are found walking up from where the assistant is opened, up to the
+root of the enclosing repository. Opened inside a product repository, the working folder's
+skills are not found. And when the working folder itself sits inside another repository, as
+with a home folder under version control, the assistant's automatic memory is shared across
+everything below it. The installer now warns about that case.
+
+**Credentials carry the organisation in their name**, so two SDLCs on the same machine never
+read each other's keys.
+
 ## 2026-10-20 · The guard and the review cannot be talked around
 
 An independent check of the previous release, on a clean clone, confirmed 28 of the 33 fixes

@@ -16,6 +16,10 @@ Each adapter lives in `adapters/<assistant>/` with an `install.sh` that `tools/i
 calls. Record the assistant and the version it was verified against in `sdlc.yml`, and run the
 final verification once per adapter.
 
+Whatever the assistant, the adapter writes only inside the working folder. Nothing goes into
+the assistant's global configuration in the person's home folder: that is what lets several
+organisations' SDLCs live on the same machine without colliding (GATE section 8).
+
 ## Writing an adapter for another assistant
 
 Read the assistant's current documentation first: event names, configuration paths and file

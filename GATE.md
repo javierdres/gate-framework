@@ -737,6 +737,35 @@ What does travel is a person carrying a lesson. The mechanism is to **propose** 
 organisation's catalog as a candidate, with the origin pointing at where it was learned. It
 then goes through that organisation's own approval like any other candidate.
 
+### Several organisations on one machine
+
+A person often carries more than one SDLC on the same computer: their employer's, a client's,
+their own side projects. GATE keeps them apart with one rule: **everything an organisation's
+SDLC installs lives in its working folder.** Instructions, skills, guards and the person's log
+go inside the folder that holds the SDLC and its products, never into the assistant's global
+configuration.
+
+Installed globally, an organisation's skills show up in every folder of the machine, including
+work that has nothing to do with it, and two SDLCs with a skill of the same name compete for
+it. Installed in the working folder, each SDLC is active only where the person opens the
+assistant for that organisation, and nothing it does leaks into the next.
+
+Two consequences follow, and both are about where the assistant is opened.
+
+**The working folder is the place to open it.** Assistants find their project configuration by
+walking up from where they are opened, and stop at the root of the repository they are in.
+Opened inside a product repository, which is a repository of its own, the assistant does not
+see the working folder's skills or guards. That is why the person always opens it in the
+working folder and works from there on any repository.
+
+**The working folder must not sit inside another repository.** Some assistants key per-project
+state, such as their automatic memory, to the enclosing repository. A home folder under version
+control makes every working folder below it one project for the assistant, and the memory of one
+organisation reaches the sessions of another. The installer warns when it finds this.
+
+Credentials follow the same idea. They stay outside every repository, in the person's own
+folder, but under names that carry the organisation, so two SDLCs never read each other's keys.
+
 ### Governance once there are many projects
 
 Three things change, and none of them is technical.
