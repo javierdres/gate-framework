@@ -270,7 +270,7 @@ construir nada.
 │   │   ├── install.sh        instalador idempotente
 │   │   ├── check-access.sh   requisitos y accesos por perfil
 │   │   ├── access-checks.tsv las verificaciones que necesita cada perfil
-│   │   ├── guards/           permisos, inicio de sesión, bitácora, con sus pruebas
+│   │   ├── guards/           permisos, inicio de sesión, bitácora, consumo, con sus pruebas
 │   │   ├── server-hooks/     para un servidor git sin ramas protegidas
 │   │   ├── clients/          un cliente de API pequeño por sistema
 │   │   └── guides/           guías de acceso paso a paso
@@ -478,6 +478,7 @@ número como un lugar donde mirar, nunca como un juicio sobre una persona.
 | Instalador | Idempotente y con respaldo. Crea `personal/` con perfil, preferencias y bitácora; escribe el `AGENTS.md` de la carpeta de trabajo sin tocar lo que ya tiene; enlaza las skills donde el asistente las busca, o las copia donde no se puede enlazar; escribe el adaptador del asistente de la persona. Se detiene si el repositorio está suelto en el home |
 | Guardia de inicio de sesión | Trae lo último de la rama principal, avisa la etapa pendiente de la puesta en marcha, verifica la identidad y entrega los perfiles habilitados, revisa los accesos, detecta si la instalación quedó atrasada y entrega la ruta de la bitácora con lo abierto |
 | Guardia por mensaje | Un recordatorio corto de actualizar la bitácora cuando el mensaje dejó un avance |
+| Guardia de consumo | Si el asistente mide el uso por ventanas y las expone, muestra cuánto se lleva de cada una y cuándo se renueva, y avisa una vez cuando al ritmo actual una ventana se va a agotar antes de renovarse: el asistente sugiere un modelo más liviano y lanza sus subagentes con uno, y al renovarse sugiere volver al más capaz. La referencia es `tools/guards/usage.py` |
 | Guardia de permisos | Antes de cada escritura vigilada, mira las autorizaciones de la sesión y responde permitir o preguntar. Producción, merges y borrados preguntan siempre. Ante cualquier error, pregunta |
 | Verificador de accesos | Revisa requisitos y accesos según el perfil de la persona y los muestra con el componente de estado |
 | Clientes de API | Uno por sistema (plataforma de código, tickets, observabilidad), sin dependencias, que lee la credencial desde el home de la persona |

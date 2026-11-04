@@ -115,6 +115,7 @@ can carry an SDLC built on it:
 | **Repository and shell access** | Reading the code, running checks and tests | Not viable for the building roles. Product can still work through a chat client with connectors |
 | **Hooks** before an action and at session start | Enforcing permissions, loading context, keeping the log | The platform carries the load: read-only credentials for the assistant, protected branches, and writes through a script that asks. Weaker, and the SDLC must say so |
 | **Connectors** to the tracker and the observability platform | Reading tickets and production data | Small API clients in the SDLC repository, reading each person's own credential |
+| **Usage data** for subscription plans metered in windows | Showing each person how much is left and warning before it runs out | Each person watches the assistant's own usage page. Nobody is warned, and the SDLC must say so |
 
 The SDLC is written once, in neutral formats, and a thin adapter wires it to the assistant
 that was chosen:
@@ -352,6 +353,13 @@ that produced it is someone's opinion in the shape of a norm.
 **Discards get recorded.** When someone rejects a finding, the reason is written down. Without
 that the assistant raises it again and the team learns to ignore it, including the findings
 that mattered.
+
+**Nobody runs out of the assistant without being told.** Subscription plans meter use in
+windows that reset at a fixed time, and whoever is focused on the work does not watch them. The
+SDLC shows how much of each window is used and when it resets, and when the current pace will
+use a window up before it resets, the assistant says so once and suggests a lighter model, and
+runs its own subagents on one. After the reset it suggests the most capable model again. The
+person always decides which model the session runs.
 
 **Missing dependencies get named.** If an access, a token or a data source is missing, say
 which one and carry on with what you can, marking what was left uncovered.

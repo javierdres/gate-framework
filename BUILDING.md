@@ -260,7 +260,7 @@ can just confirm it. Close with a summary to confirm before building anything.
 │   │   ├── install.sh        idempotent installer
 │   │   ├── check-access.sh   requirements and access per profile
 │   │   ├── access-checks.tsv the checks each profile needs
-│   │   ├── guards/           permissions, session start, log reminder, with tests
+│   │   ├── guards/           permissions, session start, log reminder, usage, with tests
 │   │   ├── server-hooks/     for a git server with no protected branches
 │   │   ├── clients/          one small API client per system
 │   │   └── guides/           step-by-step access guides
@@ -466,6 +466,7 @@ as a verdict on a person.
 | Installer | Idempotent, with a backup. Creates `personal/` with profile, preferences and log; writes the working folder's `AGENTS.md` without touching what it already has; links the skills where the assistant looks for them, or copies them where links do not work; writes the adapter for the person's assistant. Stops if the repository sits loose in the home folder |
 | Session start guard | Brings the main branch up to date, reports the pending setup stage, verifies the identity and hands over the enabled profiles, checks access, detects an outdated installation, and hands over the log path with what is open |
 | Per-message guard | A short reminder to update the log when the message moved something forward |
+| Usage guard | Where the assistant meters use in windows and exposes them, shows how much of each window is used and when it resets, and warns once when a window will run out before it resets at the current pace: the assistant suggests a lighter model and runs its subagents on one, and suggests the most capable model again after the reset. `tools/guards/usage.py` is the reference |
 | Permissions guard | Before every watched write, reads the session's authorisations and answers allow or ask. Production, merges and deletions always ask. On any error, asks |
 | Access checker | Checks requirements and access for the person's profile and shows them with the status component |
 | API clients | One per system (code platform, tracker, observability), without dependencies, reading the credential from the person's home |

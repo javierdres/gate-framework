@@ -3,6 +3,30 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-11-04 · Nobody runs out of the assistant without being told
+
+Subscription plans meter use in windows that reset at a fixed time. Whoever is focused on the
+work does not watch them, and finds out the window is spent when the assistant stops
+answering, often in the middle of something that matters.
+
+**A new principle and a new guard.** Section 4 adds the principle, and section 2 adds usage data
+to the capabilities an assistant may offer. The kit gains `tools/guards/usage.py` with its
+tests. In the status line it shows the model, the context used and each window with its reset
+time, and flags a window that will run out before it resets at the current pace. On every
+message it reads what the status line recorded and, once per session, has the assistant warn
+the person and suggest a lighter model, running its own subagents on one until the reset. When
+the window resets, it suggests the most capable model again. The person always chooses the
+session's model.
+
+**Claude Code wires it on its own.** Its adapter registers the status line, unless the person
+already has one, and the per-message check. Verified on Claude Code 2.1.314, which hands the
+five-hour and weekly windows to the status line. An assistant that does not expose its usage
+has no warning, and its SDLC says so in `PLAN.md`.
+
+Learned in an organisation's SDLC, where the status line also shows the balance of a paid
+provider the team shares. That part stays there: a status line is a good place for whatever an
+organisation must not run out of, but which ones are its own business.
+
 ## 2026-11-03 · Several SDLCs on one machine
 
 A person often carries more than one SDLC on the same computer, and an SDLC built on GATE had

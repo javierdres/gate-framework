@@ -9,8 +9,10 @@ An adapter does three things for its assistant:
 1. Makes it load `AGENTS.md` (and the person's profile and preferences) in every session.
 2. Makes it find the skills in `skills/`.
 3. Registers the guards on the right events: `session_start.py` when a session opens,
-   `log_reminder.py` on every message, `permissions.py check` before every shell command and
-   every connector call that writes.
+   `log_reminder.py` and `usage.py check` on every message, `permissions.py check` before
+   every shell command and every connector call that writes. Where the assistant has a status
+   line that receives its usage windows, `usage.py status` goes there; without it, there is no
+   usage line and no warning, and `PLAN.md` says so.
 
 Each adapter lives in `adapters/<assistant>/` with an `install.sh` that `tools/install.sh`
 calls. Record the assistant and the version it was verified against in `sdlc.yml`, and run the
@@ -37,7 +39,7 @@ end to end; the others come from each platform's public documentation:
 
 | Assistant | Instructions | Skills | Guards |
 | --- | --- | --- | --- |
-| Claude Code | `CLAUDE.md` importing `@<sdlc>/AGENTS.md` | `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse`. Automated by `claude-code/install.sh`, verified on 2.1.304 |
+| Claude Code | `CLAUDE.md` importing `@<sdlc>/AGENTS.md` | `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse`, and `statusLine` for usage (its `rate_limits` arrive after the first answer, on the subscription plans its documentation lists; check yours). Automated by `claude-code/install.sh`, verified on 2.1.304; usage verified on 2.1.314 |
 | Gemini CLI | `GEMINI.md`, or `AGENTS.md` set as the context file name | Its skills folder | `.gemini/settings.json`, before-tool and session events. Hooks may need enabling |
 | Kiro | A steering file in `.kiro/steering/` pointing to `AGENTS.md` | `.kiro/skills/` | Kiro CLI hooks on pre-tool use and session start; names differ between major versions |
 | Codex CLI | Reads `AGENTS.md` natively | Its skills folder | Its hook configuration, where the installed version supports it |

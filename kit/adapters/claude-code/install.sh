@@ -38,12 +38,13 @@ before = json.dumps(data, sort_keys=True)
 hooks = data.setdefault("hooks", {})
 guards = os.path.join(sdlc, "tools", "guards")
 q = lambda name: shlex.quote(os.path.join(guards, name))
-wanted = {
-    "SessionStart": (None, "python3 %s" % q("session_start.py")),
-    "UserPromptSubmit": (None, "python3 %s" % q("log_reminder.py")),
-    "PreToolUse": ("Bash|mcp__.*|Write|Edit|MultiEdit|NotebookEdit", "python3 %s check --format claude" % q("permissions.py")),
-}
-for event, (matcher, command) in wanted.items():
+wanted = (
+    ("SessionStart", None, "python3 %s" % q("session_start.py")),
+    ("UserPromptSubmit", None, "python3 %s" % q("log_reminder.py")),
+    ("UserPromptSubmit", None, "python3 %s check --format claude" % q("usage.py")),
+    ("PreToolUse", "Bash|mcp__.*|Write|Edit|MultiEdit|NotebookEdit", "python3 %s check --format claude" % q("permissions.py")),
+)
+for event, matcher, command in wanted:
     entries = hooks.setdefault(event, [])
     if any(h.get("command") == command for e in entries for h in e.get("hooks", [])):
         continue
@@ -51,6 +52,9 @@ for event, (matcher, command) in wanted.items():
     if matcher:
         entry["matcher"] = matcher
     entries.append(entry)
+# Usage status line. A status line the person already has is left alone.
+if not data.get("statusLine"):
+    data["statusLine"] = {"type": "command", "command": "python3 %s status" % q("usage.py"), "refreshInterval": 60}
 if json.dumps(data, sort_keys=True) != before:
     if os.path.exists(path):
         shutil.copy2(path, "%s.bak-%s" % (path, stamp))
