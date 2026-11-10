@@ -32,7 +32,9 @@ after three days.
 
 Whatever was authorised: pushes to the default branch, forced, mirrored or pruning pushes and
 pushes that delete branches, merges (they need the reviewer's approval in force), deletions on
-the code platform or the tracker, infrastructure tools, generating credentials, and any command
+the code platform or the tracker, infrastructure tools except their read-only subcommands
+(`kubectl get`, `kubectl logs`, `helm status` and the like; reading a secret still asks),
+generating credentials, and any command
 that chains an authorised write with others that are not.
 
 ## How it works

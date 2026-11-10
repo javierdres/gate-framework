@@ -73,8 +73,9 @@ decided stays in the repository.
 ## Profiles enabled
 
 The assistant identifies a person by their verified account, never by the name they type. A
-profile not in their row cannot be used.
+profile not in their row cannot be used. Profiles are written with the ids in
+`method/profiles.md`.
 
 | Person | Verifiable identity | Profiles |
 | --- | --- | --- |
-| Everyone else | — | `frontend`, `backend`, `fullstack`, `qa` (ids from `method/profiles.md`) |
+| Everyone else | — | `frontend`, `backend`, `fullstack`, `qa` |

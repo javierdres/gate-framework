@@ -48,8 +48,9 @@ A place to create the SDLC repository on the organisation's code platform.
   organisation's tools and language.
 - Writes `GATE.md` in the SDLC with the commit of GATE implemented and the first departures,
   each with its reason.
-- Runs the final verification (BUILDING.md section 11) and reports every point as passed or
-  failed, with what is missing and who it depends on.
+- Runs the final verification (BUILDING.md section 11) and reports every point as passed,
+  failed or skipped on purpose: a failure with what is missing and who it depends on, a skip
+  with its reason and who decided it.
 - Hands over to `/onboard` for the first person other than the orchestrator.
 
 ## What it does NOT do

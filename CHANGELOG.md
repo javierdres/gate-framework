@@ -3,6 +3,34 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-11-10 · A company that writes in Spanish and tracks in Linear
+
+A fourth simulation rebuilt an SDLC from scratch with the previous release: a company working in
+Spanish, on a self-managed GitLab, with Linear as its tracker and Grafana in production. It came
+out clean on the first try, every point of the final verification green or skipped on purpose,
+and the sixteen earlier fixes held. It also found what would still have hurt a company like
+that, fixed here.
+
+**Spanish no longer breaks the guards silently.** The session start guard reads the profiles
+heading of `GOVERNANCE.md` and the keys of `personal/profile.md` in Spanish as well, and the
+guide says which keys stay as GATE writes them.
+
+**Any tracker can be authorised, not only Jira.** The permissions guard reads Linear's team and
+issue identifiers, and a write through an API client that names a ticket key falls under that
+tracker's authorisation. A connector verb the guard does not recognise now asks instead of
+passing. GraphQL clients, where every call is a POST, take `QUERY` or `MUTATION` as their intent.
+
+**Moving the working folder no longer breaks the guards.** The installer points the hooks at
+the guards through the project folder, and replaces the absolute entries an older installer
+wrote instead of duplicating them.
+
+**Smaller fixes.** A person with no profile sees the profile menu again; the permissions
+method no longer contradicts the infrastructure reads; `/onboard` reports a check that depends
+on someone else, such as an SDLC not pushed yet, as pending rather than as the person's
+problem; the identity example names the host of a self-managed platform and quotes cleanly;
+the enabled profiles come without stray backticks; and the establish contract knows about
+skipped steps.
+
 ## 2026-11-10 · A first build that comes out clean
 
 A third simulation built the SDLC of an invented company end to end with GATE alone, and

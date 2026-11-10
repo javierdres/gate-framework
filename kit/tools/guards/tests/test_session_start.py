@@ -60,6 +60,17 @@ class SessionStart(unittest.TestCase):
         self.assertIn("Identity: person-1 #x (platform account)", out)
         self.assertIn("Profiles enabled: backend", out)
 
+    def test_spanish_headings_keys_and_quoted_commands(self):
+        self.write("sdlc.yml", "identity:\n  method: platform\n  command: 'printf ''%s'' persona-1'\n")
+        self.write("GOVERNANCE.md", "## Perfiles habilitados\n\n| Persona | Identidad | Perfiles |\n| --- | --- | --- |\n"
+                   "| Alguien | persona-1 | `backend`, `leadership` |\n")
+        self.write("personal/profile.md", "nombre: Alguien\nperfil: backend\nlisto: 2026-11-10\n")
+        out = self.run_guard()
+        self.assertIn("Identity: persona-1 (platform account)", out)
+        self.assertIn("Profiles enabled: backend, leadership", out)
+        self.assertNotIn("Setup stage: profile", out)
+        self.assertNotIn("Setup stage: access", out)
+
     def test_ssh_identity_needs_the_private_key(self):
         for who in ("a", "b"):
             sh(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", os.path.join(self.home, who), "-C", who], self.home)

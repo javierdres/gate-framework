@@ -73,7 +73,11 @@ SECRETS = re.compile(r"\bsecrets?\b", re.I)
 # Each organisation's API clients live in tools/clients/ and take the HTTP method first:
 # `tools/clients/<system>.sh GET <path>`. GET and HEAD only read; anything else, including a call
 # with no method, is an outward write.
-CLIENT = re.compile(r"(\S*tools/clients/\S+)\s*(\S*)")
+CLIENT = re.compile(r"(\S*tools/clients/\S+)\s*(\S*)(.*)")
+# A GraphQL API takes every call as a POST, so its client takes the intent instead: QUERY reads
+# and MUTATION writes.
+CLIENT_READS = ("GET", "HEAD", "QUERY")
+TICKET_KEY = re.compile(r"\b([A-Z][A-Z0-9]+)-\d+\b")
 
 # Constructs the guard does not parse: a write inside them always asks.
 OPAQUE = re.compile(r"(\$\(|`|<\(|>\(|\beval\b|\b(sh|bash|zsh|dash|ksh|fish|pwsh|powershell)\s+(-\w*c|-c)\b|"
@@ -88,12 +92,13 @@ IMPLICIT_POST = re.compile(r"(^|\s)(-f|-F|--field|--raw-field|--input)(\s|=)")
 CURL_DATA = re.compile(r"(^|\s)(-d|--data\S*|-F|--form)(\s|=)")
 
 READ_VERBS = re.compile(r"(get|list|search|read|fetch|query|view|show|describe|lookup|find|info|whoami|"
+                        r"discover|status|count|preview|help|ping|"
                         r"resources|atlassianuserinfo|accessible)", re.I)
 WRITE_VERBS = re.compile(r"(create|edit|update|comment|transition|move|assign|add|link|push|open|close|"
-                         r"approve|label|write|execute|post|put|patch|set|upload|publish|send|merge|"
+                         r"approve|label|write|execute|post|put|patch|set|upload|publish|send|merge|save|"
                          r"delete|remove|destroy|archive)", re.I)
 DESTRUCTIVE = re.compile(r"(merge|delete|remove|destroy|archive|executedestructive)", re.I)
-TRACKER_TOOL = re.compile(r"(jira|issue|ticket|tracker|linear|youtrack)", re.I)
+TRACKER_TOOL = re.compile(r"(jira|issue|ticket|tracker|linear|youtrack|shortcut|clickup)", re.I)
 CODE_TOOL = re.compile(r"(github|gitlab|bitbucket|pull_?request|merge_?request|\bpr\b|\bmr\b|repo|branch|commit)", re.I)
 FILE_TOOLS = ("write", "edit", "multiedit", "notebookedit", "str_replace_editor", "create_file", "replace",
               "write_file")
@@ -284,9 +289,13 @@ def infra_verdict(flat):
 def client_verdicts(flat):
     verdicts = []
     for m in CLIENT.finditer(flat):
-        if m.group(2).upper() not in ("GET", "HEAD"):
+        if m.group(2).upper() not in CLIENT_READS:
             name = os.path.basename(m.group(1))
-            verdicts.append(("watched", "write through the API client %s" % name, None))
+            scope = None
+            key = TICKET_KEY.search(m.group(3))
+            if TRACKER_TOOL.search(name) and key:
+                scope = ("tracker", key.group(1))
+            verdicts.append(("watched", "write through the API client %s" % name, scope))
     return verdicts
 
 
@@ -323,13 +332,17 @@ def classify_tool(name, args):
         return ("never", "a merge or deletion through a connector", None)
     if READ_VERBS.search(base) and not WRITE_VERBS.search(re.sub(r"read|execute", "", base)):
         return ("local", "", None)
-    if not WRITE_VERBS.search(base):
-        return ("local", "", None)
     if TRACKER_TOOL.search(lname) and not CODE_TOOL.search(lname):
         key = str(args.get("projectKey") or args.get("project") or args.get("issueKey") or
-                  args.get("issueIdOrKey") or "")
+                  args.get("issueIdOrKey") or args.get("teamKey") or args.get("team") or "")
+        if not key:
+            ticket = TICKET_KEY.search(" ".join(str(args.get(k) or "") for k in ("identifier", "id", "issueId")))
+            key = ticket.group(1) if ticket else ""
         key = key.split("-")[0].upper() or None
         return ("watched", "write to the tracker", ("tracker", key))
+    if not WRITE_VERBS.search(base):
+        # A connector verb the guard does not know is treated as a write: it never fails open.
+        return ("watched", "a connector action the guard does not recognise", None)
     return ("watched", "write through a connector", None)
 
 
@@ -367,8 +380,8 @@ def decide(event):
     reason, scope = pending[0]
     if scope and scope[1]:
         hint = "permissions.py grant %s %s %s" % (session or "<session>", scope[0], scope[1])
-        return "ask", "%s. To authorise it for the session: %s" % (reason.capitalize(), hint)
-    return "ask", "%s, outside any authorised scope." % reason.capitalize()
+        return "ask", "%s. To authorise it for the session: %s" % (reason[:1].upper() + reason[1:], hint)
+    return "ask", "%s, outside any authorised scope." % (reason[:1].upper() + reason[1:])
 
 
 def emit(decision, reason, fmt):

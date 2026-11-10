@@ -32,19 +32,27 @@ done
 
 # Guards: merged into the working folder's settings, never duplicated.
 SETTINGS="$WORK/.claude/settings.json"
-python3 - "$SETTINGS" "$SDLC" "$STAMP" <<'PY'
+python3 - "$SETTINGS" "$SDLC" "$STAMP" "$NAME" <<'PY'
 import io, json, os, shlex, shutil, sys
-path, sdlc, stamp = sys.argv[1], sys.argv[2], sys.argv[3]
+path, sdlc, stamp, name = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 data = json.load(io.open(path, encoding="utf-8")) if os.path.exists(path) else {}
 before = json.dumps(data, sort_keys=True)
 hooks = data.setdefault("hooks", {})
 guards = os.path.join(sdlc, "tools", "guards")
-q = lambda name: shlex.quote(os.path.join(guards, name))
+q = lambda script: shlex.quote(os.path.join(guards, script))
+# Hooks point at the guards through the project folder Claude Code was opened in, so moving or
+# renaming the working folder does not break them.
+rel = lambda script: 'python3 "$CLAUDE_PROJECT_DIR/%s/tools/guards/%s"' % (name, script)
+# Entries an older installer wrote with absolute paths are replaced, not duplicated.
+for entries in hooks.values():
+    for e in entries:
+        e["hooks"] = [h for h in e.get("hooks", []) if guards not in h.get("command", "")]
+    entries[:] = [e for e in entries if e.get("hooks")]
 wanted = (
-    ("SessionStart", None, "python3 %s" % q("session_start.py")),
-    ("UserPromptSubmit", None, "python3 %s" % q("log_reminder.py")),
-    ("UserPromptSubmit", None, "python3 %s check --format claude" % q("usage.py")),
-    ("PreToolUse", "Bash|mcp__.*|Write|Edit|MultiEdit|NotebookEdit", "python3 %s check --format claude" % q("permissions.py")),
+    ("SessionStart", None, rel("session_start.py")),
+    ("UserPromptSubmit", None, rel("log_reminder.py")),
+    ("UserPromptSubmit", None, rel("usage.py") + " check --format claude"),
+    ("PreToolUse", "Bash|mcp__.*|Write|Edit|MultiEdit|NotebookEdit", rel("permissions.py") + " check --format claude"),
 )
 for event, matcher, command in wanted:
     entries = hooks.setdefault(event, [])

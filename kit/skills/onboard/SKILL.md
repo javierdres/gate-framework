@@ -48,7 +48,9 @@ name, profiles and products in `personal/profile.md`, following `method/template
 ## 4. Access
 
 Read in `method/profiles.md` what their profile needs and explain why, and run
-`tools/check-access.sh <profile>`. Then, for each access
+`tools/check-access.sh <profile>`. A check that cannot pass yet for reasons outside the
+person, such as "SDLC remote reachable" while the orchestrator has not pushed the SDLC, is
+reported as pending with who it depends on, not as their problem. Then, for each access
 missing, one at a time: give the steps of its guide in `tools/guides/`, wait, and verify only
 that one before the next. Prefer company login and connectors over hand-made tokens, with the
 least privilege that works and an expiry. When an access depends on someone else, say who to

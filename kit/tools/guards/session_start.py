@@ -62,8 +62,8 @@ def config_value(key, section=None):
         q = re.match(r'"((?:[^"\\]|\\.)*)"', raw)
         return re.sub(r"\\(.)", r"\1", q.group(1)) if q else ""
     if raw.startswith("'"):
-        q = re.match(r"'([^']*)'", raw)
-        return q.group(1) if q else ""
+        q = re.match(r"'((?:[^']|'')*)'", raw)
+        return q.group(1).replace("''", "'") if q else ""
     return raw.split(" #", 1)[0].split("\t#", 1)[0].strip()
 
 
@@ -154,17 +154,19 @@ def ssh_identity():
 
 def profiles_for(who):
     text = read(os.path.join(ROOT, "GOVERNANCE.md"))
-    m = re.search(r"^##\s+Profiles enabled.*?\n(.*?)(?=^##\s|\Z)", text, re.M | re.S | re.I)
-    table = m.group(1) if m else ""
+    # The heading may be translated: the SDLC is written in the organisation's language.
+    m = re.search(r"^##\s+(Profiles enabled|Perfiles habilitados).*?\n(.*?)(?=^##\s|\Z)",
+                  text, re.M | re.S | re.I)
+    table = m.group(2) if m else ""
     fallback = None
     for line in table.splitlines():
         cells = [c.strip().strip("`") for c in line.strip().strip("|").split("|")]
         if len(cells) < 3 or set(cells[0]) <= {"-", " ", ":"}:
             continue
         if who and any(who.lower() == c.lower() for c in cells[1:-1]):
-            return cells[-1], cells[0]
+            return cells[-1].replace("`", ""), cells[0]
         if cells[1] in ("—", "-", "") and cells[0].lower().startswith(("everyone", "todas", "todos")):
-            fallback = cells[-1]
+            fallback = cells[-1].replace("`", "")
     return fallback, None
 
 
@@ -195,7 +197,7 @@ def main():
         stage = "installation"
     elif not profile.strip():
         stage = "profile"
-    elif not re.search(r"^ready:\s*\S", profile, re.M):
+    elif not re.search(r"^(ready|listo):\s*\S", profile, re.M):
         stage = "access or welcome"
     else:
         stage = None
@@ -214,7 +216,7 @@ def main():
         lines.append("- Profile: " + " · ".join(l.strip() for l in profile.splitlines() if l.strip()))
 
     checker = os.path.join(ROOT, "tools", "check-access.sh")
-    m = re.search(r"^profile:\s*(.+)$", profile, re.M)
+    m = re.search(r"^(?:profile|perfil):\s*(.+)$", profile, re.M)
     if stamp and m and os.access(checker, os.X_OK):
         code, out = run([checker, "--summary", m.group(1).split(",")[0].strip()], timeout=25)
         lines.append("- Access: %s" % (out.splitlines()[-1] if out else "the checker did not answer"))

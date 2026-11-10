@@ -175,6 +175,26 @@ class Guard(unittest.TestCase):
             d, r = self.decision(c, "s-cli")
             self.assertEqual(d, "ask", c)
 
+    def test_linear_writes_can_be_authorised(self):
+        save = {"tool_name": "mcp__linear__save_issue", "tool_input": {"teamKey": "LIN", "title": "x"},
+                "session_id": "s-lin", "cwd": self.repo}
+        comment = {"tool_name": "mcp__linear__create_comment", "tool_input": {"issueId": "LIN-42", "body": "x"},
+                   "session_id": "s-lin", "cwd": self.repo}
+        self.assertEqual(self.run_guard(save)[1]["decision"], "ask")
+        self.assertIn("grant s-lin tracker LIN", self.run_guard(comment)[1]["reason"])
+        self.grant("s-lin", "tracker", "LIN")
+        self.assertEqual(self.run_guard(save)[1]["decision"], "allow")
+        self.assertEqual(self.run_guard(comment)[1]["decision"], "allow")
+
+    def test_graphql_clients_read_by_intent(self):
+        self.assertEqual(self.decision("tools/clients/linear.sh QUERY issues.graphql", "s-gql"), (None, ""))
+        d, r = self.decision("tools/clients/linear.sh MUTATION comment.graphql LIN-42", "s-gql")
+        self.assertEqual(d, "ask")
+        self.assertIn("tracker LIN", r)
+        self.grant("s-gql", "tracker", "LIN")
+        self.assertEqual(self.decision("tools/clients/linear.sh MUTATION comment.graphql LIN-42", "s-gql")[0], "allow")
+        self.assertEqual(self.decision("tools/clients/obs.sh MUTATION x", "s-gql")[0], "ask")
+
     def test_reads_are_not_slowed_down(self):
         for c in ("gh api user | python3 -c 'import json,sys; print(1)'", "glab api projects/1",
                   "git log --oneline | head", "cd /tmp && ls", "curl -s https://example.com | jq ."):
@@ -196,6 +216,10 @@ class Guard(unittest.TestCase):
             "mcp__atlassian__executeRead": (None, None),
             "mcp__atlassian__getJiraIssue": (None, None),
             "mcp__atlassian__searchJiraIssuesUsingJql": (None, None),
+            "mcp__atlassian__discover": (None, None),
+            "mcp__linear__list_issues": (None, None),
+            "mcp__linear__save_issue": ("ask", "tracker"),
+            "mcp__someservice__frobnicate": ("ask", "does not recognise"),
         }
         for name, (decision, why) in cases.items():
             out = self.run_guard({"tool_name": name, "tool_input": {}, "session_id": "s-c"})[1]

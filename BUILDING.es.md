@@ -35,7 +35,11 @@ Instrucciones para el asistente que construye el SDLC:
   memoria. Los nombres de los hooks, las rutas de configuración y los nombres de archivo cambian
   entre versiones.
 - Los nombres de las skills van cortos y en inglés. Todo lo demás, en el idioma de la
-  organización.
+  organización, salvo lo que leen los scripts, que queda como lo escribe GATE: las claves
+  de `sdlc.yml` y del formato de reglas, los identificadores de perfil y las marcas del índice de
+  la bitácora. Los guardias también leen en español el título de perfiles de `GOVERNANCE.md`
+  («Perfiles habilitados») y las claves de `personal/profile.md` (`perfil`, `listo`); cualquier
+  otra traducción obliga a adaptar el guardia.
 - **Nada va a la configuración global del asistente.** Instrucciones, skills y guardias se
   instalan en la carpeta de trabajo, para que este SDLC nunca choque con otro en el mismo
   computador (sección 8 de GATE). Los archivos de credenciales llevan la organización en el
@@ -143,7 +147,7 @@ anota esa versión en `sdlc.yml`.
 | Cualquier otro | El archivo que cargue en cada sesión, apuntando a `AGENTS.md` | Lo que cargue cuando se necesita | Su mecanismo previo a una acción, o el respaldo en la plataforma descrito arriba |
 
 Solo el adaptador de Claude Code está verificado de punta a punta, y lo escribe
-`bin/bootstrap.py`. Se verificó en Claude Code 2.1.304, en una sesión real: las instrucciones
+`bin/bootstrap.py`. Se verificó en Claude Code 2.1.304, en una sesión real (el guardia de consumo, en la 2.1.314): las instrucciones
 cargan a través de `CLAUDE.md`, llega el contexto del guardia de inicio, encuentra `establish` y
 `onboard`, y el guardia de permisos detiene un push a la rama por defecto aunque la terminal esté
 autorizada. Las demás filas son puntos de partida sacados de la documentación pública de
@@ -503,7 +507,7 @@ número como un lugar donde mirar, nunca como un juicio sobre una persona.
 | Guardia de consumo | Si el asistente mide el uso por ventanas y las expone, muestra cuánto se lleva de cada una y cuándo se renueva, y avisa una vez cuando al ritmo actual una ventana se va a agotar antes de renovarse: el asistente sugiere un modelo más liviano y lanza sus subagentes con uno, y al renovarse sugiere volver al más capaz. La referencia es `tools/guards/usage.py` |
 | Guardia de permisos | Antes de cada escritura vigilada, mira las autorizaciones de la sesión y responde permitir o preguntar. Producción, merges y borrados preguntan siempre; las herramientas de infraestructura preguntan salvo en sus subcomandos de solo lectura. Ante cualquier error, pregunta |
 | Verificador de accesos | `requirements` revisa solo lo que el equipo necesita tener antes de instalar; un perfil revisa los requisitos, los accesos de todos (`all`) y los propios, y los muestra con el componente de estado |
-| Clientes de API | Uno por sistema (plataforma de código, tickets, observabilidad), sin dependencias, que lee la credencial desde el home de la persona. El método HTTP va primero, `tools/clients/<sistema>.sh GET <ruta>`, para que el guardia de permisos deje pasar GET y HEAD y pregunte por todo lo demás |
+| Clientes de API | Uno por sistema (plataforma de código, tickets, observabilidad), sin dependencias, que lee la credencial desde el home de la persona. El método HTTP va primero, `tools/clients/<sistema>.sh GET <ruta>`, para que el guardia de permisos deje pasar GET y HEAD y pregunte por todo lo demás; un cliente GraphQL recibe `QUERY` o `MUTATION` |
 | Guías de acceso | Una por sistema, paso a paso: cómo crear la credencial con el permiso mínimo y con vencimiento, dónde guardarla y cómo comprobar que funciona |
 
 Los scripts tienen que correr en todos los sistemas operativos del equipo. Se prefiere shell POSIX

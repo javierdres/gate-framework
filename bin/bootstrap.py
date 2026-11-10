@@ -270,7 +270,8 @@ def scaffold_sdlc(target, assistant, org, display=""):
     print("    Next, with your assistant open inside %s:" % target)
     if assistant == "claude-code":
         print("      run /establish. It interviews you, builds every layer following")
-        print("      gate-reference/BUILDING.md and closes with the final verification.")
+        print("      gate-reference/BUILDING.md (or BUILDING.es.md, in Spanish) and closes with")
+        print("      the final verification.")
     else:
         print("      ask it to read AGENTS.md and run the establish skill in")
         print("      skills/establish/SKILL.md. If your assistant loads skills from")

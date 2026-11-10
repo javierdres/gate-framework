@@ -34,7 +34,12 @@ Instructions for the assistant building the SDLC:
   adding its adapter and nothing else.
 - When you wire your own platform, **read its current documentation** rather than relying on
   memory. Hook names, configuration paths and file names change between versions.
-- Skill names are short and in English. Everything else is in the organisation's language.
+- Skill names are short and in English. Everything else is in the organisation's language,
+  except what the scripts read, which stays as GATE writes it: the keys of `sdlc.yml` and of the
+  rule format, the profile ids, and the markers in the log index. The guards also read the
+  Spanish forms of the profiles heading in `GOVERNANCE.md` ("Perfiles habilitados") and of the
+  keys in `personal/profile.md` (`perfil`, `listo`); any other translation needs the guard
+  adapted too.
 - **Nothing goes into the assistant's global configuration.** Instructions, skills and guards
   are installed in the working folder, so this SDLC never collides with another one on the same
   machine (GATE section 8). Credential files carry the organisation in their name.
@@ -137,11 +142,11 @@ version in `sdlc.yml`.
 | Any other | Whatever file it loads every session, pointing to `AGENTS.md` | Whatever it loads on demand | Its pre-action mechanism, or the platform fallback above |
 
 Only the Claude Code adapter has been verified end to end, and `bin/bootstrap.py` writes it.
-It was verified on Claude Code 2.1.304 in a real session: the instructions load through
-`CLAUDE.md`, the session start guard's context arrives, `establish` and `onboard` are found, and
-the permissions guard stops a push to the default branch even when the shell tool is allowed.
-The other rows are starting points taken from each platform's public documentation, not yet
-verified on a real installation. If you verify one, contribute it.
+It was verified on Claude Code 2.1.304 in a real session, and the usage guard on 2.1.314: the
+instructions load through `CLAUDE.md`, the session start guard's context arrives, `establish`
+and `onboard` are found, and the permissions guard stops a push to the default branch even when
+the shell tool is allowed. The other rows are starting points taken from each platform's public
+documentation, not yet verified on a real installation. If you verify one, contribute it.
 
 People who do not work in a terminal, product most often, use a **chat client** with a project
 or workspace: the instructions for their role, the context files they need and a connector to
@@ -490,7 +495,7 @@ as a verdict on a person.
 | Usage guard | Where the assistant meters use in windows and exposes them, shows how much of each window is used and when it resets, and warns once when a window will run out before it resets at the current pace: the assistant suggests a lighter model and runs its subagents on one, and suggests the most capable model again after the reset. `tools/guards/usage.py` is the reference |
 | Permissions guard | Before every watched write, reads the session's authorisations and answers allow or ask. Production, merges and deletions always ask; infrastructure tools ask except for their read-only subcommands. On any error, asks |
 | Access checker | `requirements` checks only what the machine needs before installing; a profile checks requirements, the access everyone needs (`all`) and its own, and shows them with the status component |
-| API clients | One per system (code platform, tracker, observability), without dependencies, reading the credential from the person's home. The HTTP method goes first, `tools/clients/<system>.sh GET <path>`, so the permissions guard lets GET and HEAD through and asks for anything else |
+| API clients | One per system (code platform, tracker, observability), without dependencies, reading the credential from the person's home. The HTTP method goes first, `tools/clients/<system>.sh GET <path>`, so the permissions guard lets GET and HEAD through and asks for anything else; a GraphQL client takes `QUERY` or `MUTATION` instead |
 | Access guides | One per system, step by step: how to create the credential with the least privilege and an expiry, where to keep it, how to check it works |
 
 Scripts must run on every operating system the team uses. Prefer POSIX shell and the Python

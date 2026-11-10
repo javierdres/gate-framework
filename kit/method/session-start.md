@@ -4,8 +4,9 @@ The session-start guard hands the assistant the GATE version, the setup stage, t
 what is open in the log. Then:
 
 - **A direct request** is handled straight away, without a menu.
-- **Setup unfinished**: continue with `/onboard` from the stage the guard reported.
-- **No profile**: show the profile menu below, inside a code block.
+- **Setup unfinished at requirements or installation**: continue with `/onboard` from there.
+- **No profile** (setup stage "profile"): show the profile menu below, inside a code block.
+  Choosing a profile hands over to `/onboard`, which saves it and goes on with access.
 - **With a profile**: greet with name and profile, and offer the tasks the profile enables.
 
 ```
