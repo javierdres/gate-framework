@@ -14,7 +14,11 @@ orchestrator decides. This skill implements the `/establish` contract in
 1. Read `gate-reference/BUILDING.md` from top to bottom, or `gate-reference/BUILDING.es.md` if
    the orchestrator works in Spanish. It is your build specification. Section 2 of
    `gate-reference/GATE.md` explains why it is built this way.
-2. Read `sdlc.yml`, `PLAN.md` and `GOVERNANCE.md` to see what is already filled in.
+2. Read `sdlc.yml`, `PLAN.md` and `GOVERNANCE.md` to see what is already filled in. Check
+   that this repository sits one level inside a working folder, not loose in the home folder
+   nor inside another repository; if it does not, stop and ask the orchestrator to move it
+   (BUILDING.md section 6). If `organisation.name` is only the short name, ask for the display
+   name in the interview.
 3. Read `personal/establish-progress.md` if it exists: a previous session may have left the
    build halfway. Resume from the first layer not marked done.
 4. Tell the orchestrator in three lines what is about to happen: the interview, the build in
@@ -51,7 +55,10 @@ and keep what BUILDING.md section 8 says about it: `onboard`, `guide` and `save`
 `define` against `define` and `specify`; `self-review`; `e2e` against the automated part of
 `verify` and the release regression of `deploy`; `harvest`. `onboard` already has a first
 version in `skills/onboard/`: adapt it. Replace the examples in `tools/access-checks.tsv` with
-the checks each profile of this organisation needs.
+the checks each profile of this organisation needs: `requirements` for what the machine needs,
+`all` for the access everyone needs, and the profile ids from `method/profiles.md` for the rest.
+Every API client you write in `tools/clients/` takes the HTTP method first, as its README says,
+so the permissions guard can tell a read from a write.
 
 When the code platform has no protected branches or merge requests, set up
 `tools/server-hooks/` as its README says, with `identity.method: ssh-signing` in `sdlc.yml`.
@@ -66,8 +73,8 @@ its reason.
 
 Run the checklist in BUILDING.md section 11, point by point, for real: run the installer twice,
 try an outward write with and without authorisation, make a guard fail on purpose. Report each
-point with ✓ or ✗ inside a code block, and for every ✗ say what is missing and who it depends
-on.
+point with ✓, ✗ or – inside a code block: for every ✗ say what is missing and who it depends
+on, and for every – what was skipped on purpose, why and who decided it.
 
 When every point is green or named as pending, write today's date in `built` in `sdlc.yml`, so
 the instructions stop offering `establish`. Then hand over to `onboard` for the first person

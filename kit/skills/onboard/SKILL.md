@@ -25,9 +25,9 @@ session-start guard said setup stopped:
 
 ## 1. Requirements
 
-Before the profile exists, run `tools/check-access.sh all`, which checks only what everyone
-needs; the profile's own checks run in step 4. Read what is missing: git, Python 3, and whatever
-`tools/access-checks.tsv` lists for the person's profile. For each thing missing, give the exact
+Before the profile exists, run `tools/check-access.sh requirements`, which checks only what has
+to be on the machine before installing. Access, including what everyone needs, runs in step 4,
+once there is something to be granted. Read what is missing. For each thing missing, give the exact
 command for their operating system, step by step.
 
 ## 2. Installation

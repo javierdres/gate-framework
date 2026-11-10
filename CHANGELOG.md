@@ -3,6 +3,45 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-11-10 · A first build that comes out clean
+
+A third simulation built the SDLC of an invented company end to end with GATE alone, and
+checked it in real assistant sessions. The method held: the skills behaved as their contracts
+say and every guard and catalog test passed. It also found sixteen places where the guide, the
+kit and the scaffold disagreed or left the orchestrator to guess. They are all fixed, so the
+next organisation does not trip on them.
+
+**The guards are whole from the first minute.** The scaffold registered only the session start
+and permissions guards until the installer ran; it now registers the log reminder and the usage
+check too. The guide counted three guards where the kit ships four.
+
+**The permissions guard reads more, and sees more.** Infrastructure tools no longer ask for
+every command: read-only subcommands such as `kubectl get`, `kubectl logs` or `helm status`
+pass, while anything else, a secret read included, still asks, wherever the tool sits in the
+command. An organisation's own API clients in `tools/clients/` now take the HTTP method first,
+so GET and HEAD pass and any other call asks; before, a write through them went unseen. Both
+come with tests.
+
+**Where the SDLC lives is no longer a guess.** The examples scaffold into
+`~/Projects/<org>/sdlc-<org>` instead of next to GATE, the scaffold warns when the folder the
+installer would wire is the home folder or another repository, and `/establish` checks it
+before starting. The skeleton is step one of the build order and the interview step two, which
+is what actually happens. Skill links are relative, so moving the working folder does not break
+them.
+
+**Names, profiles and access, one way each.** `--name` gives the organisation a display name
+apart from its short name. `method/profiles.md` opens with the list of profile ids every other
+file uses. The access checks separate `requirements`, what the machine needs before installing,
+from `all`, the access everyone needs, so the first check no longer fails before there is
+anything to grant.
+
+**Smaller fixes.** The pilot products get their folders during the build and any other product
+on first use; the catalog has one false-positive record, as the kit always had; the names check
+leaves licence notices aside; where the code platform accepts any single code owner, the change
+request template carries one line per custodian; commit signing is configured per working
+folder, never globally; and the final verification can mark a step skipped on purpose, with its
+reason, instead of only pass or fail.
+
 ## 2026-11-04 · Nobody runs out of the assistant without being told
 
 Subscription plans meter use in windows that reset at a fixed time. Whoever is focused on the

@@ -4,11 +4,12 @@
 #
 # Checks the requirements and the access a profile needs, one line each.
 #
-#   tools/check-access.sh <profile>             full report
+#   tools/check-access.sh requirements          only what the machine needs before installing
+#   tools/check-access.sh <profile>             full report: requirements, everyone's, the profile's
 #   tools/check-access.sh --summary <profile>   one line, for the session start guard
 #
 # The checks live in tools/access-checks.tsv: one per line, profile, name and command,
-# separated by tabs. A profile of `all` applies to everyone. A check passes when its
+# separated by tabs. `requirements` and `all` apply to everyone. A check passes when its
 # command exits 0. Never put a credential in that file; commands read each person's own.
 set -uo pipefail
 
@@ -19,7 +20,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 CHECKS="$DIR/access-checks.tsv"
 
 if [ -z "$PROFILE" ] || [ ! -f "$CHECKS" ]; then
-  sed -n '4,12p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '4,13p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 fi
 
@@ -29,7 +30,11 @@ limited() { if command -v perl >/dev/null 2>&1; then perl -e 'alarm shift; exec 
 ok=0; fail=0; report=""
 while IFS=$'\t' read -r who name cmd; do
   case "$who" in ''|\#*) continue ;; esac
-  [ "$who" = "all" ] || [ "$who" = "$PROFILE" ] || continue   # `all` as the profile runs only these
+  if [ "$PROFILE" = "requirements" ]; then
+    [ "$who" = "requirements" ] || continue
+  else
+    [ "$who" = "requirements" ] || [ "$who" = "all" ] || [ "$who" = "$PROFILE" ] || continue
+  fi
   if ( cd "$DIR/.." && limited bash -c "$cmd" ) </dev/null >/dev/null 2>&1; then
     ok=$((ok + 1)); report="$report  ✓  $name\n"
   else

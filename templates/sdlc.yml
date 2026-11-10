@@ -14,8 +14,8 @@ gate:
 built: ""
 
 organisation:
-  name: ""
-  short_name: ""            # used in sdlc-<short_name> and in headings
+  name: ""                  # display name, used in headings (bootstrap --name)
+  short_name: ""            # used in sdlc-<short_name> and in credential file names
   builds: ""                # own products, internal systems, integrations...
   language: ""              # e.g. "es-CL"; technical terms kept in English
   regulatory_context: ""    # personal, health or financial data; standards

@@ -13,7 +13,8 @@ Three levels. Local work is not this guard's business and passes untouched. Outw
 until their scope is authorised for the session. A short list always asks, whatever was
 authorised: pushes to the default branch or to a remote the repository does not declare;
 forced, mirrored, pruning, deleting and all-branch pushes; merges; deletions; infrastructure
-tools; credentials; and anything that touches the authorisations themselves.
+tools, except their read-only subcommands; credentials; and anything that touches the
+authorisations themselves.
 
 The guard is conservative by design. A session authorisation only covers a simple command the
 guard fully understands: a push or a change request that is the whole of its segment. A write
@@ -48,18 +49,37 @@ NEVER = [
     (r"\b(gh|glab|curl)\b.*\bmerge\b", "merge"),
     (r"(^|\s)(-X|--method|--request)\s*=?\s*delete\b", "deletion"),
     (r"\b(gh|glab)\s+(repo|release|issue|mr|pr|api)\b.*\bdelete\b", "deletion"),
-    (r"\b(kubectl|helm|terraform|pulumi|cdk\s+deploy|serverless\s+deploy|sam\s+deploy)\b",
-     "infrastructure or production tool"),
+    (r"\b(cdk\s+deploy|serverless\s+deploy|sam\s+deploy)\b", "infrastructure or production tool"),
     (r"\b(token|tokens|personal_access_tokens|deploy[-_]keys?)\b.*\b(create|new|add)\b", "credentials"),
     (r"\b(gh|glab)\s+auth\s+token\b", "credentials"),
     (r"permissions\.py\b.*\b(grant|revoke)\b", "an authorisation must pass the person's own confirmation"),
     (r"personal/grants\b", "the authorisations can only change through the person's own confirmation"),
 ]
+# Infrastructure tools always ask, except for the subcommands below, which only read. Reading a
+# secret is still credentials, and asks.
+INFRA = re.compile(r"(?:^|(?<=[\s/(`=]))(kubectl|helm|terraform|pulumi)(?=\s|$)", re.I)
+INFRA_READS = {
+    "kubectl": {"get", "describe", "logs", "top", "explain", "version", "api-resources", "api-versions",
+                "cluster-info", "events", "auth can-i", "auth whoami", "config view",
+                "config get-contexts", "config current-context"},
+    "helm": {"list", "ls", "status", "get", "history", "show", "search", "template", "lint", "version"},
+    "terraform": {"version", "validate", "providers"},
+    "pulumi": {"version", "whoami", "about"},
+}
+INFRA_VALUE_FLAGS = {"-n", "--namespace", "--context", "--kube-context", "--kubeconfig", "--cluster",
+                     "--user", "-s", "--server", "--stack", "-C", "--cwd"}
+INFRA_END = re.compile(r"&&|\|\||;|\||\n|&|\)|`")
+SECRETS = re.compile(r"\bsecrets?\b", re.I)
+# Each organisation's API clients live in tools/clients/ and take the HTTP method first:
+# `tools/clients/<system>.sh GET <path>`. GET and HEAD only read; anything else, including a call
+# with no method, is an outward write.
+CLIENT = re.compile(r"(\S*tools/clients/\S+)\s*(\S*)")
+
 # Constructs the guard does not parse: a write inside them always asks.
 OPAQUE = re.compile(r"(\$\(|`|<\(|>\(|\beval\b|\b(sh|bash|zsh|dash|ksh|fish|pwsh|powershell)\s+(-\w*c|-c)\b|"
                     r"\bxargs\b|\bexec\b|\bsource\b|^\s*\.\s|\bpython\d?\s+-c\b|\bperl\s+-e\b|\bnode\s+-e\b|"
                     r"\bruby\s+-e\b|\benv\s+\S+=)", re.I)
-WRITE_HINT = re.compile(r"\bgit\b.*(?<!stash )\bpush\b|"
+WRITE_HINT = re.compile(r"\bgit\b.*(?<!stash )\bpush\b|tools/clients/|"
                         r"\b(gh|glab)\b.*(\b(create|merge|delete|close|edit|comment|review|transfer|archive)\b|"
                         r"(-X|--method|--request)\s*=?\s*(post|put|patch|delete)\b|\s(-f|-F|--field|--raw-field|--input)(\s|=))|"
                         r"\bcurl\b.*((-X|--request)\s*=?\s*(post|put|patch|delete)\b|\s(-d|--data\S*|-F|--form)(\s|=))", re.I)
@@ -239,11 +259,45 @@ def classify_segment(segment, where):
     return ("local", "", None), where
 
 
+def infra_verdict(flat):
+    """Every use of an infrastructure tool, wherever it sits in the command, must be a read."""
+    for m in INFRA.finditer(flat):
+        tool = m.group(1).lower()
+        rest = INFRA_END.split(flat[m.end():], 1)[0].split()
+        sub = []
+        skip = False
+        for t in rest:
+            if skip:
+                skip = False
+                continue
+            if t.startswith("-"):
+                skip = t in INFRA_VALUE_FLAGS
+                continue
+            sub.append(t.lower())
+        if not any(" ".join(sub[:len(r.split())]) == r for r in INFRA_READS[tool]):
+            return ("never", "infrastructure or production tool", None)
+        if tool == "kubectl" and SECRETS.search(" ".join(sub[1:])):
+            return ("never", "credentials", None)
+    return None
+
+
+def client_verdicts(flat):
+    verdicts = []
+    for m in CLIENT.finditer(flat):
+        if m.group(2).upper() not in ("GET", "HEAD"):
+            name = os.path.basename(m.group(1))
+            verdicts.append(("watched", "write through the API client %s" % name, None))
+    return verdicts
+
+
 def classify_shell(command, cwd):
     flat = re.sub(r"['\"\\]", "", command)
     for pattern, why in NEVER:
         if re.search(pattern, flat, re.I):
             return [("never", why, None)]
+    infra = infra_verdict(flat)
+    if infra:
+        return [infra]
     if OPAQUE.search(command) and WRITE_HINT.search(flat):
         return [("never", "a write inside a construct the guard does not parse", None)]
     verdicts, where = [], cwd
@@ -252,7 +306,7 @@ def classify_shell(command, cwd):
         if verdict[0] == "local" and re.search(r"\bgit\b.*(?<!stash )\bpush\b", re.sub(r"['\"\\]", "", seg)):
             verdict = ("never", "a push the guard could not read with certainty", None)
         verdicts.append(verdict)
-    return verdicts
+    return verdicts + client_verdicts(flat)
 
 
 def classify_tool(name, args):

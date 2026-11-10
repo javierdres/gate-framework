@@ -23,9 +23,12 @@ On the default branch only:
 
 ## Setting it up
 
-1. Each person creates an SSH signing key and configures git to sign every commit:
-   `git config --global gpg.format ssh`, `git config --global user.signingkey ~/.ssh/id_ed25519.pub`
-   and `git config --global commit.gpgsign true`.
+1. Each person creates an SSH signing key and configures git to sign every commit in this
+   organisation's repositories only, never globally, so other organisations' work on the same
+   machine is untouched. In `~/.gitconfig`, an include for the working folder:
+   `[includeIf "gitdir:~/Projects/<org>/"]` with `path = ~/.gitconfig-<org>`, and in that file
+   `gpg.format = ssh`, `user.signingkey = ~/.ssh/id_ed25519.pub` and `commit.gpgsign = true`
+   under their sections. For a single repository, `git config` without `--global`, run inside it.
 2. `allowed_signers` at the root of the SDLC lists one line per person: their identity, the
    namespaces and their public key, for example
    `person@company.example namespaces="git" ssh-ed25519 AAAA...`. Adding someone is a reviewed

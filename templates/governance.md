@@ -77,4 +77,4 @@ profile not in their row cannot be used.
 
 | Person | Verifiable identity | Profiles |
 | --- | --- | --- |
-| Everyone else | — | building profiles |
+| Everyone else | — | `frontend`, `backend`, `fullstack`, `qa` (ids from `method/profiles.md`) |

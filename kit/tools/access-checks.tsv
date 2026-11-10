@@ -1,7 +1,9 @@
 # profile	name	command
-# One check per line, separated by tabs. `all` applies to every profile.
+# One check per line, separated by tabs. Profile ids are the ones in method/profiles.md.
+# `requirements`: what has to be on the machine before installing; runs first, on its own.
+# `all`: the access everyone needs, checked together with each profile's own.
 # /establish replaces the examples with the checks of this organisation.
-all	git installed	command -v git
-all	Python 3 installed	command -v python3
+requirements	git installed	command -v git
+requirements	Python 3 installed	command -v python3
 all	SDLC remote reachable	git ls-remote --exit-code origin HEAD
 all	personal/ ignored by version control	git check-ignore -q personal/profile.md

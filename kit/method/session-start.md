@@ -16,7 +16,7 @@ what is open in the log. Then:
 
   ── I AM ──────────────────────────────────────────────────
    2   Product                 define and refine requests
-   3   Builder                 frontend, backend or fullstack
+   3   Builder                 frontend, backend, fullstack or qa
    4   Operations              production and incidents
    5   Security                audit and review changes
    6   Leadership              see the team and decide

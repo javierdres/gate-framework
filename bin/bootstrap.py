@@ -5,13 +5,15 @@
 
 Three subcommands:
 
-    bootstrap.py sdlc <path> [--assistant <id>] [--org <short name>]
+    bootstrap.py sdlc <working folder>/sdlc-<org> [--assistant <id>] [--org <short name>]
+                      [--name "<display name>"]
                                    create the organisation's SDLC repository
     bootstrap.py catalog <path>    create a standalone standards catalog repository
     bootstrap.py config <path>     drop .gate/config.yml into a project
 
 `sdlc` is where an orchestrator starts: it writes the whole skeleton that
-/establish then fills in from the interview, with the empty catalog inside it,
+/establish then fills in from the interview. Create it where it will live, inside the
+working folder people open the assistant in, because the installer wires that folder, with the empty catalog inside it,
 the neutral guards and the adapter for the chosen assistant (claude-code,
 gemini-cli, kiro, codex or other). The catalog is identical for anyone starting
 out, so there is no reason to build it by hand. The config is filled in with
@@ -95,9 +97,9 @@ One postmortem per incident of this product, written from `method/templates/post
 root cause goes to `harvest`.
 """
 
-SDLC_README = """# {org} SDLC
+SDLC_README = """# {name} SDLC
 
-How {org} works with an AI assistant across the software life cycle: product, building,
+How {name} works with an AI assistant across the software life cycle: product, building,
 operations, security and leadership. Built on [GATE](https://github.com/javierdres/gate-framework):
 the assistant prepares, people decide.
 
@@ -164,7 +166,7 @@ def gate_version():
     return v or "to be defined"
 
 
-def scaffold_sdlc(target, assistant, org):
+def scaffold_sdlc(target, assistant, org, display=""):
     if os.path.exists(target) and os.listdir(target):
         print("x %s exists and is not empty. Refusing to write over it." % target)
         return 1
@@ -172,6 +174,7 @@ def scaffold_sdlc(target, assistant, org):
         print("x unknown assistant '%s'. One of: %s" % (assistant, ", ".join(ASSISTANTS)))
         return 1
     org = org or os.path.basename(os.path.abspath(target)).replace("sdlc-", "") or "org"
+    display = display or org
     written = copy_tree(KIT, target)
     for name in os.listdir(os.path.join(target, "adapters")):
         folder = os.path.join(target, "adapters", name)
@@ -182,18 +185,19 @@ def scaffold_sdlc(target, assistant, org):
         src = os.path.join(HERE, "templates", tpl)
         path = os.path.join(target, dst)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        text = io.open(src, encoding="utf-8").read().replace("<Organisation>", org)
+        text = io.open(src, encoding="utf-8").read().replace("<Organisation>", display)
         io.open(path, "w", encoding="utf-8").write(text)
         written += 1
 
     version = gate_version()
     config = io.open(os.path.join(HERE, "templates", "sdlc.yml"), encoding="utf-8").read()
     config = re.sub(r'^(  version:) ""', r'\1 "%s"' % version, config, count=1, flags=re.M)
+    config = re.sub(r'^(  name:) ""', lambda m: '%s "%s"' % (m.group(1), display), config, count=1, flags=re.M)
     config = re.sub(r'^(  short_name:) ""', r'\1 "%s"' % org, config, count=1, flags=re.M)
     config = re.sub(r'^(  - id:) ""(\s+# claude-code)', r'\1 "%s"\2' % assistant, config, count=1, flags=re.M)
     extra = {
         "sdlc.yml": config,
-        "README.md": SDLC_README.format(org=org),
+        "README.md": SDLC_README.format(name=display),
         "ONBOARDING.md": SDLC_ONBOARDING.format(org=org),
         "GATE.md": SDLC_GATE_MAP.format(version=version),
         "CODEOWNERS": "# Translates GOVERNANCE.md. During formulation, the orchestrator owns everything.\n* @<orchestrator>\n",
@@ -234,6 +238,8 @@ def scaffold_sdlc(target, assistant, org):
         guard = 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/%s"'
         settings = {"hooks": {
             "SessionStart": [{"hooks": [{"type": "command", "command": guard % "session_start.py"}]}],
+            "UserPromptSubmit": [{"hooks": [{"type": "command", "command": guard % "log_reminder.py"}]},
+                                 {"hooks": [{"type": "command", "command": (guard % "usage.py") + " check --format claude"}]}],
             "PreToolUse": [{"matcher": "Bash|mcp__.*|Write|Edit|MultiEdit|NotebookEdit",
                             "hooks": [{"type": "command", "command": (guard % "permissions.py") + " check --format claude"}]}],
         }}
@@ -252,7 +258,14 @@ def scaffold_sdlc(target, assistant, org):
         written += 2
 
     print("OK  SDLC for %s scaffolded at %s (%d files, GATE %s, assistant %s)"
-          % (org, target, written, version, assistant))
+          % (display, target, written, version, assistant))
+    parent = os.path.realpath(os.path.dirname(os.path.abspath(target)))
+    top = run(["git", "rev-parse", "--show-toplevel"], parent)
+    if parent == os.path.realpath(os.path.expanduser("~")) or (top and os.path.realpath(top) == parent):
+        print()
+        print("!   %s is the working folder the installer will wire, and it is your home" % parent)
+        print("    folder or another repository. Move the SDLC into a working folder of its own,")
+        print("    for example ~/Projects/%s/sdlc-%s, before running /establish." % (org, org))
     print()
     print("    Next, with your assistant open inside %s:" % target)
     if assistant == "claude-code":
@@ -388,7 +401,7 @@ def main():
         return 2
     action, path = sys.argv[1], sys.argv[2]
     if action == "sdlc":
-        return scaffold_sdlc(path, option("--assistant", "other"), option("--org"))
+        return scaffold_sdlc(path, option("--assistant", "other"), option("--org"), option("--name"))
     if action == "catalog":
         return scaffold_catalog(path)
     if not os.path.isdir(path):

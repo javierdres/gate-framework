@@ -19,12 +19,14 @@ if ! grep -qF "$MARK" "$WORK/CLAUDE.md" 2>/dev/null; then
   } >> "$WORK/CLAUDE.md"
 fi
 
-# Skills: linked one by one, so the person's own skills stay untouched.
+# Skills: linked one by one, so the person's own skills stay untouched. The links are relative,
+# so they survive the working folder being moved or renamed.
 mkdir -p "$WORK/.claude/skills"
 for dir in "$SDLC"/skills/*/; do
   [ -f "$dir/SKILL.md" ] || continue
   skill="$(basename "$dir")"
-  [ -e "$WORK/.claude/skills/$skill" ] || ln -s "$dir" "$WORK/.claude/skills/$skill" 2>/dev/null \
+  rel="$(python3 -c 'import os, sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "${dir%/}" "$WORK/.claude/skills")"
+  [ -e "$WORK/.claude/skills/$skill" ] || ln -s "$rel" "$WORK/.claude/skills/$skill" 2>/dev/null \
     || cp -R "$dir" "$WORK/.claude/skills/$skill"
 done
 

@@ -171,7 +171,7 @@ and so that any capable assistant can build it by following it.
 | Plan | What is being built now, what comes next, what is out of scope |
 | Governance | The roles, who approves what, who holds each role today |
 | Method | The cycle as this organisation runs it: profiles, permissions, the person's log, session start, templates |
-| Catalog | The rules by scope, each scope with its false-positive record |
+| Catalog | The rules by scope, and the false-positive record |
 | Products | The context of each product, its business rules, its use cases and their automated flows |
 | Tools | Installer, access checker, guards, API clients and step-by-step access guides |
 | Skills | The implementations of the contracts in section 6, plus the entry skills |

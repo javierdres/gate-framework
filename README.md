@@ -29,7 +29,7 @@ written in neutral formats and a thin adapter wires it to that assistant.
 ## Getting started: build your SDLC
 
 ```
-python3 bin/bootstrap.py sdlc ../sdlc-<org> --assistant claude-code --org <org>
+python3 bin/bootstrap.py sdlc ~/Projects/<org>/sdlc-<org> --assistant claude-code --org <org>
 ```
 
 That writes the skeleton of your organisation's SDLC: the base files, the empty standards

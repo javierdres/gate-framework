@@ -20,7 +20,8 @@ It explains why the SDLC is built this way; this guide says how.
 Instructions for the assistant building the SDLC:
 
 - **Do not build anything before the interview in section 5 is finished** and its summary is
-  confirmed. Whatever nobody knows is marked "to be defined" and the build carries on; nothing
+  confirmed. The skeleton `bin/bootstrap.py` wrote is the only thing that exists before it: it is
+  what lets `/establish` run, and it is filled in only after the interview. Whatever nobody knows is marked "to be defined" and the build carries on; nothing
   is invented.
 - Wherever this guide says "the code platform", "the tracker" or "the production source of
   truth", use whatever the organisation actually has. If it has none of one of them, the part
@@ -47,13 +48,16 @@ Instructions for the assistant building the SDLC:
 
 - A repository, `sdlc-<org>`, that every person clones into their own working folder next to
   the repositories of their products. The assistant is opened in that working folder.
+  The orchestrator scaffolds it there too, `~/Projects/<org>/sdlc-<org>` for example: the
+  installer wires the folder that contains the SDLC, so an SDLC scaffolded loose in the home
+  folder, or inside another repository, wires the wrong one.
 - Persistent instructions every session loads, with the rules that always apply.
 - A plan with an objective, a review date and what is out of scope.
 - Governance by roles, with one table of who holds each role today and one of which profiles
   each person may use, both tied to verifiable identities.
 - The method as the organisation runs it: profiles, permissions, the person's log, session
   start, templates.
-- An empty standards catalog, by scope, each scope with its false-positive record.
+- An empty standards catalog, by scope, with its false-positive record.
 - A folder per pilot product, with its context, its business rules and its catalog of use
   cases.
 - Tools: an installer, an access checker, the guards, small API clients and step-by-step access
@@ -224,6 +228,11 @@ can just confirm it. Close with a summary to confirm before building anything.
 
 ## 6. Repository structure
 
+The SDLC always lives one level inside a working folder, never loose in the home folder nor
+inside another repository: the installer writes the instructions, skills and guards into the
+folder that contains it. To try it out without touching your real working folder, scaffold it
+into a throwaway one, `/tmp/try/sdlc-<org>` for example, rather than somewhere fixed.
+
 ```
 <working folder>/
 ├── AGENTS.md                 written by the installer; points to the SDLC and to personal/
@@ -301,7 +310,13 @@ the tasks that profile enables: product, building, review, operations and suppor
 other. Before starting, the assistant summarises what it understood and waits. If the person
 greets without a request, it mentions in one line what is still open in their log.
 
-**Profiles (`method/profiles.md`).** One sheet per profile, answering five questions: what the
+**Profiles (`method/profiles.md`).** It opens with the list of profile ids, the only names a
+profile has anywhere in the SDLC: in `GOVERNANCE.md`, `personal/profile.md`,
+`tools/access-checks.tsv` and the session-start menu. GATE's list is `product`, `frontend`,
+`backend`, `fullstack`, `qa`, `operations`, `security`, `leadership` and `support`; the
+building profiles are `frontend`, `backend`, `fullstack` and `qa`. `/establish` removes the
+ones the organisation does not use and adds its own, here first. Then one sheet per profile,
+answering five questions: what the
 person gets, what they configure (with the least privilege and how to obtain it), what data
 they work with, which skills they use, and how they know they are ready. It is the single
 source: onboarding, the plan and the access checker read from it.
@@ -340,6 +355,12 @@ custodian of the affected layer; tools by operations; skills by the profile they
 positives with no approval at all. How a rule is born and the monthly harvest. The table of who
 holds each role today and the table of profiles per person, with their verifiable identity:
 the only two tables in the repository with names.
+
+`CODEOWNERS` enforces whatever the code platform can. Where "every custodian" must approve and
+the platform accepts any single listed owner (GitHub's code owners work that way; GitLab's
+approval rules can require each one), the change request template carries one line per
+custodian whose approval is needed, and whoever merges checks every line is ticked by that
+person. `GOVERNANCE.md` says which mechanism the organisation uses.
 
 **Catalog (`catalog/`).** Written whole by `bin/bootstrap.py`: the rule format, two severities
 (hard rules block, soft rules suggest), the validator, the generated `catalog.json` and the
@@ -467,9 +488,9 @@ as a verdict on a person.
 | Session start guard | Brings the main branch up to date, reports the pending setup stage, verifies the identity and hands over the enabled profiles, checks access, detects an outdated installation, and hands over the log path with what is open |
 | Per-message guard | A short reminder to update the log when the message moved something forward |
 | Usage guard | Where the assistant meters use in windows and exposes them, shows how much of each window is used and when it resets, and warns once when a window will run out before it resets at the current pace: the assistant suggests a lighter model and runs its subagents on one, and suggests the most capable model again after the reset. `tools/guards/usage.py` is the reference |
-| Permissions guard | Before every watched write, reads the session's authorisations and answers allow or ask. Production, merges and deletions always ask. On any error, asks |
-| Access checker | Checks requirements and access for the person's profile and shows them with the status component |
-| API clients | One per system (code platform, tracker, observability), without dependencies, reading the credential from the person's home |
+| Permissions guard | Before every watched write, reads the session's authorisations and answers allow or ask. Production, merges and deletions always ask; infrastructure tools ask except for their read-only subcommands. On any error, asks |
+| Access checker | `requirements` checks only what the machine needs before installing; a profile checks requirements, the access everyone needs (`all`) and its own, and shows them with the status component |
+| API clients | One per system (code platform, tracker, observability), without dependencies, reading the credential from the person's home. The HTTP method goes first, `tools/clients/<system>.sh GET <path>`, so the permissions guard lets GET and HEAD through and asks for anything else |
 | Access guides | One per system, step by step: how to create the credential with the least privilege and an expiry, where to keep it, how to check it works |
 
 Scripts must run on every operating system the team uses. Prefer POSIX shell and the Python
@@ -479,21 +500,25 @@ standard library, with no dependencies.
 
 ## 10. Build order
 
-1. The interview, with its summary confirmed.
-2. The skeleton of the repository, with `personal/` ignored by version control. `python3
-   bin/bootstrap.py sdlc <path> --assistant <id> --org <short name>` writes it: the structure,
-   the base files from the templates, the empty catalog with its validator, the three guards,
+1. The skeleton of the repository, with `personal/` ignored by version control, written by the
+   orchestrator before opening the assistant. `python3 bin/bootstrap.py sdlc
+   <working folder>/sdlc-<org> --assistant <id> --org <short name> --name "<display name>"`
+   writes it: the structure,
+   the base files from the templates, the empty catalog with its validator, the four guards,
    the installer, a copy of GATE in `gate-reference/`, first versions of the `establish` and
    `onboard` skills and, for Claude Code, its adapter with both skills already registered.
    `/establish` fills in and writes the rest.
+2. The interview, with its summary confirmed. Nothing below starts before it.
 3. `sdlc.yml`, `GOVERNANCE.md`, `CODEOWNERS` and `PLAN.md`, from the interview.
 4. The method: README, profiles, permissions, log, style, session start, flows, templates, and
    the chat-client package if a role needs it.
 5. The empty catalog, with its format, its scopes and its false-positive record.
-6. The product template and the folders of the pilot products.
+6. The product template and the folders of the pilot products named in the interview. Any
+   other product gets its folder from the template when someone first works on it.
 7. `AGENTS.md` of the repository, and `GATE.md` with the version and the first departures.
    Create the SDLC repository on the code platform and push it once with its upstream
-   (`git push -u origin main`), with the orchestrator's OK.
+   (`git push -u origin main`), with the orchestrator's OK. If the orchestrator decides to wait,
+   the step is reported as skipped in the final verification, with the reason.
 8. Installer, guards, access checker, API clients and access guides.
 9. The adapter for the chosen assistant.
 10. The entry skills: `onboard`, `guide` and `save`.
@@ -509,7 +534,7 @@ standard library, with no dependencies.
   SDLC VERIFICATION
   ──────────────────────────────────────────────────────────
   ○  No file carries credentials or client data
-  ○  Only GOVERNANCE.md has names (CODEOWNERS, accounts only)
+  ○  Only GOVERNANCE.md has names (CODEOWNERS accounts only; licence notices aside)
   ○  personal/ is ignored by version control
   ○  The installer runs twice without duplicating anything
   ○  The assistant loads AGENTS.md in a fresh session
@@ -530,7 +555,9 @@ standard library, with no dependencies.
   ○  GATE.md names the commit implemented
 ```
 
-Report each point with ✓ or ✗ and, for every ✗, what is missing and who it depends on. When the
+Report each point with ✓, ✗ or –. A ✗ says what is missing and who it depends on. A – marks a
+point skipped on purpose, such as the first push or an access that cannot exist yet, with the
+reason and who decided it; it is not a failure, and it goes into `PLAN.md` as pending. When the
 assistant has no hooks, the guard points are replaced by the platform fallback and reported as
 such.
 

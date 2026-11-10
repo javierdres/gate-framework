@@ -133,6 +133,48 @@ class Guard(unittest.TestCase):
             self.assertEqual(d, "ask", command)
             self.assertIn("Always asks", r, command)
 
+    def test_infrastructure_reads_pass_and_everything_else_asks(self):
+        self.grant("s-infra", "repo", self.repo)
+        for c in ("kubectl get pods -n prod", "kubectl -n prod logs deploy/api --tail 50",
+                  "kubectl --context prod describe pod x", "kubectl auth can-i get pods",
+                  "helm list -A", "helm status api -n prod", "terraform validate",
+                  "kubectl get pods | grep api", "cat terraform/main.tf", "ls helm-charts/",
+                  "grep -rn kubectl.apply docs/"):
+            self.assertEqual(self.decision(c, "s-infra"), (None, ""), c)
+        asks = {
+            "kubectl apply -f x.yaml": "infrastructure",
+            "kubectl -n prod delete pod x": "infrastructure",
+            "kubectl exec -it x -- sh": "infrastructure",
+            "kubectl config use-context prod": "infrastructure",
+            "kubectl get pods && kubectl delete pod x": "infrastructure",
+            "kubectl get pods -o yaml | kubectl apply -f -": "infrastructure",
+            "sh -c 'kubectl delete pod x'": "infrastructure",
+            "echo $(kubectl scale deploy x --replicas 0)": "infrastructure",
+            "nice kubectl rollout restart deploy/x": "infrastructure",
+            "KUBECONFIG=/x kubectl drain node": "infrastructure",
+            "helm upgrade api ./chart": "infrastructure",
+            "terraform apply": "infrastructure",
+            "terraform plan": "infrastructure",
+            "kubectl get secret db -o yaml": "credentials",
+            "kubectl -n prod describe secrets": "credentials",
+        }
+        for command, why in asks.items():
+            d, r = self.decision(command, "s-infra")
+            self.assertEqual(d, "ask", command)
+            self.assertIn(why, r, command)
+
+    def test_api_clients_read_freely_and_writes_ask(self):
+        self.grant("s-cli", "repo", self.repo)
+        for c in ("tools/clients/tracker.sh GET issue/ABC-1", "python3 tools/clients/obs.py HEAD /health",
+                  "./tools/clients/tracker.sh GET search | jq ."):
+            self.assertEqual(self.decision(c, "s-cli"), (None, ""), c)
+        for c in ("tools/clients/tracker.sh POST issue/ABC-1/comment body.json",
+                  "tools/clients/tracker.sh issue/ABC-1", "python3 tools/clients/obs.py put /x",
+                  "git status && tools/clients/tracker.sh DELETE issue/ABC-1",
+                  "sh -c 'tools/clients/tracker.sh POST x'"):
+            d, r = self.decision(c, "s-cli")
+            self.assertEqual(d, "ask", c)
+
     def test_reads_are_not_slowed_down(self):
         for c in ("gh api user | python3 -c 'import json,sys; print(1)'", "glab api projects/1",
                   "git log --oneline | head", "cd /tmp && ls", "curl -s https://example.com | jq ."):

@@ -10,7 +10,7 @@ chooses the assistant, scaffolds the SDLC and lets `/establish` build it with th
 [BUILDING.md](../BUILDING.md).
 
 ```
-python3 bin/bootstrap.py sdlc ../sdlc-<org> --assistant <id> --org <org>
+python3 bin/bootstrap.py sdlc ~/Projects/<org>/sdlc-<org> --assistant <id> --org <org>
 ```
 
 That writes the skeleton: base files, the empty catalog with its validator, the guards, the

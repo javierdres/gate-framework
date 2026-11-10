@@ -20,7 +20,8 @@ Ahí se explica por qué el SDLC se construye así; esta guía dice cómo.
 Instrucciones para el asistente que construye el SDLC:
 
 - **No construyas nada antes de terminar la entrevista de la sección 5** y de que se confirme su
-  resumen. Lo que nadie sepa se marca como «por definir» y se sigue; nada se inventa.
+  resumen. El esqueleto que escribió `bin/bootstrap.py` es lo único que existe antes: es lo que
+  permite correr `/establish`, y se completa recién después de la entrevista. Lo que nadie sepa se marca como «por definir» y se sigue; nada se inventa.
 - Donde esta guía dice «la plataforma de código», «la herramienta de tickets» o «la fuente de
   verdad de producción», usa lo que la organización tenga. Si le falta una de esas piezas, la
   parte que depende de ella queda fuera y se anota en el plan como pendiente.
@@ -50,6 +51,9 @@ Instrucciones para el asistente que construye el SDLC:
 
 - Un repositorio, `sdlc-<org>`, que cada persona clona en su carpeta de trabajo, al lado de los
   repositorios de sus productos. El asistente se abre en esa carpeta de trabajo.
+  El orquestador también lo crea ahí, por ejemplo en `~/Projects/<org>/sdlc-<org>`: el
+  instalador conecta la carpeta que contiene el SDLC, así que un SDLC creado suelto en el home, o
+  dentro de otro repositorio, conecta la carpeta equivocada.
 - Instrucciones persistentes que carga cada sesión, con las reglas que aplican siempre.
 - Un plan con un objetivo, una fecha de revisión y lo que queda fuera de alcance.
 - Un gobierno por roles, con una tabla de quién ocupa cada rol hoy y otra de qué perfiles puede
@@ -234,6 +238,11 @@ construir nada.
 
 ## 6. Estructura del repositorio
 
+El SDLC vive siempre un nivel dentro de una carpeta de trabajo, nunca suelto en el home ni dentro
+de otro repositorio: el instalador escribe las instrucciones, las skills y los guardias en la
+carpeta que lo contiene. Para probarlo sin tocar tu carpeta de trabajo real, créalo en una
+carpeta desechable, por ejemplo `/tmp/prueba/sdlc-<org>`, y no en una ruta fija.
+
 ```
 <carpeta de trabajo>/
 ├── AGENTS.md                 lo deja el instalador; apunta al SDLC y a personal/
@@ -311,7 +320,13 @@ y las tareas que ese perfil habilita: producto, construcción, revisión, operac
 liderazgo y otra. Antes de empezar, el asistente resume lo que entendió y espera. Si la persona
 saluda sin pedir nada, le menciona en una línea lo que sigue abierto en su bitácora.
 
-**Perfiles (`method/profiles.md`).** Una ficha por perfil, que responde cinco preguntas: qué
+**Perfiles (`method/profiles.md`).** Parte con la lista de identificadores de perfil, los únicos
+nombres que tiene un perfil en todo el SDLC: en `GOVERNANCE.md`, `personal/profile.md`,
+`tools/access-checks.tsv` y el menú de inicio. La lista de GATE es `product`, `frontend`,
+`backend`, `fullstack`, `qa`, `operations`, `security`, `leadership` y `support`; los perfiles de
+construcción son `frontend`, `backend`, `fullstack` y `qa`. `/establish` quita los que la
+organización no usa y suma los propios, primero aquí. Después, una ficha por perfil, que responde
+cinco preguntas: qué
 obtiene la persona, qué configura (con el permiso mínimo y cómo se consigue), con qué datos
 trabaja, qué skills usa y cómo sabe que quedó lista. Es la fuente única: el onboarding, el plan y
 el verificador de accesos leen de aquí.
@@ -350,6 +365,13 @@ de la capa afectada; herramientas, operación; skills, según el perfil al que s
 sin aprobación. Cómo nace una regla y la cosecha mensual. La tabla de quién ocupa cada rol hoy y
 la de perfiles por persona, con su identidad verificable: las dos únicas tablas del repositorio
 con nombres.
+
+`CODEOWNERS` hace cumplir lo que la plataforma de código permite. Cuando deben aprobar «todos los
+responsables» y la plataforma acepta a cualquiera de los dueños listados (así funcionan los code
+owners de GitHub; las reglas de aprobación de GitLab sí pueden exigir a cada uno), la plantilla
+del merge request trae una línea por cada responsable cuya aprobación se necesita, y quien hace el
+merge revisa que cada línea la haya marcado esa persona. `GOVERNANCE.md` dice qué mecanismo usa
+la organización.
 
 **Catálogo (`catalog/`).** Lo escribe entero `bin/bootstrap.py`: el formato de una regla, dos
 severidades (las reglas duras bloquean, las blandas recomiendan), el validador, el
@@ -479,9 +501,9 @@ número como un lugar donde mirar, nunca como un juicio sobre una persona.
 | Guardia de inicio de sesión | Trae lo último de la rama principal, avisa la etapa pendiente de la puesta en marcha, verifica la identidad y entrega los perfiles habilitados, revisa los accesos, detecta si la instalación quedó atrasada y entrega la ruta de la bitácora con lo abierto |
 | Guardia por mensaje | Un recordatorio corto de actualizar la bitácora cuando el mensaje dejó un avance |
 | Guardia de consumo | Si el asistente mide el uso por ventanas y las expone, muestra cuánto se lleva de cada una y cuándo se renueva, y avisa una vez cuando al ritmo actual una ventana se va a agotar antes de renovarse: el asistente sugiere un modelo más liviano y lanza sus subagentes con uno, y al renovarse sugiere volver al más capaz. La referencia es `tools/guards/usage.py` |
-| Guardia de permisos | Antes de cada escritura vigilada, mira las autorizaciones de la sesión y responde permitir o preguntar. Producción, merges y borrados preguntan siempre. Ante cualquier error, pregunta |
-| Verificador de accesos | Revisa requisitos y accesos según el perfil de la persona y los muestra con el componente de estado |
-| Clientes de API | Uno por sistema (plataforma de código, tickets, observabilidad), sin dependencias, que lee la credencial desde el home de la persona |
+| Guardia de permisos | Antes de cada escritura vigilada, mira las autorizaciones de la sesión y responde permitir o preguntar. Producción, merges y borrados preguntan siempre; las herramientas de infraestructura preguntan salvo en sus subcomandos de solo lectura. Ante cualquier error, pregunta |
+| Verificador de accesos | `requirements` revisa solo lo que el equipo necesita tener antes de instalar; un perfil revisa los requisitos, los accesos de todos (`all`) y los propios, y los muestra con el componente de estado |
+| Clientes de API | Uno por sistema (plataforma de código, tickets, observabilidad), sin dependencias, que lee la credencial desde el home de la persona. El método HTTP va primero, `tools/clients/<sistema>.sh GET <ruta>`, para que el guardia de permisos deje pasar GET y HEAD y pregunte por todo lo demás |
 | Guías de acceso | Una por sistema, paso a paso: cómo crear la credencial con el permiso mínimo y con vencimiento, dónde guardarla y cómo comprobar que funciona |
 
 Los scripts tienen que correr en todos los sistemas operativos del equipo. Se prefiere shell POSIX
@@ -491,21 +513,25 @@ y la biblioteca estándar de Python, sin dependencias.
 
 ## 10. Orden de construcción
 
-1. La entrevista, con su resumen confirmado.
-2. El esqueleto del repositorio, con `personal/` ignorado por el control de versiones. `python3
-   bin/bootstrap.py sdlc <ruta> --assistant <id> --org <nombre corto>` lo escribe: la
-   estructura, los archivos base desde las plantillas, el catálogo vacío con su validador, los
-   tres guardias, el instalador, una copia de GATE en `gate-reference/`, primeras versiones de
+1. El esqueleto del repositorio, con `personal/` ignorado por el control de versiones, que
+   escribe el orquestador antes de abrir el asistente. `python3 bin/bootstrap.py sdlc
+   <carpeta de trabajo>/sdlc-<org> --assistant <id> --org <nombre corto> --name "<nombre visible>"`
+   lo escribe: la estructura, los archivos base desde las plantillas, el catálogo vacío con su
+   validador, los cuatro guardias, el instalador, una copia de GATE en `gate-reference/`, primeras versiones de
    las skills `establish` y `onboard` y, para Claude Code, su adaptador con las dos skills ya
    registradas. `/establish` completa y escribe el resto.
+2. La entrevista, con su resumen confirmado. Nada de lo que sigue parte antes.
 3. `sdlc.yml`, `GOVERNANCE.md`, `CODEOWNERS` y `PLAN.md`, a partir de la entrevista.
 4. El método: README, perfiles, permisos, bitácora, estilo, inicio de sesión, flujos, plantillas,
    y el paquete del cliente de chat si algún rol lo necesita.
 5. El catálogo vacío, con su formato, sus ámbitos y su registro de descartes.
-6. La plantilla de productos y las carpetas de los productos del piloto.
+6. La plantilla de productos y las carpetas de los productos del piloto que nombró la
+   entrevista. Cualquier otro producto recibe su carpeta desde la plantilla cuando alguien lo
+   trabaja por primera vez.
 7. El `AGENTS.md` del repositorio, y `GATE.md` con la versión y las primeras diferencias. Se crea
    el repositorio del SDLC en la plataforma de código y se sube una vez con su upstream
-   (`git push -u origin main`), con el OK del orquestador.
+   (`git push -u origin main`), con el OK del orquestador. Si el orquestador decide esperar, el
+   paso se reporta como omitido en la verificación final, con el motivo.
 8. Instalador, guardias, verificador de accesos, clientes de API y guías de acceso.
 9. El adaptador del asistente elegido.
 10. Las skills de entrada: `onboard`, `guide` y `save`.
@@ -521,7 +547,7 @@ y la biblioteca estándar de Python, sin dependencias.
   VERIFICACIÓN DEL SDLC
   ──────────────────────────────────────────────────────────
   ○  Ningún archivo trae credenciales ni datos de clientes
-  ○  Solo GOVERNANCE.md tiene nombres (CODEOWNERS, solo cuentas)
+  ○  Solo GOVERNANCE.md tiene nombres (CODEOWNERS solo cuentas; avisos de licencia aparte)
   ○  personal/ está ignorado por el control de versiones
   ○  El instalador corre dos veces sin duplicar nada
   ○  El asistente carga AGENTS.md en una sesión nueva
@@ -542,7 +568,9 @@ y la biblioteca estándar de Python, sin dependencias.
   ○  GATE.md nombra el commit que implementa
 ```
 
-Reporta cada punto con ✓ o ✗ y, en cada ✗, qué falta y de quién depende. Si el asistente no tiene
+Reporta cada punto con ✓, ✗ o –. Un ✗ dice qué falta y de quién depende. Un – marca un punto
+omitido a propósito, como la primera subida o un acceso que todavía no puede existir, con el
+motivo y quién lo decidió; no es una falla, y queda en `PLAN.md` como pendiente. Si el asistente no tiene
 hooks, los puntos de los guardias se reemplazan por el respaldo en la plataforma y se reportan
 así.
 
