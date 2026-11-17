@@ -124,6 +124,22 @@ class SessionStart(Base):
         self.write("personal/sessions/README.md", "# Log\n\n## Offen\n<!-- sdlc:open -->\n- thema drei\n\n## Rest\n")
         self.assertIn("thema drei", self.run_guard())
 
+    def test_older_names_keep_working_and_are_pointed_out(self):
+        self.write("sdlc.yml", 'gate:\n  version: "abc1234"\nbuilt: 2026-10-01\n')
+        out = self.run_guard()
+        self.assertIn("GATE version: abc1234", out)
+        self.assertNotIn("not built yet", out)
+        self.assertIn("tools/migrate.sh", out)
+        self.assertNotIn("Older names in the working folder", out)
+        self.put(os.path.join(self.work, "CLAUDE.md"), "<!-- sdlc:begin -->\n@x/AGENTS.md\n<!-- sdlc:end -->\n")
+        self.put(os.path.join(self.work, ".kiro", "hooks", "sdlc.json"), '{"c": "tools/guards/session_start.py"}')
+        out = self.run_guard()
+        self.assertIn("Older names in the working folder (CLAUDE.md, .kiro/hooks/sdlc.json)", out)
+        self.write("system.yml", 'gate:\n  version: "def5678"\nbuilt: 2026-10-01\n')
+        out = self.run_guard()
+        self.assertIn("GATE version: def5678", out)
+        self.assertNotIn("tools/migrate.sh", out)
+
     def test_asks_to_rename_once_the_system_is_renamed(self):
         here = os.path.basename(self.root)
         self.write("system.yml", 'system:\n  name: "%s"\n  reach: "software"\n' % here)

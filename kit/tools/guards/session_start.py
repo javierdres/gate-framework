@@ -227,6 +227,40 @@ def renamed():
             "working under the old name." % (here, name, ROOT, os.path.dirname(ROOT)))
 
 
+def older_names(assistant):
+    """Lines about names from before the identifiers became neutral. Everything keeps working
+    with them; the orchestrator migrates the repository once, and each person's installer
+    replaces what it wrote in their working folder."""
+    lines, name, work = [], os.path.basename(ROOT), os.path.dirname(ROOT)
+    if config_path().endswith("sdlc.yml"):
+        lines.append("- Older config name: this system still keeps its config in sdlc.yml. It keeps "
+                     "working. Mention it only to the orchestrator: they run `bash %s/tools/migrate.sh` "
+                     "once and push the result as a change request; nobody else has to do anything "
+                     "for it." % name)
+    found = []
+    for f in ("CLAUDE.md", "AGENTS.md", "GEMINI.md"):
+        text = read(os.path.join(work, f))
+        if "<!-- sdlc:begin -->" in text or re.search(r"^<!-- sdlc:(?!open -->)[A-Za-z0-9._-]+ -->",
+                                                      text, re.M):
+            found.append(f)
+    for rel, mark in ((".kiro/steering/sdlc.md", "sdlc:begin"),
+                      (".kiro/hooks/sdlc.json", "tools/guards/session_start.py")):
+        if mark in read(os.path.join(work, rel)):
+            found.append(rel)
+    if "<!-- sdlc:open -->" in read(os.path.join(PERSONAL, "sessions", "README.md")):
+        found.append("the log's index")
+    for folder in SKILL_FOLDERS:
+        base = os.path.join(work, folder)
+        if os.path.isdir(base) and any(os.path.exists(os.path.join(base, d, COPY_MARKS[1]))
+                                       for d in os.listdir(base)):
+            found.append(folder)
+    if found:
+        lines.append("- Older names in the working folder (%s): running the installer again replaces "
+                     "them, with backups. Offer it in the same line as any reinstall: `bash "
+                     "%s/tools/install.sh %s`." % (", ".join(found), name, assistant or "<assistant>"))
+    return lines
+
+
 def assistant_in_use():
     """The assistant this session runs in, from the variables each one sets, or None. An
     adapter's hooks may declare it with GATE_ASSISTANT (or the older SDLC_ASSISTANT), which wins
@@ -537,6 +571,7 @@ def main(argv):
     notice = renamed()
     if notice:
         lines.append(notice)
+    lines.extend(older_names(assistant))
 
     stamp, state = installation(assistant)
     if stamp:
