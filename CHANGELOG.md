@@ -3,6 +3,28 @@
 What changed in GATE, and why. An organisation's system pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-11-17 · GATE no longer names the organisation's system
+
+Each organisation names its own system, yet GATE kept calling it "the SDLC" in its documents,
+templates and skills, and in what its scripts print. A person saw the name their organisation
+chose next to one it never picked. GATE now says "the organisation's system", and GATE.md says
+only once, as context, that what it describes is a software development life cycle. The
+templates carry `<system>`, which the scaffold replaces with the chosen name. The installer, the
+adapters, the session start guard, the status line and the Kiro hooks print that name.
+
+**Still pending.** The identifiers that installed systems read keep their names for now:
+`sdlc.yml`, the `sdlc:` markers, the `SDLC_*` environment variables, `$SDLC` in the adapter
+interface, the `sdlc_*` functions of `tools/lib.sh`, `.kiro/hooks/sdlc.json` and
+`bootstrap.py sdlc`. A second change will rename them with a fallback: `system.yml` read first
+with `sdlc.yml` still accepted for one version, the old markers and variables still recognised,
+and `tools/rename.sh` and the session start guard migrating each installation on their own.
+
+**What to do.** Bring the new `kit/` into your system and replace `gate-reference/`, then run the
+installer again so the working folder, the skills and the adapter hooks pick up the new wording.
+Your own `AGENTS.md`, `GOVERNANCE.md`, `PLAN.md` and `CHANGELOG.md` came from the templates and
+may still say "the SDLC". Nothing reads those words, so change them to your system's name
+whenever you like.
+
 ## 2026-11-17 · What a working system learned, back in GATE
 
 An organisation has run a system built on GATE every day for months, across product, building,
