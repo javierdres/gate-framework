@@ -45,7 +45,9 @@ assistants:
     version: ""             # the version the adapter was verified against
     hooks: true             # false means the platform fallback is in use
     connectors: []          # tracker, documentation, observability
-  chat_client: ""           # for roles outside the terminal; empty if none
+
+# The chat client for roles outside the terminal; empty if none.
+chat_client: ""
 
 identity:
   # How the system tells who a person is. platform is the strongest; declared

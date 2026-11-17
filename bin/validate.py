@@ -6,6 +6,9 @@
 For each skill it checks that the frontmatter carries every field, that the
 required sections exist, and that the trigger chain closes both ways: if A says
 it triggers B, B has to say it is triggered by A.
+
+It also parses the YAML templates, so a scaffold never starts from a config that does not
+load. That part needs pyyaml; without it, it says so and skips.
 """
 import io
 import os
@@ -119,13 +122,30 @@ def main():
                 error(where, "says it is triggered by '%s', but '%s' does not list it in triggers"
                       % (origin, origin))
 
+    templates = os.path.join(ROOT, "templates")
+    yml = sorted(f for f in os.listdir(templates) if f.endswith(".yml"))
+    try:
+        import yaml
+    except ImportError:
+        yaml = None
+    for f in yml if yaml else []:
+        try:
+            yaml.safe_load(io.open(os.path.join(templates, f), encoding="utf-8"))
+        except yaml.YAMLError as e:
+            error("templates/%s" % f, "does not parse: %s" % str(e).replace("\n", " "))
+
     for e in errors:
         print("x %s" % e)
     if errors:
-        print("\nx %d problem(s) across %d skill(s)." % (len(errors), len(names)))
+        print("\nx %d problem(s) across %d skill(s) and %d YAML template(s)."
+              % (len(errors), len(names), len(yml) if yaml else 0))
         return 1
 
     print("OK  %d skills valid, trigger chain closes." % len(names))
+    if yaml:
+        print("OK  %d YAML templates parse." % len(yml))
+    else:
+        print("-   YAML templates not parsed: pip install pyyaml to check them.")
     human = [n for n, f in fronts.items()
              if "person" in as_list(f.get("triggered_by", ""))]
     print("    Human invocation: %s" % ", ".join("/%s" % h for h in sorted(human)))
