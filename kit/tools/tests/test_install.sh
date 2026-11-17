@@ -13,10 +13,15 @@ set -uo pipefail
 KIT="$(cd "$(dirname "$0")/../.." && pwd)"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 fail=0
+skipping=""
 check() {  # check <description> <command...>
   local what="$1"; shift
+  if [ -n "$skipping" ]; then echo "  -  $what (skipped: no $skipping adapter)"; return; fi
   if "$@" >/dev/null 2>&1; then echo "  ✓  $what"; else echo "  ✗  $what"; fail=1; fi
 }
+# The checks that follow need that adapter. bootstrap.py keeps only the one the organisation chose,
+# so in a scaffolded system the others are skipped rather than failed.
+needs() { if [ -z "$1" ] || [ -d "$S/adapters/$1" ]; then skipping=""; else skipping="$1"; fi; }
 for v in $(env | grep -E '^(CLAUDE|GEMINI|KIRO_|CODEX|SDLC_)[A-Za-z_]*=' | cut -d= -f1); do unset "$v"; done
 export HOME="$T/home" GIT_CONFIG_GLOBAL="$T/home/.gitconfig" GIT_CONFIG_NOSYSTEM=1 TERM_PROGRAM=
 mkdir -p "$HOME"
@@ -42,6 +47,7 @@ check "an explicit SDLC_ASSISTANT wins" sh -c \
   "[ \"\$(CLAUDECODE=1 SDLC_ASSISTANT=kiro bash -c '. \"$S/tools/lib.sh\"; sdlc_assistant')\" = kiro ]"
 
 # What an older installer, and the person, left in the working folder.
+needs claude-code
 printf 'old\n' > "$HOME/.tracker-key"
 printf '# Mine\n\n<!-- sdlc:sdlc-acme -->\n@sdlc-acme/AGENTS.md\n@sdlc-acme/personal/profile.md\n' > "$W/CLAUDE.md"
 printf 'x\n' > "$W/CLAUDE.md.bak-20260101000000"
@@ -95,12 +101,14 @@ out="$(bash "$S/tools/install.sh" claude-code 2>&1)"
 check "tolerates invalid JSON settings: warns and leaves them" sh -c \
   "[ \"\$(cat '$W/.claude/settings.json')\" = '{ not json' ] && printf '%s' \"\$0\" | grep -q 'not valid JSON'" "$out"
 
+needs kiro
 check "kiro: installs alongside" bash "$S/tools/install.sh" kiro
 check "kiro: the permissions guard blocks, the message guard records the OK" sh -c \
   "grep -q 'permissions.py check --format exit' '$W/.kiro/hooks/sdlc.json' && grep -q 'log_reminder.py --passes' '$W/.kiro/hooks/sdlc.json'"
 check "kiro: its own fingerprint" test -f "$S/personal/.installed-kiro"
 
 # Requirements first: nothing is touched when one is missing.
+needs ""
 mkdir -p "$T/nossh" "$T/w2"
 for c in bash git dirname basename date grep sed uname env cat; do ln -sf "$(command -v $c)" "$T/nossh/$c"; done
 ln -sf "$(command -v python3)" "$T/nossh/python3"
@@ -110,8 +118,9 @@ check "stops before touching anything when a requirement is missing" sh -c \
 
 # The adapters check, on the kit and on a copy where an adapter fell behind.
 check "every adapter wires every guard" python3 "$KIT/tools/adapters_check.py"
+needs kiro
 cp -R "$KIT" "$T/drift"
-python3 - "$T/drift/adapters/kiro/hooks.json" <<'PY'
+[ -n "$skipping" ] || python3 - "$T/drift/adapters/kiro/hooks.json" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1]))
 data["hooks"] = [h for h in data["hooks"] if "log_reminder" not in h["action"]["command"]]
