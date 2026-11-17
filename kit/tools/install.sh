@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Javier Núñez
 #
-# Installs the organisation's SDLC in the person's working folder, for the assistant they use.
+# Installs the organisation's system in the person's working folder, for the assistant they use.
 #
 #   tools/install.sh [<assistant>]    claude-code | gemini-cli | kiro | codex | other
 #
@@ -52,7 +52,7 @@ ENCLOSING="$(git -C "$WORK" rev-parse --show-toplevel 2>/dev/null || true)"
 if [ -n "$ENCLOSING" ]; then
   echo "! $WORK is inside the repository $ENCLOSING."
   echo "  The assistant may share state, such as its memory, with every other folder in it,"
-  echo "  including another organisation's SDLC. Move the working folder out, or remove that"
+  echo "  including another organisation's system. Move the working folder out, or remove that"
   echo "  repository if it was not meant to be there."
 fi
 
@@ -74,16 +74,16 @@ for f in "$WORK"/*.bak-* "$WORK"/.*/*.bak-*; do
 done
 [ "$moved" = 0 ] || echo "OK  $moved older backups moved to $NAME/personal/backups/"
 
-# 2. The working folder's AGENTS.md. The block between the sdlc markers belongs to the SDLC and
-#    is rewritten on every install; whatever is outside it belongs to the person.
+# 2. The working folder's AGENTS.md. The block between the sdlc markers belongs to the system
+#    and is rewritten on every install; whatever is outside it belongs to the person.
 # shellcheck disable=SC2086
 result="$($PY "$SDLC/tools/instructions_block.py" "$WORK/AGENTS.md" "$BACKUPS/AGENTS.md.$STAMP" <<EOF
-Read and follow $NAME/AGENTS.md, the organisation's SDLC, in every session.
+Read and follow $NAME/AGENTS.md, the organisation's system, in every session.
 The person's profile is in $NAME/personal/profile.md and their preferences in
 $NAME/personal/preferences.md.
 EOF
 )"
-[ "$result" = unchanged ] || echo "OK  AGENTS.md in the working folder: SDLC block $result"
+[ "$result" = unchanged ] || echo "OK  AGENTS.md in the working folder: $NAME block $result"
 
 # 3. The adapter for the person's assistant.
 ADAPTER="$SDLC/adapters/$ASSISTANT/install.sh"

@@ -3,7 +3,7 @@ inclusion: always
 ---
 
 <!-- sdlc:begin -->
-# The organisation's SDLC
+# __NAME__
 
 Written by `__NAME__/tools/install.sh kiro` and rewritten on every install: keep your own
 steering in another file of `.kiro/steering/`.

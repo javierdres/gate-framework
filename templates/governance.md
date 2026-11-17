@@ -3,18 +3,18 @@
 Who approves what in this repository and what can change. `CODEOWNERS` translates it into
 rules the code platform enforces on every change request.
 
-The SDLC is organised by roles, not by people. The whole repository names roles; names live
+<system> is organised by roles, not by people. The whole repository names roles; names live
 only in the tables at the end of this document. When someone rotates, those tables change and
 nothing else.
 
 ## Current phase: formulation
 
-While the SDLC is being formulated, the orchestrator is responsible for everything: proposes,
+While <system> is being formulated, the orchestrator is responsible for everything: proposes,
 approves and merges. Custodians give their view and get ready, but do not approve yet.
 
 The phase ends when its exit criteria are met, checked on the review date:
 
-- [ ] A person other than the orchestrator installed the SDLC alone and has access verified
+- [ ] A person other than the orchestrator installed <system> alone and has access verified
 - [ ] A product owner used it on a real requirement
 - [ ] A builder took one of those without product questions
 - [ ] A rule harvested from real work entered the catalog
@@ -27,7 +27,7 @@ everyone else.
 
 | Role | What they do |
 | --- | --- |
-| Orchestrator | Builds and evolves the SDLC, chooses the assistant, assigns roles and profiles, decides when formulation ends |
+| Orchestrator | Builds and evolves <system>, chooses the assistant, assigns roles and profiles, decides when formulation ends |
 | Custodian of <layer> | Approves the rules of that layer |
 | Custodian of operations | Approves operations rules, guides and tools, and everything that touches production |
 | Custodian of security | Approves security rules and owns security findings until they close |
@@ -35,7 +35,7 @@ everyone else.
 | Product owner of each product | Decides what is built in their product and validates its business rules and use cases |
 
 A person in a business role who takes part in a pilot gets no targets, deadlines or tasks from
-the SDLC. They use it at their own pace, and what they report is applied. The pilot is recorded
+<system>. They use it at their own pace, and what they report is applied. The pilot is recorded
 in `PLAN.md` by role.
 
 ## What can change and who approves it

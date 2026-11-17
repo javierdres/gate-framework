@@ -41,7 +41,7 @@ first step is this gate, and from there the counts freeze whatever it has.
 
 ## How to wire it
 
-The gate is included from the SDLC at a fixed version, never copied and never taken from the
+The gate is included from the system at a fixed version, never copied and never taken from the
 default branch. A change to the default branch would otherwise reach every project with no
 version and without anyone deciding it.
 
@@ -63,7 +63,7 @@ version and without anyone deciding it.
      when: change request
      fetch: full history of the target branch
      run:
-       - curl -fsSL <SDLC raw URL>/<tag>/catalog/ci/gate.py -o /tmp/gate.py
+       - curl -fsSL <system raw URL>/<tag>/catalog/ci/gate.py -o /tmp/gate.py
        - python3 /tmp/gate.py --base origin/$TARGET_BRANCH
                                --counts counts.tsv
                                --profile AGENTS.md

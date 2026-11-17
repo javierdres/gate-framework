@@ -10,7 +10,7 @@ Four subcommands:
                                    orchestrator picks one before scaffolding it
     bootstrap.py sdlc <working folder>/<system name> [--assistant <id>] [--org <short name>]
                       [--name "<display name>"] [--reach software|beyond-software]
-                                   create the organisation's SDLC repository; the folder name
+                                   create the organisation's system repository; the folder name
                                    is the system's name
     bootstrap.py catalog <path>    create a standalone standards catalog repository
     bootstrap.py config <path>     drop .gate/config.yml into a project
@@ -57,7 +57,7 @@ def copy_tree(src_dir, target):
 
 
 def scaffold_catalog(target):
-    """A standalone catalog repository, for an organisation that keeps it outside its SDLC."""
+    """A standalone catalog repository, for an organisation that keeps it outside its system."""
     if os.path.exists(target) and os.listdir(target):
         print("x %s exists and is not empty. Refusing to write over it." % target)
         return 1
@@ -75,11 +75,11 @@ def scaffold_catalog(target):
     return 0
 
 
-# ───────────────────────────── the organisation's SDLC ──────────────────────
+# ───────────────────────────── the organisation's system ────────────────────
 
 ASSISTANTS = ("claude-code", "gemini-cli", "kiro", "codex", "other")
 
-SDLC_TEMPLATES = {
+SYSTEM_TEMPLATES = {
     "AGENTS.md": "agents.md",
     "GOVERNANCE.md": "governance.md",
     "PLAN.md": "plan.md",
@@ -96,14 +96,14 @@ SDLC_TEMPLATES = {
     "method/templates/rule.md": "rule.md",
     "method/chat-client/README.md": "chat-client.md",
 }
-SDLC_INCIDENTS = """# Incidents
+SYSTEM_INCIDENTS = """# Incidents
 
 One postmortem per incident of this product, written from `method/templates/postmortem.md`:
 `YYYY-MM-DD-short-name.md`. The timeline is rebuilt from the sources, not from memory, and the
 root cause goes to `harvest`.
 """
 
-SDLC_README = """# {system}
+SYSTEM_README = """# {system}
 
 How {name} works with an AI assistant {reach}. Built on [GATE](https://github.com/javierdres/gate-framework):
 the assistant prepares, people decide.
@@ -112,7 +112,7 @@ To start, see [ONBOARDING.md](ONBOARDING.md). What is being built now is in [PLA
 and who approves what is in [GOVERNANCE.md](GOVERNANCE.md).
 """
 
-SDLC_ONBOARDING = """# Onboarding
+SYSTEM_ONBOARDING = """# Onboarding
 
 1. Ask the orchestrator for read access to this repository on the code platform, with your own
    account. Product and other roles that work outside the terminal get the chat-client package
@@ -133,7 +133,7 @@ You never paste a credential in the chat. Each access has a step-by-step guide i
 See [skills/README.md](skills/README.md).
 """
 
-SDLC_GATE_MAP = """# GATE in this SDLC
+SYSTEM_GATE_MAP = """# GATE in this system
 
 Implements GATE at commit `{version}`. Moving to a newer one is a change request to this file
 that also reviews the departures below.
@@ -253,11 +253,11 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
         if os.path.isdir(folder) and name != assistant:
             shutil.rmtree(folder)
 
-    for dst, tpl in SDLC_TEMPLATES.items():
+    for dst, tpl in SYSTEM_TEMPLATES.items():
         src = os.path.join(HERE, "templates", tpl)
         path = os.path.join(target, dst)
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        text = io.open(src, encoding="utf-8").read().replace("<Organisation>", display)
+        text = io.open(src, encoding="utf-8").read().replace("<Organisation>", display).replace("<system>", system)
         io.open(path, "w", encoding="utf-8").write(text)
         written += 1
 
@@ -271,16 +271,16 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
     config = re.sub(r'^(  - id:) ""(\s+# claude-code)', r'\1 "%s"\2' % assistant, config, count=1, flags=re.M)
     extra = {
         "sdlc.yml": config,
-        "README.md": SDLC_README.format(system=system, name=display, reach=REACH[reach]),
-        "ONBOARDING.md": SDLC_ONBOARDING.format(org=org),
-        "GATE.md": SDLC_GATE_MAP.format(version=version),
+        "README.md": SYSTEM_README.format(system=system, name=display, reach=REACH[reach]),
+        "ONBOARDING.md": SYSTEM_ONBOARDING.format(org=org),
+        "GATE.md": SYSTEM_GATE_MAP.format(version=version),
         "CHANGELOG.md": io.open(os.path.join(HERE, "templates", "changelog.md"), encoding="utf-8").read()
-        .replace("<Organisation>", display).replace("<gate version>", version)
+        .replace("<Organisation>", display).replace("<system>", system).replace("<gate version>", version)
         .replace("<YYYY-MM-DD>", __import__("datetime").date.today().isoformat()),
         "CODEOWNERS": "# Translates GOVERNANCE.md. During formulation, the orchestrator owns everything.\n* @<orchestrator>\n",
         ".gitignore": "personal/\n__pycache__/\n.DS_Store\n",
         "method/flows/.gitkeep": "",
-        "products/_template/incidents/README.md": SDLC_INCIDENTS,
+        "products/_template/incidents/README.md": SYSTEM_INCIDENTS,
     }
     for rel, content in extra.items():
         path = os.path.join(target, rel)
@@ -288,8 +288,8 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
         io.open(path, "w", encoding="utf-8").write(content)
         written += 1
 
-    # The reference travels with the SDLC, so /establish works offline and against the exact
-    # version the SDLC was scaffolded from.
+    # The reference travels with the system, so /establish works offline and against the exact
+    # version it was scaffolded from.
     reference = os.path.join(target, "gate-reference")
     for rel in REFERENCE_FILES:
         src = os.path.join(HERE, rel)
@@ -300,16 +300,16 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
     for folder in REFERENCE_FOLDERS:
         written += copy_tree(os.path.join(HERE, folder), os.path.join(reference, folder))
     io.open(os.path.join(reference, "ABOUT.md"), "w", encoding="utf-8").write(
-        "# GATE reference\n\nA read-only copy of GATE at commit `%s`, the version this SDLC was "
+        "# GATE reference\n\nA read-only copy of GATE at commit `%s`, the version this system was "
         "scaffolded from, with its own paths kept so every link inside it resolves. Moving to a "
-        "newer GATE replaces this folder and updates `GATE.md` at the root of the SDLC.\n" % version)
+        "newer GATE replaces this folder and updates `GATE.md` at the root of the system.\n" % version)
     written += 1
 
     if assistant == "claude-code":
         # Claude Code finds skills in .claude/skills/ of the folder it is opened in. Linking them
         # here makes /establish and /onboard available before anything is installed.
         io.open(os.path.join(target, "CLAUDE.md"), "w", encoding="utf-8").write("@AGENTS.md\n")
-        # The guards are active from the very first session opened inside the SDLC, before the
+        # The guards are active from the very first session opened inside the system, before the
         # installer runs: paths are relative to the project Claude Code was opened in.
         # Same form as the installer writes in the working folder (adapters/claude-code/install.sh).
         guard = 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/%s"'
@@ -344,7 +344,7 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
     if parent == os.path.realpath(os.path.expanduser("~")) or (top and os.path.realpath(top) == parent):
         print()
         print("!   %s is the working folder the installer will wire, and it is your home" % parent)
-        print("    folder or another repository. Move the SDLC into a working folder of its own,")
+        print("    folder or another repository. Move the system into a working folder of its own,")
         print("    for example ~/Projects/%s/%s, before running /establish." % (org, system))
     print()
     print("    Next, with your assistant open inside %s:" % target)

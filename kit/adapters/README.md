@@ -1,6 +1,6 @@
 # Adapters
 
-The only part of this SDLC that is specific to an AI assistant. Everything else is neutral:
+The only part of this system that is specific to an AI assistant. Everything else is neutral:
 instructions in `AGENTS.md`, skills in `skills/<name>/SKILL.md`, guards in `tools/guards/`
 that read the intended action as JSON on standard input.
 
@@ -17,7 +17,7 @@ An adapter does three things for its assistant:
    with `--passes` (it records the person's typed OK) and the session start guard with
    `--guards block`; `kiro/` is the example.
 
-The SDLC's `AGENTS.md` imports `method/session-start.md` with an `@` line, so the start menu
+The system's `AGENTS.md` imports `method/session-start.md` with an `@` line, so the start menu
 loads in every session: some assistants do not follow links. An adapter whose assistant does not
 resolve `@` imports inlines that file when it installs.
 
@@ -36,7 +36,7 @@ What every adapter keeps to, so a second install changes nothing and a rename ne
   Hooks go through the working folder, never an absolute path, and never break a session when
   the script is missing on a branch.
 - Skills are linked with `sdlc_skill`, copied and marked where links fail, and links to skills
-  the SDLC no longer has are removed (`sdlc_prune_skills`).
+  the system no longer has are removed (`sdlc_prune_skills`).
 - Whatever it replaces is copied to `personal/backups/` first.
 - An optional `session.py` runs at every session start, for what the assistant picks up without
   reinstalling (the Claude Code one registers the status line).
@@ -49,7 +49,7 @@ an adapter or the installer.
 
 Whatever the assistant, the adapter writes only inside the working folder. Nothing goes into
 the assistant's global configuration in the person's home folder: that is what lets several
-organisations' SDLCs live on the same machine without colliding (GATE section 8).
+organisations' systems live on the same machine without colliding (GATE section 8).
 
 ## Writing an adapter for another assistant
 
@@ -75,7 +75,7 @@ end to end; the others come from each platform's public documentation:
 
 ## When the assistant has no hooks
 
-The SDLC still works, with weaker enforcement, and `PLAN.md` says so:
+The system still works, with weaker enforcement, and `PLAN.md` says so:
 
 - The assistant works with credentials that cannot write where it matters.
 - The main branch is protected and nobody merges their own change.

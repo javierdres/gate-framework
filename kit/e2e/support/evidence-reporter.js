@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Javier Núñez
 //
 // The evidence of every run, outside the repository, in <E2E home>/evidence/<stamp>/ (0700): who
-// ran it, from which SDLC commit, against what, with which authorisations, the result of each
+// ran it, from which commit of the system, against what, with which authorisations, the result of each
 // case, every call that went out with an effect or was cut, and a manifest with the SHA-256 of
 // each file, written last, to show later that nothing was altered.
 import crypto from 'node:crypto'
@@ -79,7 +79,7 @@ export default class EvidenceReporter {
       '',
       `- Who: ${meta.who} on ${meta.machine}`,
       `- From ${meta.started} to ${meta.ended}, result ${meta.result}`,
-      `- SDLC: ${meta.sdlc.branch} @ ${meta.sdlc.commit.slice(0, 10)}${meta.sdlc.dirty ? ' (uncommitted changes in e2e or products)' : ''}, Playwright ${meta.playwright}`,
+      `- System: ${meta.sdlc.branch} @ ${meta.sdlc.commit.slice(0, 10)}${meta.sdlc.dirty ? ' (uncommitted changes in e2e or products)' : ''}, Playwright ${meta.playwright}`,
       `- Unattended: ${meta.unattended ? 'yes, so no effect could go out' : 'no'}`,
       `- Authorised effects: ${meta.authorisedEffects || 'none'}, cap ${meta.cap}`,
       ...meta.products.map((p) => `- ${p.product}: ${p.host || 'no environment declared'}, simulated: ${p.simulated || 'none'}`),

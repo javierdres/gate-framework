@@ -1,8 +1,8 @@
 > [English](BUILDING.md) · **Español**
 
-# Construir el SDLC de tu organización
+# Construir el sistema de tu organización
 
-Esta guía lleva a un orquestador desde GATE hasta un SDLC propio que funciona: un repositorio
+Esta guía lleva a un orquestador desde GATE hasta un sistema propio que funciona: un repositorio
 con el método de la organización, su catálogo de estándares, sus productos, sus skills y la
 forma en que entra cada persona, corriendo sobre el asistente de IA que la organización eligió.
 
@@ -11,13 +11,13 @@ qué te van a preguntar y con qué vas a terminar. **Si eres el asistente**, es 
 de construcción: `/establish` la sigue de principio a fin.
 
 Lee primero la [sección 2 de GATE.md](GATE.md#2-before-stage-0-the-orchestrator-builds-the-sdlc).
-Ahí se explica por qué el SDLC se construye así; esta guía dice cómo.
+Ahí se explica por qué el sistema se construye así; esta guía dice cómo.
 
 ---
 
 ## 1. Cómo usar esta guía
 
-Instrucciones para el asistente que construye el SDLC:
+Instrucciones para el asistente que construye el sistema:
 
 - **No construyas nada antes de terminar la entrevista de la sección 5** y de que se confirme su
   resumen. El esqueleto que escribió `bin/bootstrap.py` es lo único que existe antes: es lo que
@@ -29,7 +29,7 @@ Instrucciones para el asistente que construye el SDLC:
   la siguiente. Todo archivo que llegue a un sistema compartido sigue la regla de permisos: nada
   se publica sin el OK del orquestador.
 - **Escribe todo en formatos neutrales** (sección 3) y deja lo propio de tu plataforma dentro
-  del adaptador. Otro asistente tiene que poder correr este SDLC mañana con solo agregar su
+  del adaptador. Otro asistente tiene que poder correr este sistema mañana con solo agregar su
   adaptador.
 - Cuando conectes tu propia plataforma, **lee su documentación actual** en vez de confiar en tu
   memoria. Los nombres de los hooks, las rutas de configuración y los nombres de archivo cambian
@@ -41,7 +41,7 @@ Instrucciones para el asistente que construye el SDLC:
   («Perfiles habilitados») y las claves de `personal/profile.md` (`perfil`, `listo`); cualquier
   otra traducción obliga a adaptar el guardia.
 - **Nada va a la configuración global del asistente.** Instrucciones, skills y guardias se
-  instalan en la carpeta de trabajo, para que este SDLC nunca choque con otro en el mismo
+  instalan en la carpeta de trabajo, para que este sistema nunca choque con otro en el mismo
   computador (sección 8 de GATE). Los archivos de credenciales llevan la organización en el
   nombre.
 - El catálogo arranca vacío o con las semillas de GATE que elija el orquestador. Cada semilla
@@ -54,14 +54,13 @@ Instrucciones para el asistente que construye el SDLC:
 
 ## 2. Con qué terminas
 
-- Un repositorio con el nombre que el orquestador eligió para el sistema, `<sistema>` desde
-  aquí: `sdlc-<org>` mientras cubre el ciclo de vida del software y `ai-office-<org>` cuando
-  también cubre operaciones, soporte u otras áreas de la organización (sección 4). Cada persona
-  lo clona en su carpeta de trabajo, al lado de los
-  repositorios de sus productos. El asistente se abre en esa carpeta de trabajo.
-  El orquestador también lo crea ahí, por ejemplo en `~/Projects/<org>/<sistema>`: el
-  instalador conecta la carpeta que contiene el SDLC, así que un SDLC creado suelto en el home, o
-  dentro de otro repositorio, conecta la carpeta equivocada.
+- Un repositorio con el nombre que el orquestador eligió para el sistema, `<sistema>` desde aquí:
+  `sdlc-<org>` mientras cubre el ciclo de vida del software y `ai-office-<org>` cuando también cubre
+  operaciones, soporte u otras áreas de la organización (sección 4). Cada persona lo clona en su
+  carpeta de trabajo, al lado de los repositorios de sus productos. El asistente se abre en esa
+  carpeta de trabajo. El orquestador también lo crea ahí, por ejemplo en
+  `~/Projects/<org>/<sistema>`: el instalador conecta la carpeta que contiene el sistema, así que un
+  sistema creado suelto en el home, o dentro de otro repositorio, conecta la carpeta equivocada.
 - Instrucciones persistentes que carga cada sesión, con las reglas que aplican siempre.
 - Un plan con un objetivo, una fecha de revisión y lo que queda fuera de alcance.
 - Un gobierno por roles, con una tabla de quién ocupa cada rol hoy y otra de qué perfiles puede
@@ -93,7 +92,7 @@ Instrucciones para el asistente que construye el SDLC:
 | Hooks antes de una acción y al iniciar la sesión | Permisos, contexto al inicio, la bitácora | La plataforma asume el control (ver abajo). Sirve, con menos garantías |
 | Conectores (Model Context Protocol) | Tickets y observabilidad | Clientes de API en `tools/`. Sirve |
 
-Cuando el asistente no tiene hooks, el SDLC lo dice en su plan y lo compensa en la plataforma:
+Cuando el asistente no tiene hooks, el sistema lo dice en su plan y lo compensa en la plataforma:
 el asistente trabaja con credenciales que no pueden escribir donde importa, la rama principal
 está protegida y las escrituras hacia afuera pasan por un script de `tools/` que muestra la
 acción y pide OK.
@@ -102,11 +101,11 @@ acción y pide OK.
 
 | Pieza | Forma neutral | Dónde vive |
 |---|---|---|
-| Instrucciones persistentes | `AGENTS.md` | En la raíz del repositorio del SDLC, más uno corto en la carpeta de trabajo |
-| Skills | Una carpeta por skill con su `SKILL.md`: un `name`, una `description` que dice cuándo usarla con las palabras que diría una persona, e instrucciones en texto | `skills/` en el repositorio del SDLC |
+| Instrucciones persistentes | `AGENTS.md` | En la raíz del repositorio del sistema, más uno corto en la carpeta de trabajo |
+| Skills | Una carpeta por skill con su `SKILL.md`: un `name`, una `description` que dice cuándo usarla con las palabras que diría una persona, e instrucciones en texto | `skills/` en el repositorio del sistema |
 | Guardias | Scripts que leen la acción como JSON por la entrada estándar y responden permitir, preguntar o denegar | `tools/guards/` |
 | Conectores | Servidores Model Context Protocol | Se declaran por asistente, en su adaptador |
-| Configuración | `sdlc.yml`: la organización, sus asistentes, sus herramientas, sus ámbitos y la versión de GATE | En la raíz del repositorio del SDLC |
+| Configuración | `sdlc.yml`: la organización, sus asistentes, sus herramientas, sus ámbitos y la versión de GATE | En la raíz del repositorio del sistema |
 
 ### El contrato de los guardias
 
@@ -142,7 +141,7 @@ sin la confirmación de la persona. Sus pruebas, y las del guardia de inicio, es
 
 ### Los adaptadores
 
-El adaptador es la única parte del SDLC propia de un asistente. Hace tres cosas: que el
+El adaptador es la única parte del sistema propia de un asistente. Hace tres cosas: que el
 asistente cargue `AGENTS.md`, que encuentre las skills y que los guardias queden registrados en
 los eventos que corresponden. El asistente que corre `/establish` escribe su propio adaptador
 leyendo la documentación actual de su plataforma, y la verificación final prueba que funciona.
@@ -168,7 +167,7 @@ cada plataforma, todavía sin verificar en una instalación real. Si verificas u
 
 Quienes no trabajan en una terminal, producto casi siempre, usan un **cliente de chat** con un
 proyecto o espacio de trabajo: las instrucciones de su rol, los archivos de contexto que
-necesita y un conector a la herramienta de tickets. El SDLC guarda ese paquete en
+necesita y un conector a la herramienta de tickets. El sistema guarda ese paquete en
 `method/chat-client/` y dice qué copiar dónde, a partir de
 [`templates/chat-client.md`](templates/chat-client.md). Las instrucciones replican `define`. El
 conocimiento es un juego de archivos por producto y es una copia, así que se vuelve a subir cada
@@ -176,7 +175,7 @@ vez que cambia su fuente. El conector de tickets funciona con la identidad de la
 Leer código, si la organización lo quiere, pide un token personal de solo lectura y con
 vencimiento. Lo que no se puede comprobar desde ahí queda como pregunta para el traspaso.
 
-Una organización puede usar varios asistentes sobre el mismo SDLC. Cada uno tiene su carpeta en
+Una organización puede usar varios asistentes sobre el mismo sistema. Cada uno tiene su carpeta en
 `adapters/`, y el instalador conecta el que use cada persona. Una verificación en el pipeline
 falla cuando un cambio en lo que carga un asistente (las instrucciones y sus importaciones, los
 guardias o las skills) deja atrás a otro adaptador. El adaptador atrasado se corrige en el mismo
@@ -204,14 +203,14 @@ siguiente escritura vigilada lo usa. Cada OK vale para una sola acción durante 
 ## 4. Las decisiones que solo toma el orquestador
 
 Cada una trae un valor por defecto, así que ninguna frena la construcción. Todas se pueden
-cambiar después con un cambio al repositorio del SDLC.
+cambiar después con un cambio al repositorio del sistema.
 
 | Decisión | Por defecto |
 |---|---|
 | Qué asistente, o cuáles | El que ya usan los roles que construyen. Se anota la versión |
 | Nombre del sistema, que también es el de su repositorio y su carpeta | `sdlc-<org>` mientras cubre software y `ai-office-<org>` cuando va más allá. `bootstrap.py names <org>` propone otros. Se puede cambiar después con `tools/rename.sh`, aunque cada persona tiene que correrlo una vez |
 | Plataforma de código, herramienta de tickets y fuente de verdad de producción | Las que la organización ya usa. Una sola fuente de verdad por pregunta |
-| Cómo se identifica a una persona | Su cuenta en la plataforma de código. Sin cuentas de plataforma, una llave SSH de firma registrada en el SDLC. La identidad declarada, solo como último recurso y diciéndolo |
+| Cómo se identifica a una persona | Su cuenta en la plataforma de código. Sin cuentas de plataforma, una llave SSH de firma registrada en el sistema. La identidad declarada, solo como último recurso y diciéndolo |
 | Cómo se protege la rama principal | Las ramas protegidas y las aprobaciones obligatorias de la plataforma. Sin ellas, el hook de servidor de `tools/server-hooks/` |
 | Quién ocupa cada rol | El orquestador cubre todo rol de responsable que todavía no tenga a nadie |
 | Perfiles habilitados por persona | Perfiles de construcción para todos; producto, operación y liderazgo por nombre |
@@ -220,7 +219,7 @@ cambiar después con un cambio al repositorio del SDLC.
 | Criterios de salida de la formulación y fecha de revisión | Los cuatro criterios de la sección 2 de GATE.md, revisados entre cuatro y seis semanas después de la construcción |
 | Idioma y estándar de escritura | El de la organización. Los términos técnicos se dejan en inglés cuando así los dice el equipo |
 | Modo autónomo | No se permite: `permissions.autonomous_allowed: false` en `sdlc.yml`. Si se permite, una persona puede pedirlo explícitamente para una sesión |
-| Dónde viven las pruebas de flujo | En el repositorio del SDLC, para que la adopción no obligue a cambiar ningún repositorio de producto. En los repositorios de productos solo se lee |
+| Dónde viven las pruebas de flujo | En el repositorio del sistema, para que la adopción no obligue a cambiar ningún repositorio de producto. En los repositorios de productos solo se lee |
 | Fuera de alcance | Lo que el orquestador nombre en la entrevista, más las fases siguientes hasta que la primera funcione |
 
 ---
@@ -257,7 +256,7 @@ construir nada.
 - Por cada persona: su identidad verificable (su cuenta en la plataforma de código o en la
   herramienta de tickets, o la llave SSH de firma que va a usar) y los perfiles que tiene
   habilitados.
-- Si la plataforma de código tiene ramas protegidas y merge requests. Si no los tiene, el SDLC
+- Si la plataforma de código tiene ramas protegidas y merge requests. Si no los tiene, el sistema
   usa el hook de servidor y los commits firmados.
 
 **Las herramientas**
@@ -285,16 +284,16 @@ construir nada.
 
 ## 6. Estructura del repositorio
 
-El SDLC vive siempre un nivel dentro de una carpeta de trabajo, nunca suelto en el home ni dentro
+El sistema vive siempre un nivel dentro de una carpeta de trabajo, nunca suelto en el home ni dentro
 de otro repositorio: el instalador escribe las instrucciones, las skills y los guardias en la
 carpeta que lo contiene. Para probarlo sin tocar tu carpeta de trabajo real, créalo en una
 carpeta desechable, por ejemplo `/tmp/prueba/<sistema>`, y no en una ruta fija.
 
 ```
 <carpeta de trabajo>/
-├── AGENTS.md                 lo deja el instalador; apunta al SDLC y a personal/
+├── AGENTS.md                 lo deja el instalador; apunta al sistema y a personal/
 ├── <archivos del adaptador>  los deja el instalador para el asistente de la persona
-├── <sistema>/               el repositorio del SDLC de la organización, con el nombre que eligió el orquestador
+├── <sistema>/               el repositorio del sistema de la organización, con el nombre que eligió el orquestador
 │   ├── AGENTS.md             reglas para el asistente y mapa del repositorio
 │   ├── sdlc.yml              organización, asistentes, herramientas, ámbitos, versión de GATE
 │   ├── allowed_signers       llaves SSH de firma por persona, si la identidad las usa
@@ -366,17 +365,17 @@ un acceso, decir cuál y seguir con lo que se pueda; lo que una persona corre fu
 se le da paso a paso; escribir por roles y nunca por nombres; nadie es observado; correr la
 cosecha al cerrar una revisión; llevar la bitácora sin que lo pidan; cada persona que decide
 recibe el documento escrito para ella; y la regla de las frases: una afirmación por oración, o un
-conector que diga la relación. Si el SDLC corre en más de un asistente, un cambio en lo que carga
+conector que diga la relación. Si el sistema corre en más de un asistente, un cambio en lo que carga
 uno se revisa contra los demás adaptadores.
 
 **Inicio de sesión (`method/session-start.md`).** La única copia del menú. Un pedido directo se
 atiende sin menú, salvo que los requisitos o la instalación no hayan terminado: esas dos etapas
 van primero incluso entonces, porque sin ellas los guardias no están corriendo. Desde la etapa
 de perfil en adelante, lo pendiente se ofrece y no se impone. Si el asistente se abrió dentro del
-repositorio del SDLC y no en la carpeta de trabajo, pide volver a abrirlo ahí. Si el guardia de
+repositorio del sistema y no en la carpeta de trabajo, pide volver a abrirlo ahí. Si el guardia de
 inicio no pudo verificar a la persona, el asistente la verifica con el conector de tickets antes
 de mostrar cualquier menú. Sin perfil, un menú numerado de perfiles dentro de un bloque de
-código, con una opción para trabajar sin el flujo y dos para conocer el SDLC. Con perfil, un
+código, con una opción para trabajar sin el flujo y dos para conocer el sistema. Con perfil, un
 saludo con nombre y perfil, y las tareas que ese perfil habilita: producto, construcción,
 revisión, operación y soporte, liderazgo y otra. Solo aparecen los perfiles y las tareas
 habilitados. Las opciones que quedan conservan su número. Un perfil declarado que no está
@@ -386,7 +385,7 @@ asistente resume lo que entendió y espera. Si la persona saluda sin pedir nada,
 una línea lo que sigue abierto en su bitácora.
 
 **Perfiles (`method/profiles.md`).** Parte con la lista de identificadores de perfil, los únicos
-nombres que tiene un perfil en todo el SDLC: en `GOVERNANCE.md`, `personal/profile.md`,
+nombres que tiene un perfil en todo el sistema: en `GOVERNANCE.md`, `personal/profile.md`,
 `tools/access-checks.tsv` y el menú de inicio. La lista de GATE es `product`, `frontend`,
 `backend`, `fullstack`, `qa`, `operations`, `security`, `leadership` y `support`; los perfiles de
 construcción son `frontend`, `backend`, `fullstack` y `qa`. `/establish` quita los que la
@@ -407,7 +406,7 @@ una escritura autorizada con otras que no lo están. La autorización vive en `p
 vence con la sesión. Se registra con un comando que pasa por la confirmación del propio
 asistente, de modo que no puede autorizarse solo. Si la organización lo permite, hay un cuarto
 nivel: el **modo autónomo**, que una persona pide explícitamente para una sesión. Desde ahí el
-SDLC deja de preguntar y decide el modo de permisos del propio asistente. El asistente nunca
+sistema deja de preguntar y decide el modo de permisos del propio asistente. El asistente nunca
 puede activárselo solo. Las ramas protegidas y las aprobaciones de la plataforma siguen
 rigiendo.
 
@@ -477,13 +476,13 @@ honestidad de la sección 11 de GATE.md. «Fuera de alcance» siempre trae una l
 quita: registrar cómo usan el asistente las personas o leer sus prompts, ni siquiera para medir
 la adopción.
 
-**`CHANGELOG.md`.** El registro de cambios del propio SDLC: una entrada por versión con qué
+**`CHANGELOG.md`.** El registro de cambios del propio sistema: una entrada por versión con qué
 cambió, por qué y una línea «Qué hacer» para quien ya lo tiene instalado, aunque la respuesta sea
-«nada». Cada cambio al SDLC suma su entrada. El guardia de inicio avisa qué versiones trajo una
+«nada». Cada cambio al sistema suma su entrada. El guardia de inicio avisa qué versiones trajo una
 actualización, con su «Qué hacer», para que nadie tenga que leer la historia para saber que le
 toca reinstalar.
 
-**`GATE.md` del SDLC.** El commit de GATE que implementa, y un mapa corto de qué etapa o
+**`GATE.md` del sistema.** El commit de GATE que implementa, y un mapa corto de qué etapa o
 principio cubre cada parte y dónde se aparta del marco, cada diferencia con su motivo.
 
 **`ONBOARDING.md` y `README.md`.** Para personas. El README dice qué es en una página. El
@@ -492,12 +491,12 @@ vez y dejar que `/onboard` haga el resto. Incluye una tabla de las skills dispon
 
 ---
 
-## 8. Las skills del SDLC
+## 8. Las skills del sistema
 
 Cada skill es una carpeta en `skills/` con un `SKILL.md` que implementa uno de los contratos de
 [`skills/`](skills/) de este repositorio. La descripción dice qué hace y cuándo usarla, con las
 palabras que diría una persona, porque es lo que el asistente usa para decidir si la carga. Una
-skill entra al SDLC común cuando la usa todo un rol en cualquier producto, no depende de los
+skill entra al sistema común cuando la usa todo un rol en cualquier producto, no depende de los
 datos o accesos de una sola persona y trae su propia documentación.
 
 ### Skills de entrada
@@ -516,7 +515,7 @@ pega una, le pide revocarla. Solo las lecturas masivas que un conector no alcanz
 justifican un token personal. Ofrece clonar los repositorios de los productos de la persona en su carpeta
 de trabajo. Si se vuelve a correr, muestra solo lo que falla o advierte y retoma desde esa etapa.
 
-**`guide`** explica el SDLC: por qué usarlo en vez del asistente a secas, un recorrido de cinco
+**`guide`** explica el sistema: por qué usarlo en vez del asistente a secas, un recorrido de cinco
 minutos según el perfil de la persona y qué puede pedir ese perfil hoy, revisado contra su
 configuración local. Una skill a la que todavía le falta lo que pide para partir aparece como
 algo que se arma la primera vez que se use, no como un error. Una credencial personal que está
@@ -609,7 +608,7 @@ como un vacío. Su vista de salud parte de las funciones críticas que declara e
 respaldo), las cadenas de cobertura y los problemas que persisten entre lecturas guardadas.
 Nunca marca a una persona como riesgo de fuga, de desgaste o de bajo rendimiento. El trabajo
 fuera de horario se muestra solo del equipo. La vista personal es privada y no compara a nadie.
-La versión para gerencia nombra roles, no personas. El efecto del SDLC se lee con las reglas de
+La versión para gerencia nombra roles, no personas. El efecto del sistema se lee con las reglas de
 la sección 11 de GATE.md, solo desde el trabajo compartido.
 
 ---
@@ -618,9 +617,9 @@ la sección 11 de GATE.md, solo desde el trabajo compartido.
 
 | Pieza | Qué hace |
 |---|---|
-| Instalador | Antes de tocar nada revisa los requisitos (git, ssh y un Python 3.8 o superior que de verdad corra), y si falta alguno se detiene. Es idempotente. Crea `personal/` con perfil, preferencias y bitácora. Escribe sus bloques entre las marcas del SDLC en los archivos de instrucciones de la carpeta de trabajo. Enlaza las skills, o las copia donde no se puede enlazar, nunca pisa una skill de la persona que tenga el mismo nombre y quita las que el SDLC ya no tiene. Suma los guardias y las reglas base que siempre preguntan, deja intacta una configuración que no es JSON válido y guarda en `personal/backups/` una copia de todo lo que cambia. Si no se le indica el asistente, lo detecta. Deja una huella por asistente. Se detiene si el repositorio está suelto en el home |
-| Guardia de inicio de sesión | Trae lo último de la rama principal, avisa la etapa pendiente de la puesta en marcha, verifica la identidad y entrega los perfiles habilitados, revisa los accesos, detecta si la instalación quedó atrasada, avisa qué versiones del SDLC trajo la actualización con su «Qué hacer» y entrega la ruta de la bitácora con lo abierto. Nunca queda esperando a la red. Adelanta la rama principal sin cambiar de rama y aparta los cambios locales solo cuando no tocan los archivos que llegan; si los tocan, no hace nada y dice por qué. Cuando cambió la huella de skills, instalador o adaptador, ofrece reinstalar, y el asistente puede hacerlo con el OK de la persona. Avisa si el asistente se abrió dentro del SDLC y verifica la identidad en cadena (plataforma de código, comando del sistema de tickets y, al final, el conector de tickets) sin tomar nunca una cuenta de bot por una persona |
-| Barra de estado | Si el asistente tiene una, suma una línea de avisos del SDLC que aparece solo cuando hay algo que decir: la instalación quedó atrás del repositorio y hay que reinstalar, hay merge requests esperando la revisión de la persona, las autorizaciones vigentes de la sesión (o el modo autónomo) y un token personal por vencer. Lo que necesita la red se refresca en segundo plano y queda en caché, nunca en cada refresco de la barra. Los avisos que dependían de que el asistente se acordara de darlos al saludar se perdían. Los avisos propios de la organización vienen de `tools/notices.py`, que corre en segundo plano detrás de una caché |
+| Instalador | Antes de tocar nada revisa los requisitos (git, ssh y un Python 3.8 o superior que de verdad corra), y si falta alguno se detiene. Es idempotente. Crea `personal/` con perfil, preferencias y bitácora. Escribe sus bloques entre las marcas del sistema en los archivos de instrucciones de la carpeta de trabajo. Enlaza las skills, o las copia donde no se puede enlazar, nunca pisa una skill de la persona que tenga el mismo nombre y quita las que el sistema ya no tiene. Suma los guardias y las reglas base que siempre preguntan, deja intacta una configuración que no es JSON válido y guarda en `personal/backups/` una copia de todo lo que cambia. Si no se le indica el asistente, lo detecta. Deja una huella por asistente. Se detiene si el repositorio está suelto en el home |
+| Guardia de inicio de sesión | Trae lo último de la rama principal, avisa la etapa pendiente de la puesta en marcha, verifica la identidad y entrega los perfiles habilitados, revisa los accesos, detecta si la instalación quedó atrasada, avisa qué versiones del sistema trajo la actualización con su «Qué hacer» y entrega la ruta de la bitácora con lo abierto. Nunca queda esperando a la red. Adelanta la rama principal sin cambiar de rama y aparta los cambios locales solo cuando no tocan los archivos que llegan; si los tocan, no hace nada y dice por qué. Cuando cambió la huella de skills, instalador o adaptador, ofrece reinstalar, y el asistente puede hacerlo con el OK de la persona. Avisa si el asistente se abrió dentro del sistema y verifica la identidad en cadena (plataforma de código, comando del sistema de tickets y, al final, el conector de tickets) sin tomar nunca una cuenta de bot por una persona |
+| Barra de estado | Si el asistente tiene una, suma una línea de avisos del sistema que aparece solo cuando hay algo que decir: la instalación quedó atrás del repositorio y hay que reinstalar, hay merge requests esperando la revisión de la persona, las autorizaciones vigentes de la sesión (o el modo autónomo) y un token personal por vencer. Lo que necesita la red se refresca en segundo plano y queda en caché, nunca en cada refresco de la barra. Los avisos que dependían de que el asistente se acordara de darlos al saludar se perdían. Los avisos propios de la organización vienen de `tools/notices.py`, que corre en segundo plano detrás de una caché |
 | Guardia por mensaje | Un recordatorio corto de actualizar la bitácora cuando el mensaje dejó un avance. Donde el asistente solo puede bloquear, registra además el «ok» que escribe la persona como un pase de un solo uso |
 | Guardia de consumo | Si el asistente mide el uso por ventanas y las expone, muestra cuánto se lleva de cada una y cuándo se renueva, y avisa una vez cuando al ritmo actual una ventana se va a agotar antes de renovarse: el asistente sugiere un modelo más liviano y lanza sus subagentes con uno, y al renovarse sugiere volver al más capaz. La referencia es `tools/guards/usage.py` |
 | Guardia de permisos | Antes de cada escritura vigilada, mira las autorizaciones de la sesión y responde permitir o preguntar. Producción, merges y borrados preguntan siempre; las herramientas de infraestructura preguntan salvo en sus subcomandos de solo lectura. Ante cualquier error, pregunta. Aprobar un merge request siempre pregunta |
@@ -656,7 +655,7 @@ y la biblioteca estándar de Python, sin dependencias.
    entrevista. Cualquier otro producto recibe su carpeta desde la plantilla cuando alguien lo
    trabaja por primera vez.
 7. El `AGENTS.md` del repositorio, y `GATE.md` con la versión y las primeras diferencias. Se crea
-   el repositorio del SDLC en la plataforma de código y se sube una vez con su upstream
+   el repositorio del sistema en la plataforma de código y se sube una vez con su upstream
    (`git push -u origin main`), con el OK del orquestador. Si el orquestador decide esperar, el
    paso se reporta como omitido en la verificación final, con el motivo.
 8. Instalador, guardias, verificador de accesos, clientes de API y guías de acceso.
@@ -672,7 +671,7 @@ y la biblioteca estándar de Python, sin dependencias.
 ## 11. Verificación final
 
 ```
-  VERIFICACIÓN DEL SDLC
+  VERIFICACIÓN FINAL
   ──────────────────────────────────────────────────────────
   ○  Ningún archivo trae credenciales ni datos de clientes
   ○  Solo GOVERNANCE.md tiene nombres (CODEOWNERS solo cuentas; avisos de licencia aparte)
@@ -719,7 +718,7 @@ reglas del equipo. Todo lo demás queda en el plan y espera.
 y cada asistente tiene su adaptador. Cada persona usa el que el orquestador habilitó, y la
 verificación corre una vez por adaptador.
 
-**¿Y si nuestro asistente no tiene hooks?** El SDLC igual funciona, con menos garantías. El
+**¿Y si nuestro asistente no tiene hooks?** El sistema igual funciona, con menos garantías. El
 asistente trabaja con credenciales que no pueden escribir donde importa, la rama principal está
 protegida y las escrituras hacia afuera pasan por un script que pide OK. El plan lo dice, para
 que nadie suponga otra cosa.
@@ -730,7 +729,7 @@ API de `tools/clients/` leen la credencial propia de cada persona. Son pequeños
 **Nuestro servidor git no tiene ramas protegidas ni merge requests.** Usa `tools/server-hooks/`:
 mantiene la rama principal solo con avance rápido, exige que cada commit esté firmado con una
 llave registrada en `allowed_signers` y exige que los cambios lleguen como un merge revisado por
-otra persona. Las mismas llaves le dan al SDLC una identidad verificable por persona.
+otra persona. Las mismas llaves le dan al sistema una identidad verificable por persona.
 
 **¿Podemos escribir los formatos en nuestro idioma?** Los documentos, sí. Las claves que leen
 los guardias y los validadores (el frontmatter de las reglas, `sdlc.yml`, la marca
@@ -741,7 +740,7 @@ falla sin avisar.
 paquete de su rol y un conector a la herramienta de tickets, y con un acceso propio de solo
 lectura al código si la organización quiere que el asistente lo lea por ellos.
 
-**¿Por qué las pruebas de flujo viven en el SDLC y no en cada producto?** Para que la adopción no
+**¿Por qué las pruebas de flujo viven en el sistema y no en cada producto?** Para que la adopción no
 obligue a cambiar ningún repositorio de producto, y para que las pruebas describan lo que
 producto definió y no lo que hace el código. Una organización que las prefiera en cada producto
 puede moverlas y anotarlo como diferencia.
@@ -760,7 +759,7 @@ gobierno lo dice. Cuando alguien asume un rol, se cambia una fila.
 **¿Dónde van las credenciales?** En el home de cada persona, con permisos restringidos y
 vencimiento. Nunca en un repositorio, nunca en el chat, nunca un token compartido.
 
-**¿Cómo pasamos a una versión nueva de GATE?** Con un merge request al `GATE.md` del SDLC, que
+**¿Cómo pasamos a una versión nueva de GATE?** Con un merge request al `GATE.md` del sistema, que
 actualiza el commit fijado y revisa el mapa de diferencias. Nada se actualiza solo.
 
 **¿Cómo devolvemos lo que aprendimos?** Proponiéndolo a GATE como candidato, contado como patrón
@@ -770,7 +769,7 @@ y sin nada que pertenezca a la organización. Ver [CONTRIBUTING.md](CONTRIBUTING
 de revisión. Si no se cumple ninguno, se revisa el enfoque antes de construir más. Después, por
 la lectura mensual por audiencia de la sección 11 de GATE.md, con sus reglas para no engañarse.
 
-**¿Podemos medir la adopción por cómo usan las personas el asistente?** No. El SDLC nunca
+**¿Podemos medir la adopción por cómo usan las personas el asistente?** No. El sistema nunca
 registra cuándo ni cómo lo usa alguien ni lee sus prompts. La adopción se mide en conjunto
 a partir del trabajo compartido y de una encuesta voluntaria.
 

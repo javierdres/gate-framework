@@ -1,11 +1,11 @@
 ---
 name: guide
-description: Explains this organisation's SDLC to a person in the terms of their profile. Welcomes someone who just finished setup with a live, read-only demonstration on their own data; says why to use the SDLC rather than the bare assistant; walks them through it in five minutes; or tells them what they can ask for today, checked against their local configuration. Use it at the end of onboard, with options 8 and 9 of the start menu, or when someone says "what are you for", "why use the SDLC", "how does this work", "give me a tour", "what can I do here" or "what can you do".
+description: Explains this organisation's system to a person in the terms of their profile. Welcomes someone who just finished setup with a live, read-only demonstration on their own data; says why to use the system rather than the bare assistant; walks them through it in five minutes; or tells them what they can ask for today, checked against their local configuration. Use it at the end of onboard, with options 8 and 9 of the start menu, or when someone says "what are you for", "why use the system", "how does this work", "give me a tour", "what can I do here" or "what can you do".
 ---
 
 # guide
 
-You explain the SDLC to one person, in the language of their profile: business with product,
+You explain the system to one person, in the language of their profile: business with product,
 support and leadership, code and rules with builders and security. This skill implements the
 `/guide` contract in `gate-reference/skills/guide/SKILL.md`. The orchestrator adapts it during
 `establish`.
@@ -21,7 +21,7 @@ columns, no emoji, with one or two plain sentences between components.
 
 Three components, each followed by one sentence:
 
-1. **What changes.** The bare assistant on the left, the assistant with the SDLC on the right:
+1. **What changes.** The bare assistant on the left, the assistant with the system on the right:
    each person explains their context, against starting from the team's; answers from what it
    believes, against checking the code and the data; writes wherever asked, against asking
    before writing; the conversation is lost, against the decision staying in the ticket or the
@@ -37,7 +37,7 @@ task.
 
 ## Tour (option 9)
 
-Five short parts: the map of the SDLC repository, one question per folder; the person's own
+Five short parts: the map of the system's repository, one question per folder; the person's own
 flow, drawn from `method/flows/`; the skills of their profile from `skills/README.md`, always
 with `onboard`, `guide` and `save`; how it is used (greet, ask directly, call a skill by name,
 `save`, `guide`); and a real first task for the profile, with an example of how to ask for it.
@@ -67,7 +67,7 @@ A practical answer: the list, what is missing and a first task.
 ## Welcome
 
 Closes `onboard`. The person has just turned everything green; here they see, on their own data,
-what the SDLC does for them. A few minutes, read only, nothing written outside `personal/`.
+what the system does for them. A few minutes, read only, nothing written outside `personal/`.
 
 1. **Ready.** Their name, profile and the five setup stages ticked. Anything that depends on
    someone else shows as ⚠, with whom it depends on.
@@ -87,7 +87,7 @@ what the SDLC does for them. A few minutes, read only, nothing written outside `
    If a query fails for lack of an access, say so in one line and show the next one for the
    profile. Never invent data, and never show example data as if it were theirs.
 4. **What you can ask me**, the component of "what can I ask for" for their profile.
-5. **What the SDLC keeps for you**: the log, so they resume without explaining again; the
+5. **What the system keeps for you**: the log, so they resume without explaining again; the
    rules, so what is corrected once is applied on its own; their decisions, because nothing is
    written to a shared system without their approval.
 6. **Start**: a first real task, the profile's options first.

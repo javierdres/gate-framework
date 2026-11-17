@@ -3,10 +3,10 @@
 In this order. Each step works without the ones after it, and none requires the previous one to
 be perfect.
 
-## 0. The orchestrator builds the SDLC
+## 0. The orchestrator builds the system
 
-Everything else runs inside the organisation's own SDLC, so it comes first. The orchestrator
-chooses the assistant, scaffolds the SDLC and lets `/establish` build it with them, following
+Everything else runs inside the organisation's own system, so it comes first. The orchestrator
+chooses the assistant, scaffolds the system and lets `/establish` build it with them, following
 [BUILDING.md](../BUILDING.md).
 
 ```
@@ -21,7 +21,7 @@ layer.
 - [ ] Interview summary confirmed by the orchestrator
 - [ ] Formulation phase declared in `GOVERNANCE.md`, with exit criteria and a review date
 - [ ] Final verification run, every point green or named as pending with who it depends on
-- [ ] The SDLC repository created on the code platform, main branch protected
+- [ ] The system's repository created on the code platform, main branch protected
 
 ## 1. The standards catalog, empty
 
@@ -39,7 +39,7 @@ Nothing else runs for someone whose access is not green.
 
 - [ ] Profiles enabled per person in `GOVERNANCE.md`, against a verifiable identity
 - [ ] `/onboard` implemented, with a step-by-step access guide per system
-- [ ] A person other than the orchestrator installed the SDLC alone, access green
+- [ ] A person other than the orchestrator installed the system alone, access green
 - [ ] Roles that work outside the terminal have their chat-client package and a read-only access
 - [ ] Personal credentials per person, never shared, with an expiry
 

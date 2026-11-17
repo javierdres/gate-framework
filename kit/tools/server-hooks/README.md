@@ -10,7 +10,7 @@ them on any git server that runs hooks.
 On the default branch only:
 
 - No deletion and no history rewrite: fast-forward only.
-- Every new commit signed with an SSH key listed in `allowed_signers`, which also gives the SDLC
+- Every new commit signed with an SSH key listed in `allowed_signers`, which also gives the system
   a verifiable identity per person without platform accounts (`identity.method: ssh-signing` in
   `sdlc.yml`).
 - Changes arrive as a merge commit signed by its reviewer: the signature's identity in
@@ -29,7 +29,7 @@ On the default branch only:
    `[includeIf "gitdir:~/Projects/<org>/"]` with `path = ~/.gitconfig-<org>`, and in that file
    `gpg.format = ssh`, `user.signingkey = ~/.ssh/id_ed25519.pub` and `commit.gpgsign = true`
    under their sections. For a single repository, `git config` without `--global`, run inside it.
-2. `allowed_signers` at the root of the SDLC lists one line per person: their identity, the
+2. `allowed_signers` at the root of the system lists one line per person: their identity, the
    namespaces and their public key, for example
    `person@company.example namespaces="git" ssh-ed25519 AAAA...`. Adding someone is a reviewed
    change like any other.

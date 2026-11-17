@@ -2,8 +2,8 @@
   "version": "v1",
   "hooks": [
     {
-      "name": "SDLC: session start",
-      "description": "Setup stage, identity and profiles, access, the log and the SDLC brought up to date",
+      "name": "__NAME__: session start",
+      "description": "Setup stage, identity and profiles, access, the log and the system brought up to date",
       "trigger": "SessionStart",
       "action": {
         "type": "command",
@@ -12,7 +12,7 @@
       "timeout": 30
     },
     {
-      "name": "SDLC: log and OK",
+      "name": "__NAME__: log and OK",
       "description": "Reminds the log, and records the person's OK for the next watched write",
       "trigger": "UserPromptSubmit",
       "action": {
@@ -22,7 +22,7 @@
       "timeout": 5
     },
     {
-      "name": "SDLC: permissions",
+      "name": "__NAME__: permissions",
       "description": "Blocks the outward writes that do not have the person's OK",
       "trigger": "PreToolUse",
       "action": {

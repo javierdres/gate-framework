@@ -1,7 +1,7 @@
 ---
 skill: establish
 stage: foundation
-name: Build the organisation's SDLC
+name: Build the organisation's system
 triggered_by: [person]
 triggers: [onboard]
 gate: orchestrator gate
@@ -10,11 +10,11 @@ writes_outside: [sdlc repository]
 consults: []
 ---
 
-# /establish — Build the organisation's SDLC
+# /establish — Build the organisation's system
 
 ## Purpose
 
-Take an orchestrator from GATE to a working SDLC of their own organisation: a repository with
+Take an orchestrator from GATE to a working system of their own organisation: a repository with
 its method, its catalog (empty, or seeded with the GATE rules the orchestrator adopts), its
 products, its skills, its guards and the way each person gets in, running on the AI assistant
 the orchestrator chose. It follows
@@ -24,11 +24,11 @@ the orchestrator chose. It follows
 
 A named orchestrator, with authority to assign roles in the organisation.
 
-An AI assistant chosen by the orchestrator that loads persistent instructions every session
-and can work in a repository and a shell. Hooks and connectors are preferred; without them the
-SDLC uses the platform fallback described in BUILDING.md section 3.
+An AI assistant chosen by the orchestrator that loads persistent instructions every session and can
+work in a repository and a shell. Hooks and connectors are preferred; without them the system uses
+the platform fallback described in BUILDING.md section 3.
 
-A place to create the SDLC repository on the organisation's code platform.
+A place to create the system's repository on the organisation's code platform.
 
 ## What it does
 
@@ -42,7 +42,7 @@ A place to create the SDLC repository on the organisation's code platform.
 - Records the orchestrator's decisions (BUILDING.md section 4) in `sdlc.yml`, `GOVERNANCE.md`
   and `PLAN.md`, including the assistant and the version it will be verified against, and the
   formulation exit criteria with their review date.
-- Builds the SDLC **in layers, in the order of BUILDING.md section 10**, and shows each layer
+- Builds the system **in layers, in the order of BUILDING.md section 10**, and shows each layer
   before starting the next.
 - Writes everything in neutral formats: `AGENTS.md` for instructions, `SKILL.md` folders for
   skills, guards that read the action as JSON on standard input, Model Context Protocol for
@@ -51,7 +51,7 @@ A place to create the SDLC repository on the organisation's code platform.
   documentation**, and leaves in `adapters/README.md` what another assistant would need.
 - Implements the phase one skills against the contracts in this repository, adapted to the
   organisation's tools and language.
-- Writes `GATE.md` in the SDLC with the commit of GATE implemented and the first departures,
+- Writes `GATE.md` in the system with the commit of GATE implemented and the first departures,
   each with its reason.
 - Runs the final verification (BUILDING.md section 11) and reports every point as passed,
   failed or skipped on purpose: a failure with what is missing and who it depends on, a skip
@@ -77,6 +77,6 @@ verification are accepted before the build moves on.
 **Reads:** The orchestrator's answers to the interview, and whatever can be read off the
 organisation's existing repositories and tools.
 
-**Writes:** The organisation's SDLC repository, with `sdlc.yml`, its governance and its plan,
+**Writes:** The organisation's system repository, with `sdlc.yml`, its governance and its plan,
 and the final verification report. There is no work-item dossier yet: this is what makes the
 first one possible.

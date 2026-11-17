@@ -11,8 +11,8 @@ its rules, in this same format, and this file holds only what belongs to no sing
 A false positive is one finding rejected in one context. What the organisation decided, as a
 standard, not to adopt at all goes to [`not-adopted.md`](not-adopted.md) instead.
 
-The rejection usually happens in a product repository and this record lives in the SDLC, so the
-entry goes as its own small change to the SDLC, linked from the review thread where the finding
+The rejection usually happens in a product repository and this record lives in the system, so the
+entry goes as its own small change to the system, linked from the review thread where the finding
 was rejected.
 
 ## Format

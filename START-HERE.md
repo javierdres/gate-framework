@@ -7,7 +7,7 @@ get, and **what it changes compared with how you do it today**.
 
 If you only read one thing about GATE, read this.
 
-**Before any of these, the organisation's SDLC has to exist.** If it does not yet, you are the
+**Before any of these, the organisation's system has to exist.** If it does not yet, you are the
 orchestrator and you start in [BUILDING.md](BUILDING.md): `python3 bin/bootstrap.py sdlc`, then
 `/establish` on the assistant you chose. Each person then joins with `/onboard`. Everything below
 assumes that is done.
@@ -205,6 +205,6 @@ You do not need the whole framework. The floor is lower than it looks:
 - A branch convention that links to the ticket
 - An empty standards catalog with its format validator, which `bootstrap.py sdlc` writes
 
-With that you can build the SDLC and reach step 3 of [adoption](adoption/README.md), which is
+With that you can build the system and reach step 3 of [adoption](adoption/README.md), which is
 the pre-review, and you are already getting value. Data sources, an exercised rollback and business indicators come
 with the later steps.

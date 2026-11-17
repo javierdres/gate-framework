@@ -1,7 +1,7 @@
 # Kiro adapter
 
-Lets the SDLC run in Kiro with the same instructions, skills and guards as any other assistant.
-Nothing is copied: everything points at the SDLC repository, so each update reaches Kiro too.
+Lets the system run in Kiro with the same instructions, skills and guards as any other assistant.
+Nothing is copied: everything points at the system's repository, so each update reaches Kiro too.
 
 **Verified against:** to verify. It comes from Kiro's public documentation (steering, hooks and
 skills) and has not been run on a real installation yet. Record the version in `sdlc.yml` once
@@ -17,7 +17,7 @@ the final verification passes on it.
 | `.kiro/skills/<skill>` | `skills/` | The same skills, linked (copied where links fail) |
 | `.kiro/hooks/sdlc.json` | `hooks.json` | Session start, the per-message guard and the permissions guard |
 
-The steering and hooks files are the SDLC's own and are rewritten on every install: the
+The steering and hooks files are the system's own and are rewritten on every install: the
 person's own go in other files. Connectors (Model Context Protocol servers) are not written by
 the adapter: the organisation declares its own in `.kiro/settings/mcp.json`.
 

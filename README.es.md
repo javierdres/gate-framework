@@ -3,9 +3,9 @@
 # GATE
 
 **Governed, Assisted, Traceable Engineering.** La base con la que un orquestador construye el
-SDLC asistido con IA de su propia organización: las etapas del ciclo de vida del software, sus
-entradas y salidas, los puntos de control humano, los actores de cada una, y cómo convertir todo
-eso en un proyecto SDLC propio que funciona, sobre el asistente de IA que elijas.
+sistema de trabajo asistido con IA de su propia organización: las etapas del ciclo de vida del
+software, sus entradas y salidas, los puntos de control humano, los actores de cada una, y cómo
+convertir todo eso en un sistema propio que funciona, sobre el asistente de IA que elijas.
 
 Agnóstico de empresa, dominio, lenguaje, plataforma y asistente de IA.
 
@@ -13,7 +13,7 @@ Asistencia que se detiene donde empieza el criterio.
 
 ## Qué te entrega GATE
 
-GATE es la teoría y la fundación. El SDLC de tu organización es la casa que se construye
+GATE es la teoría y la fundación. El sistema de tu organización es la casa que se construye
 encima: un repositorio con tu método, tu catálogo de estándares, tus productos, tus skills, tu
 gobierno y la forma en que entra cada persona.
 
@@ -23,17 +23,17 @@ y para un asistente de IA, un scaffolding, guardias neutrales que hacen cumplir 
 los contratos de las skills que hay que implementar.
 
 Funciona con Claude Code, Gemini CLI, Kiro, Codex o cualquier asistente que cargue instrucciones
-persistentes, use skills y pueda trabajar en un repositorio. El orquestador elige; el SDLC se
+persistentes, use skills y pueda trabajar en un repositorio. El orquestador elige; el sistema se
 escribe en formatos neutrales y un adaptador liviano lo conecta a ese asistente.
 
-## Para arrancar: construye tu SDLC
+## Para arrancar: construye tu sistema
 
 ```
 python3 bin/bootstrap.py names <org>
 python3 bin/bootstrap.py sdlc ~/Projects/<org>/sdlc-<org> --assistant claude-code --org <org>
 ```
 
-Eso escribe el esqueleto del SDLC de tu organización: los archivos base, el catálogo de
+Eso escribe el esqueleto del sistema de tu organización: los archivos base, el catálogo de
 estándares vacío con su validador, los guardias de permisos, de inicio de sesión y de bitácora,
 el instalador y el adaptador. Abre tu asistente dentro de esa carpeta y corre `/establish`: te
 entrevista, construye cada capa siguiendo [BUILDING.es.md](BUILDING.es.md) y cierra con una
@@ -50,32 +50,32 @@ están verificados.
 **[BUILDING.es.md](BUILDING.es.md)** si eres el orquestador. Dice qué vas a decidir, qué te van
 a preguntar y con qué vas a terminar.
 
-**[START-HERE.es.md](START-HERE.es.md)** cuando el SDLC ya existe. Responde las preguntas que
+**[START-HERE.es.md](START-HERE.es.md)** cuando el sistema ya existe. Responde las preguntas que
 vienen después: cómo inicio un proyecto nuevo, cómo inicio un requerimiento nuevo sobre uno
 existente y cómo resuelvo una incidencia.
 
 ## La referencia
 
 [GATE.md](GATE.md) es el documento completo, en inglés. Si tienes diez minutos, lee la sección 2
-(el orquestador y cómo se construye el SDLC), la 3 (la puerta de entrada y el expediente) y la 7
+(el orquestador y cómo se construye el sistema), la 3 (la puerta de entrada y el expediente) y la 7
 (los actores, y la línea entre lo que hace la IA y lo que hacen las personas).
 
 ## Qué contiene
 
 ```
-├── BUILDING.es.md      Cómo un orquestador construye el SDLC de su organización
+├── BUILDING.es.md      Cómo un orquestador construye el sistema de su organización
 ├── START-HERE.es.md    Las tres formas de entrar al ciclo, y qué cambia cada una
 ├── GATE.md             El framework completo
 ├── CONTRIBUTING.md     Cómo cambia el framework mismo
 ├── CHANGELOG.md        Qué cambió y por qué
 ├── skills/             Los 20 contratos de skills: 3 de fundación, 1 de apoyo, 14 de ciclo, 2 transversales
-├── templates/          Config del SDLC, instrucciones, gobierno, plan, producto, casos de uso,
+├── templates/          Config del sistema, instrucciones, gobierno, plan, producto, casos de uso,
 │                       expediente, decisión, guion de QA, postmortem, regla, bitácora
-├── kit/                Lo que bootstrap.py copia en un SDLC nuevo: el catálogo, guardias y
+├── kit/                Lo que bootstrap.py copia en un sistema nuevo: el catálogo, guardias y
 │                       sus pruebas, instalador, verificador, adaptadores, hooks de servidor, método
 ├── adoption/           Cómo implantarlo, paso a paso
 ├── bin/
-│   ├── bootstrap.py    Arma el SDLC de la organización, un catálogo o la config de un proyecto
+│   ├── bootstrap.py    Arma el sistema de la organización, un catálogo o la config de un proyecto
 │   ├── validate.py     Comprueba que los contratos estén completos y la cadena cierre
 │   ├── check_config.py Reporta qué le falta al .gate/config.yml de un proyecto
 │   └── build_pdf.py    Regenera el PDF desde el Markdown
@@ -85,7 +85,7 @@ existente y cómo resuelvo una incidencia.
 
 ## Qué no contiene, a propósito
 
-**Las reglas de tu organización.** El catálogo es de cada organización y vive en su propio SDLC.
+**Las reglas de tu organización.** El catálogo es de cada organización y vive en su propio sistema.
 Este framework define cómo se alimenta, no qué dice. La sección 8 del documento explica cómo
 encajan los niveles.
 
@@ -109,7 +109,7 @@ A dice que gatilla a B, B tiene que decir que la gatilla A.
 
 ## Los momentos de invocación humana
 
-Antes del ciclo, una vez cada uno: `/establish` cuando una organización construye su SDLC, y
+Antes del ciclo, una vez cada uno: `/establish` cuando una organización construye su sistema, y
 `/onboard` cuando una persona se suma. En el ciclo: `/init` cuando nace la necesidad, `/build`
 cuando alguien se sienta a implementar, `/review` cuando alguien revisa, varias veces, `/verify`
 cuando alguien prueba y `/deploy` cuando alguien despliega.
@@ -129,7 +129,7 @@ porque hubo automatismos que ejecutaron de más. Las tres incompatibilidades de 
 un equipo chico con asistencia fuerte converge rápido, y a veces hacia el lado equivocado. La
 etapa 12 existe porque es fácil encontrar un catálogo de estándares vacío al lado de un cambio
 con ciento cincuenta comentarios de discusión. Y la sección 2 existe porque GATE se puso en
-práctica en una organización real, y construir ese SDLC enseñó lo que una fundación le tiene que
+práctica en una organización real, y construir ese sistema enseñó lo que una fundación le tiene que
 dar a un orquestador.
 
 Es un framework vivo, en uso y en mejora continua.

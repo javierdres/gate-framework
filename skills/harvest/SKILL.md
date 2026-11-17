@@ -23,7 +23,7 @@ Write access to the standards repository. Catalog and false-positive record up t
 ## What it does
 
 - Takes four sources, in this order of strength: the root cause of an incident, the resolved threads of a review, a finding of the pre-review that no rule covers, and a correction made during a session. The first two are the primary sources; the last two are suggestions the person may choose to raise.
-- Runs on its own when a review closes, when a postmortem closes and when a pre-review leaves something without a rule. When review happens outside the assistant, as it often does in phase one, the person runs it when the review closes, and the SDLC's instructions remind them.
+- Runs on its own when a review closes, when a postmortem closes and when a pre-review leaves something without a rule. When review happens outside the assistant, as it often does in phase one, the person runs it when the review closes, and the system's instructions remind them.
 - A pre-review is private, so a candidate drawn from it is raised only if its author chooses to, and its origin is told as a pattern ("pre-review of a change to the payments module") rather than linked to a private record.
 - Before harvesting a review, looks for open threads a later commit already addressed. With the person's OK it answers each one citing that commit and resolves it, because an addressed thread left open hides that the correction exists. Only then reads the threads, read-only.
 - Takes resolved threads and applied suggestions as corrections the team accepted. A thread closed by rejecting a suggestion with a reason is a candidate for the false-positive record, not for a rule.

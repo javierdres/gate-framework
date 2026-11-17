@@ -9,10 +9,10 @@ identity with its enabled profiles, and what is open in the log. Then:
 
 - **Setup unfinished at requirements or installation**: continue with `/onboard` from there as
   soon as the person writes, even if they bring another request. Without those two stages the
-  SDLC does not work, so a request handled first would run without the guards.
+  system does not work, so a request handled first would run without the guards.
 - **Setup unfinished from the profile stage on**: follow the rest of this page and offer to
   complete what is pending.
-- **Opened inside the SDLC repository** instead of the working folder: ask the person to reopen
+- **Opened inside the system's repository** instead of the working folder: ask the person to reopen
   the assistant at the working folder, where their profile, log and guards load.
 - **A direct request** is handled straight away, without a menu. The profile still sets the
   language.
@@ -39,7 +39,7 @@ person's own identity, before showing any menu.
 ```
   How do you want to work today?
 
-  ── WITHOUT THE SDLC ─────────────────────────────────────
+  ── WITHOUT THE FLOW ─────────────────────────────────────
    1   Plain assistant         free session, no flow
 
   ── I AM ──────────────────────────────────────────────────
@@ -51,7 +51,7 @@ person's own identity, before showing any menu.
    7   Support                 users' cases
 
   ── I WANT TO KNOW IT ─────────────────────────────────────
-   8   What is it for?         why use the SDLC
+   8   What is it for?         why use the system
    9   A guided tour           five minutes
 
   Type the number of your option.

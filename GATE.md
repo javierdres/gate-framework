@@ -2,13 +2,14 @@
 
 ### Governed, Assisted, Traceable Engineering
 
-**An AI-assisted SDLC framework.** A software development life cycle that defines the stages,
-their inputs and outputs, the human control points and the actors of each one.
+**A framework for AI-assisted software development.** It describes a software development life cycle
+(SDLC), with its stages, their inputs and outputs, the human control points and the actors of each
+one.
 
 Technical reference document, agnostic of company, domain, language, platform and AI assistant.
 
-It is the foundation an orchestrator uses to build their own organisation's SDLC, with the AI
-assistant the organisation chooses. It covers the whole journey: from building that SDLC, to
+It is the foundation an orchestrator uses to build their own organisation's system, with the AI
+assistant the organisation chooses. It covers the whole journey: from building that system, to
 someone raising a need, to the system running in production, with the organisation having
 learned something from doing it.
 
@@ -36,23 +37,23 @@ mechanisms that turn every decision and every incident into a reusable standard.
 The gain does not come from the assistant doing more. It comes from what it does sticking,
 chaining into the next step, and not depending on someone remembering.
 
-### A foundation for building your own SDLC
+### A foundation for building your own system
 
-GATE is not the SDLC an organisation runs. It is what an organisation builds its own SDLC
+GATE is not the system an organisation runs. It is what an organisation builds its own system
 from.
 
 The framework defines the stages, the skill contracts, the gates and the line between the
-machine and the people, and it is the same for everybody. Each organisation's SDLC is a project
+machine and the people, and it is the same for everybody. Each organisation's system is a project
 of its own: a repository holding its method, its standards catalog, the context of its
 products, its skill implementations, its governance and the way each person gets in. GATE
-explains; the organisation's SDLC applies.
+explains; the organisation's system applies.
 
 That project has an owner from the first day, the **orchestrator**, and it can be built with
 whichever AI assistant the organisation chooses. Section 2 says how.
 
 ### What kind of framework this is, and what it does not replace
 
-GATE is an **SDLC**: it describes the life cycle of a software product, from the need to
+GATE describes the **life cycle** of a software product, from the need to
 retirement, with the stages, artefacts and controls of each leg. It sits in the same family as
 the classic life cycle models and as continuous integration and delivery practice.
 
@@ -72,15 +73,15 @@ alternatives to them.
 
 ---
 
-## 2. Before stage 0: the orchestrator builds the SDLC
+## 2. Before stage 0: the orchestrator builds the organisation's system
 
-Every other section of this document assumes an SDLC that already exists. This one is about
+Every other section of this document assumes a system that already exists. This one is about
 how it comes to exist, and it is where any organisation starts.
 
 ```mermaid
 flowchart TD
     O(["ORCHESTRATOR<br/>chooses the assistant<br/>and answers the interview"]) --> E["<b>/establish</b><br/>interview · confirmed summary"]
-    E --> L["Builds the SDLC layer by layer<br/>each layer shown before the next"]
+    E --> L["Builds the organisation's system layer by layer<br/>each layer shown before the next"]
     L --> V{"Final verification<br/>every point green<br/>or named as pending"}
     V --> F["<b>Formulation</b><br/>the orchestrator approves<br/>exit criteria written"]
     F --> N["<b>/onboard</b><br/>each person gets in<br/>with their own access"]
@@ -94,8 +95,8 @@ flowchart TD
 ### The orchestrator
 
 The first role, named before anything else is built. The orchestrator builds the
-organisation's SDLC together with the assistant, chooses which assistant the organisation
-uses, assigns roles and profiles, and decides when the SDLC is ready to run.
+organisation's system together with the assistant, chooses which assistant the organisation
+uses, assigns roles and profiles, and decides when the organisation's system is ready to run.
 
 The profile is short: authority in the organisation to assign roles, and enough technical
 judgement to reject a well-written proposal from the assistant. In a small company it is
@@ -106,19 +107,19 @@ decide.
 ### The assistant is the orchestrator's choice
 
 GATE does not depend on a particular AI assistant. Any assistant that meets these conditions
-can carry an SDLC built on it:
+can carry a system built on it:
 
-| Capability | What the SDLC uses it for | If the assistant lacks it |
+| Capability | What the organisation's system uses it for | If the assistant lacks it |
 |---|---|---|
 | **Persistent instructions** loaded in every session | The rules that always apply and the map of the repository | Not viable: without it every session starts from zero |
 | **On-demand skills** | One per skill contract in section 6 | Instruction files per task, invoked by name. Worse, still viable |
 | **Repository and shell access** | Reading the code, running checks and tests | Not viable for the building roles. Product can still work through a chat client with connectors |
-| **Hooks** before an action and at session start | Enforcing permissions, loading context, keeping the log | The platform carries the load: read-only credentials for the assistant, protected branches, and writes through a script that asks. Weaker, and the SDLC must say so |
-| **Connectors** to the tracker and the observability platform | Reading tickets and production data | Small API clients in the SDLC repository, reading each person's own credential |
-| **Usage data** for subscription plans metered in windows | Showing each person how much is left and warning before it runs out | Each person watches the assistant's own usage page. Nobody is warned, and the SDLC must say so |
+| **Hooks** before an action and at session start | Enforcing permissions, loading context, keeping the log | The platform carries the load: read-only credentials for the assistant, protected branches, and writes through a script that asks. Weaker, and the organisation's system must say so |
+| **Connectors** to the tracker and the observability platform | Reading tickets and production data | Small API clients in the system's repository, reading each person's own credential |
+| **Usage data** for subscription plans metered in windows | Showing each person how much is left and warning before it runs out | Each person watches the assistant's own usage page. Nobody is warned, and the organisation's system must say so |
 
-The SDLC is written once, in neutral formats, and a thin adapter wires it to the assistant
-that was chosen:
+The organisation's system is written once, in neutral formats, and a thin adapter wires it to the
+assistant that was chosen:
 
 - **Instructions** live in `AGENTS.md`, the convention most assistants read. Where an assistant
   expects another file name, the adapter is a one-line file that points to it.
@@ -130,17 +131,17 @@ that was chosen:
 - **Connectors** use the Model Context Protocol where the assistant supports it, and the
   repository's API clients where it does not.
 
-An organisation can run more than one assistant over the same SDLC. Each one gets its adapter,
+An organisation can run more than one assistant over the same system. Each one gets its adapter,
 while the method, the catalog and the products stay single. A check in the pipeline fails when
 a change to what one assistant loads leaves another adapter behind, and the lagging adapter is
 fixed in the same change request. Without that check, the second assistant quietly runs on
 rules the first one has already left behind.
 
-The choice is recorded in the SDLC's configuration and in its governance, with the version it
+The choice is recorded in the system's configuration and in its governance, with the version it
 was verified against. Changing assistant later is a decision like any other: the orchestrator
 takes it, the adapter is rebuilt and the final verification runs again.
 
-### How the SDLC gets built
+### How the organisation's system gets built
 
 `/establish` is the first skill and the only one that runs before stage 0. The same line holds
 as everywhere else: the assistant prepares, the orchestrator decides.
@@ -162,11 +163,11 @@ as everywhere else: the assistant prepares, the orchestrator decides.
 
 [BUILDING.md](BUILDING.md) is the complete guide `/establish` follows: the decisions the
 orchestrator takes and their defaults, the assistant adapters, the interview, the repository
-structure, what every base file holds, the guards, the order, the checklist and the questions
-that always come up. It is written so that an orchestrator can build the SDLC by reading it,
-and so that any capable assistant can build it by following it.
+structure, what every base file holds, the guards, the order, the checklist and the questions that
+always come up. It is written so that an orchestrator can build the organisation's system by reading
+it, and so that any capable assistant can build it by following it.
 
-### What the organisation's SDLC holds
+### What the organisation's system holds
 
 | Part | What it answers |
 |---|---|
@@ -183,14 +184,14 @@ and so that any capable assistant can build it by following it.
 
 ### The formulation phase
 
-While the SDLC is being built, the three incompatibilities in section 7 cannot hold: one
-person proposes, approves and merges. GATE accepts that on two conditions. The phase is
+While the organisation's system is being built, the three incompatibilities in section 7 cannot
+hold: one person proposes, approves and merges. GATE accepts that on two conditions. The phase is
 declared in governance, and its exit is written before it starts.
 
 The exit is observable and has a review date. A reasonable default: a person other than the
-orchestrator installed the SDLC on their own and has their access verified; a product owner
-used it on a real requirement; a builder took one of those without product questions; and a
-rule harvested from real work entered the catalog. If none of that has happened by the review
+orchestrator installed the organisation's system on their own and has their access verified; a
+product owner used it on a real requirement; a builder took one of those without product questions;
+and a rule harvested from real work entered the catalog. If none of that has happened by the review
 date, the approach is reviewed before anything else is built.
 
 From the day formulation ends, the orchestrator is bound by the same incompatibilities as
@@ -203,25 +204,26 @@ installation, profile, access and a short live demonstration on their own data. 
 the profiles enabled for that person's verified identity, sets up each access one at a time
 with the least privilege that works, and never asks for or accepts a credential in the chat.
 
-Identity comes from the strongest source the organisation has. An account on the code platform
-or the tracker is the usual one. Without platform accounts, an SSH signing key listed in the
-SDLC works, and a server-side hook can then require every commit to be signed by it. A name a
-person merely declares is the last resort, and the SDLC says so: the profiles then guide, and
-the real control is whatever the platform enforces.
+Identity comes from the strongest source the organisation has. An account on the code platform or
+the tracker is the usual one. Without platform accounts, an SSH signing key listed in the
+organisation's system works, and a server-side hook can then require every commit to be signed by
+it. A name a person merely declares is the last resort, and the organisation's system says so: the
+profiles then guide, and the real control is whatever the platform enforces.
 
-A person who does not work in the repository, product most often, gets in through a chat client
-with connectors and a read-only access of their own. The SDLC adapts the entry to the role.
+A person who does not work in the repository, product most often, gets in through a chat client with
+connectors and a read-only access of their own. The organisation's system adapts the entry to the
+role.
 
-### How the SDLC stays tied to GATE
+### How the organisation's system stays tied to GATE
 
-The organisation's SDLC declares the version of GATE it implements, pinned to a commit, and
+The organisation's system declares the version of GATE it implements, pinned to a commit, and
 keeps a short map of which stage or principle each of its parts implements and where it
 departs from the framework.
 
 The departures are the useful part, because each one is either a local decision or a lesson
 GATE has not learned yet. Lessons travel up the way a rule travels from a project to the
 organisation: proposed as a candidate, with the origin told as a pattern and nothing that
-belongs to the organisation. GATE never links to an organisation's SDLC, which is private by
+belongs to the organisation. GATE never links to an organisation's system, which is private by
 nature. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
@@ -322,13 +324,13 @@ authorised: production, merges, approving a change request, deletions, rewriting
 anything to do with credentials. An approval is a person's judgement on someone else's work; an
 assistant that approves turns the reviewer gate into a ceremony.
 
-The only exception is the organisation's to grant. If its configuration allows an autonomous
-mode, a person may ask for it explicitly, for one session, to leave work running and find it
-done when they return. The SDLC then stops asking, short list included, and the assistant's own
+The only exception is the organisation's to grant. If its configuration allows an autonomous mode, a
+person may ask for it explicitly, for one session, to leave work running and find it done when they
+return. The organisation's system then stops asking, short list included, and the assistant's own
 permission mode decides. The assistant can never switch it on for itself, and the platform's
-protections still hold: protected branches and mandatory approvals do not move. It is off unless
-the organisation decides otherwise. It exists because people left long work running and came
-back to a session stopped at its first question, and then learned to work around the SDLC.
+protections still hold: protected branches and mandatory approvals do not move. It is off unless the
+organisation decides otherwise. It exists because people left long work running and came back to a
+session stopped at its first question, and then learned to work around the organisation's system.
 
 **What must hold is enforced by the environment, not by the prompt.** An instruction fades
 over a long session, the same way a person forgets to run a command. Permissions, session start
@@ -347,12 +349,12 @@ checked out. If it could not be checked, that gets said.
 person is identified by their verified account, never by what they type. When someone rotates,
 one row changes and nothing else.
 
-**Nobody is observed.** The SDLC never records when or how a person uses the assistant, and
-never reads or stores their prompts or conversations, not even to measure adoption. Adoption
-and impact are measured only from work that is already shared, such as changes, reviews and
-tickets, aggregated and never by person, plus a voluntary survey. If a question can only be
-answered by watching people, it is not measured. A team that feels watched stops using the
-assistant where it matters, or uses it where nobody can see.
+**Nobody is observed.** The organisation's system never records when or how a person uses the
+assistant, and never reads or stores their prompts or conversations, not even to measure adoption.
+Adoption and impact are measured only from work that is already shared, such as changes, reviews and
+tickets, aggregated and never by person, plus a voluntary survey. If a question can only be answered
+by watching people, it is not measured. A team that feels watched stops using the assistant where it
+matters, or uses it where nobody can see.
 
 **Nobody does another person's part.** What depends on someone else is asked of them, in the
 ticket where it lives, and the work carries on with what is one's own. Doing it for them hides
@@ -373,11 +375,11 @@ that produced it is someone's opinion in the shape of a norm.
 that the assistant raises it again and the team learns to ignore it, including the findings
 that mattered.
 
-**Nobody runs out of the assistant without being told.** Subscription plans meter use in
-windows that reset at a fixed time, and whoever is focused on the work does not watch them. The
-SDLC shows how much of each window is used and when it resets, and when the current pace will
-use a window up before it resets, the assistant says so once and suggests a lighter model, and
-runs its own subagents on one. After the reset it suggests the most capable model again. The
+**Nobody runs out of the assistant without being told.** Subscription plans meter use in windows
+that reset at a fixed time, and whoever is focused on the work does not watch them. The
+organisation's system shows how much of each window is used and when it resets, and when the current
+pace will use a window up before it resets, the assistant says so once and suggests a lighter model,
+and runs its own subagents on one. After the reset it suggests the most capable model again. The
 person always decides which model the session runs.
 
 **Missing dependencies get named.** If an access, a token or a data source is missing, say
@@ -462,11 +464,11 @@ someone decides.
 
 | Skill | Stage | Triggered by | Delivers | Writes outside, on approval |
 |---|---|---|---|---|
-| `/establish` | Foundation | **Orchestrator** | The organisation's SDLC, built and verified on the chosen assistant | The SDLC repository |
+| `/establish` | Foundation | **Orchestrator** | The organisation's system, built and verified on the chosen assistant | The system's repository |
 | `/onboard` | Foundation | **Person**, or `/establish` for the first one | A person ready to work: profile, access verified, a first demonstration | Nothing shared |
-| `/guide` | Foundation | **Person**, or `/onboard` at the welcome | What the SDLC does for that profile, and what the person can ask for today | Nothing |
-| `/save` | Support | **Person** | Something worth keeping, put where whoever looks for it will find it | The SDLC repository, by change request |
-| `/pulse` | Support, optional | **Person** | What the team works on, what is blocked and who unblocks it, the team's health, and whether the SDLC changed the work | Nothing |
+| `/guide` | Foundation | **Person**, or `/onboard` at the welcome | What the organisation's system does for that profile, and what the person can ask for today | Nothing |
+| `/save` | Support | **Person** | Something worth keeping, put where whoever looks for it will find it | The system's repository, by change request |
+| `/pulse` | Support, optional | **Person** | What the team works on, what is blocked and who unblocks it, the team's health, and whether the organisation's system changed the work | Nothing |
 | `/init` | 0 | **Person** | Dossier opened and classified by type of work | Ticket |
 | `/define` | 1 | `/init` | Problem, context, data classification | Ticket |
 | `/specify` | 2 | `/define` | Acceptance and compliance criteria | Ticket |
@@ -493,7 +495,7 @@ someone tests (`/verify`) and when someone deploys (`/deploy`). The framework ch
 else in the cycle.
 
 Outside it, a person also starts the skills that do not belong to a stage: `/establish` once,
-when an organisation builds its SDLC; `/onboard` once per person; `/guide`, `/save` and, once
+when an organisation builds its system; `/onboard` once per person; `/guide`, `/save` and, once
 the organisation adopts it, `/pulse` whenever they want; and `/harvest` when they close a review
 held outside the assistant, until `/review` is adopted and triggers it on its own.
 
@@ -559,7 +561,7 @@ Roles, not job titles. One person can hold several.
 
 | Role | What they clear | Profile |
 |---|---|---|
-| **Orchestrator** | Section 2: builds the SDLC, chooses the assistant, assigns roles and profiles, and decides when formulation ends | Authority to assign roles and judgement to reject the assistant's proposal. Bound by the incompatibilities once formulation ends |
+| **Orchestrator** | Section 2: builds the organisation's system, chooses the assistant, assigns roles and profiles, and decides when formulation ends | Authority to assign roles and judgement to reject the assistant's proposal. Bound by the incompatibilities once formulation ends |
 | **Requester** | Nothing. They raise the need | Knows the problem first hand. Needs no technical profile |
 | **Product owner** | Gates 1, 2 and 11 | Decides what gets built and what does not. Can take being told their hypothesis failed |
 | **Engineering lead** | Gates 3 and 4 | Architecture judgement and memory of the system. Able to reject a well-written proposal |
@@ -647,7 +649,7 @@ lives**.
 ```mermaid
 flowchart TD
     F["<b>THE FRAMEWORK</b><br/>stages · skill contracts · templates<br/>gates · role incompatibilities"]
-    O["<b>THE ORGANISATION'S SDLC</b><br/>method · catalog · false positives<br/>skill implementations · adapters<br/>custodians · regulatory context"]
+    O["<b>THE ORGANISATION'S SYSTEM</b><br/>method · catalog · false positives<br/>skill implementations · adapters<br/>custodians · regulatory context"]
     P["<b>THE PROJECT</b><br/>how this codebase is built · data sources<br/>project-scoped rules"]
     W["<b>THE WORK ITEM</b><br/>one dossier"]
     H["<b>THE PERSON</b><br/>profile · preferences<br/>own credentials · work log"]
@@ -666,7 +668,7 @@ flowchart TD
 | Level | What lives there | How many |
 |---|---|---|
 | Framework | The method: stages, contracts, templates, gates | One, for everybody |
-| Organisation | Its SDLC repository: method, catalog, false positives, product context, skill implementations, assistant adapters, custodians | One per organisation |
+| Organisation | Its system's repository: method, catalog, false positives, product context, skill implementations, assistant adapters, custodians | One per organisation |
 | Project | How that codebase is built, its data sources, its own rules | One per product or service |
 | Work item | The dossier | One per piece of work |
 | Person | Profile, preferences, personal credentials and the log of their own work | One per person, on their own machine |
@@ -767,15 +769,15 @@ then goes through that organisation's own approval like any other candidate.
 
 ### Several organisations on one machine
 
-A person often carries more than one SDLC on the same computer: their employer's, a client's,
-their own side projects. GATE keeps them apart with one rule: **everything an organisation's
-SDLC installs lives in its working folder.** Instructions, skills, guards and the person's log
-go inside the folder that holds the SDLC and its products, never into the assistant's global
-configuration.
+A person often carries more than one organisation's system on the same computer: their employer's, a
+client's, their own side projects. GATE keeps them apart with one rule: **everything an
+organisation's system installs lives in its working folder.** Instructions, skills, guards and the
+person's log go inside the folder that holds the organisation's system and its products, never into
+the assistant's global configuration.
 
 Installed globally, an organisation's skills show up in every folder of the machine, including
-work that has nothing to do with it, and two SDLCs with a skill of the same name compete for
-it. Installed in the working folder, each SDLC is active only where the person opens the
+work that has nothing to do with it, and two systems with a skill of the same name compete for
+it. Installed in the working folder, each system is active only where the person opens the
 assistant for that organisation, and nothing it does leaks into the next.
 
 Two consequences follow, and both are about where the assistant is opened.
@@ -792,7 +794,7 @@ control makes every working folder below it one project for the assistant, and t
 organisation reaches the sessions of another. The installer warns when it finds this.
 
 Credentials follow the same idea. They stay outside every repository, in the person's own
-folder, but under names that carry the organisation, so two SDLCs never read each other's keys.
+folder, but under names that carry the organisation, so two systems never read each other's keys.
 
 ### Governance once there are many projects
 
@@ -1083,7 +1085,7 @@ to, and a pre-review, being private, contributes its pattern and never its recor
 
 `/harvest` runs on its own when a review closes, when a postmortem closes and when a pre-review
 leaves something without a rule. Where review happens outside the assistant, as it usually does
-before `/review` is adopted, the person who closes the review runs it, and the SDLC's
+before `/review` is adopted, the person who closes the review runs it, and the system's
 instructions remind them.
 
 ```mermaid
@@ -1239,8 +1241,9 @@ other eleven say.
 never rejects anything has become a ceremony, and the judgement the framework moved the
 bottleneck to is no longer being exercised.
 
-**The SDLC itself.** The formulation exit criteria from section 2, checked on their review
-date. Until they are met, the organisation has a project in construction, not an SDLC in use.
+**The organisation's system itself.** The formulation exit criteria from section 2, checked on their
+review date. Until they are met, the organisation has a project in construction, not a system in
+use.
 
 ### Measuring the effect honestly
 
@@ -1255,17 +1258,17 @@ it.
 The first total an organisation runs tends to show an improvement that does not exist. These
 rules come from one that did, and they apply to every reading:
 
-- **No adoption, no effect to attribute.** Compare the domains that adopted the SDLC with those
-  that did not. If both improve alike, the cause is something else.
-- **The SDLC's own work is not the organisation's.** Its repository and its board stay out of
+- **No adoption, no effect to attribute.** Compare the domains that adopted the organisation's
+  system with those that did not. If both improve alike, the cause is something else.
+- **The system's own work is not the organisation's.** Its repository and its board stay out of
   the totals. That is where the orchestrator works with the assistant every day, and mixing it
   in inflates any gain.
 - **One month is not a trend.** It takes three months in a row in the same direction. A month
   with few changes in a domain is not read on its own.
 - **It gets worse first.** New rules raise review rounds and rule citations for a while, because
   review gets stricter. Still rising after three months is a regression.
-- **People and process move the numbers more than the SDLC.** Before attributing a change, look
-  for someone who joined or left, a new reviewer or a new branching flow, and name it.
+- **People and process move the numbers more than the organisation's system.** Before attributing a
+  change, look for someone who joined or left, a new reviewer or a new branching flow, and name it.
 - **What was not read does not count.** A month with more than a tenth of its data unread is
   left out.
 - **Never by person.** The reading names nobody. A domain of one or two people is those people:
@@ -1282,10 +1285,11 @@ rules come from one that did, and they apply to every reading:
 - Personal credentials per person, never shared, with the least privilege that works and an
   expiry, stored on the person's machine with restricted permissions. Never in a repository and
   never in a chat. A team token destroys the traceability of who approved what.
-- An identity the SDLC can verify a person against: their account on the code platform or the
-  tracker, or an SSH signing key listed in the SDLC, never the name they type.
+- An identity the organisation's system can verify a person against: their account on the code
+  platform or the tracker, or an SSH signing key listed in the organisation's system, never the name
+  they type.
 - For the roles that build and review, a local copy of every repository the cycle touches,
-  including the organisation's SDLC. Roles that do not work in the repository get in through
+  including the organisation's system. Roles that do not work in the repository get in through
   their own tools, with a read-only access of their own.
 - A catalog readable by machine, versioned, with a format validator.
 - A low-friction place to record false positives, outside the rule approval process. If
@@ -1304,8 +1308,8 @@ rules come from one that did, and they apply to every reading:
 In this order. Each step works without the ones after it, and none requires the previous one to
 be perfect.
 
-0. **The orchestrator builds the SDLC.** `/establish`, on the assistant the orchestrator chose,
-   with the formulation phase declared and its exit written. See section 2 and
+0. **The orchestrator builds the organisation's system.** `/establish`, on the assistant the
+   orchestrator chose, with the formulation phase declared and its exit written. See section 2 and
    [BUILDING.md](BUILDING.md).
 1. **The standards catalog, empty.** With a rule format, a validator and a generated catalog.
    Empty on purpose: a set copied from an industry guide describes whoever copied it.
@@ -1370,14 +1374,14 @@ well-written guess, which is worse than none.
 already answered, and the chain breaks without anyone noticing.
 
 **The formulation with no exit.** The orchestrator keeps approving everything for good, and the
-SDLC becomes one person's project with a team's name on it.
+organisation's system becomes one person's project with a team's name on it.
 
 **Machine keys translated.** The keys of the formats the guards and validators read stay in
 English whatever language the documents use. Translating them makes a check fail in silence.
 
-**The SDLC tied to one assistant.** Instructions, skills and guards written in one vendor's
-format and nowhere else. Changing assistant means rebuilding the house instead of swapping an
-adapter.
+**The organisation's system tied to one assistant.** Instructions, skills and guards written in one
+vendor's format and nowhere else. Changing assistant means rebuilding the house instead of swapping
+an adapter.
 
 **The gate that never says no.** Approvals arrive in seconds and nothing is ever corrected. The
 assistant's fluency is doing the judging.

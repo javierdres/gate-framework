@@ -18,7 +18,7 @@ Optional. It belongs to the third phase, once product and building work with rea
 
 Let whoever leads see the team's work without asking anyone for a report: what each person is
 on, what is blocked and who unblocks it, how work flows, what was delivered, whether the team
-can carry its work when someone is away, and whether the SDLC changed the work at all. It also
+can carry its work when someone is away, and whether the system changed the work at all. It also
 gives any member a private view of their own work.
 
 ## Preconditions
@@ -55,7 +55,7 @@ by version control. For the health view, the team's critical functions, declared
   ends up carrying what when a backup steps in, and backups already holding twice the median
   load), and the problems that persist across saved readings, with the first reading and
   today's. Risk is described in the situation, never in the person.
-- **The effect of the SDLC**, read month by month against the rules in GATE.md section 11.
+- **The effect of the system**, read month by month against the rules in GATE.md section 11.
   Only shared work, aggregated by domain.
 - **Your own view**, for any member who asks how they are doing: their work in progress, what
   waits on someone else, their changes waiting for review, and at most three things to adjust.
@@ -72,7 +72,7 @@ by version control. For the health view, the team's critical functions, declared
   something suggests one person is worn out, it suggests the leader talk to them in private,
   and it stays out of the view.
 - Never shows after-hours work by person; only for the team.
-- Never records or reads how people use the assistant, and never measures the SDLC's effect by
+- Never records or reads how people use the assistant, and never measures the system's effect by
   person.
 - Never stores verdicts or readings about people in a shared repository. Readings stay in the
   leader's personal folder, and the personal view is not saved.

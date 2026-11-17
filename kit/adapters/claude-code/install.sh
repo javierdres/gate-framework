@@ -16,10 +16,10 @@ result="$($PY "$SDLC/tools/instructions_block.py" "$WORK/CLAUDE.md" "$BACKUPS/CL
 @$NAME/personal/preferences.md
 EOF
 )"
-[ "$result" = unchanged ] || echo "OK  CLAUDE.md in the working folder: SDLC block $result"
+[ "$result" = unchanged ] || echo "OK  CLAUDE.md in the working folder: $NAME block $result"
 
 # Skills: linked one by one, so the person's own skills stay untouched. A folder of the person's
-# with the same name as one of the SDLC's is left alone, with a warning.
+# with the same name as one of the system's is left alone, with a warning.
 mkdir -p "$WORK/.claude/skills"
 linked=0; copied=0
 for dir in "$SDLC"/skills/*/; do
@@ -29,12 +29,12 @@ for dir in "$SDLC"/skills/*/; do
   set +e; sdlc_skill "$dir" "$dest" "../../$NAME/skills/$skill"; r=$?; set -e
   case "$r" in
     0) if [ -L "$dest" ]; then linked=$((linked + 1)); else copied=$((copied + 1)); fi ;;
-    2) echo "! .claude/skills/$skill in the working folder is not the SDLC's; left untouched. Rename yours to use the SDLC's." ;;
+    2) echo "! .claude/skills/$skill in the working folder is not $NAME's; left untouched. Rename yours to use the one from $NAME." ;;
     *) echo "! Could not install the skill $skill" ;;
   esac
 done
 for skill in $(sdlc_prune_skills "$SDLC" "$WORK/.claude/skills"); do
-  echo "OK  skill $skill removed: the SDLC no longer has it"
+  echo "OK  skill $skill removed: $NAME no longer has it"
 done
 [ "$copied" = 0 ] || echo "OK  $copied skills copied, as links are not available here; each session refreshes them"
 
@@ -59,7 +59,7 @@ before = json.dumps(data, sort_keys=True)
 hooks = data.setdefault("hooks", {})
 guard = '%s "$CLAUDE_PROJECT_DIR/%s/tools/guards/%%s"' % (py, name)
 # Hooks go through the project folder Claude Code was opened in, so moving or renaming the
-# working folder does not break them. A branch of the SDLC without the script never breaks the
+# working folder does not break them. A branch of the system without the script never breaks the
 # session: the tolerant ones end in `|| true`, and the permissions guard steps aside when its
 # script is missing. `shell` keeps Claude Code on Windows from running them in PowerShell.
 tolerant = lambda script, args="": "%s%s 2>/dev/null || true" % (guard % script, args)

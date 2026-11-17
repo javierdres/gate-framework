@@ -6,7 +6,7 @@ identity and the person's log.
 
     python3 tools/guards/tests/test_session_start.py
 
-Each test builds a throwaway working folder with an SDLC holding a copy of the guard, and a bare
+Each test builds a throwaway working folder with a system holding a copy of the guard, and a bare
 repository as its origin when the update is under test. The SSH identity test needs ssh-keygen.
 """
 import io
@@ -28,7 +28,7 @@ def sh(args, cwd, env=None):
 class Base(unittest.TestCase):
     def setUp(self):
         self.work = tempfile.mkdtemp()
-        self.root = os.path.join(self.work, "sdlc-test")
+        self.root = os.path.join(self.work, "system-test")
         os.makedirs(os.path.join(self.root, "tools", "guards"))
         os.makedirs(os.path.join(self.root, "personal", "sessions"))
         shutil.copy(GUARD, os.path.join(self.root, "tools", "guards", "session_start.py"))
@@ -146,7 +146,7 @@ GIT_ID = ["-c", "user.name=t", "-c", "user.email=t@t"]
 
 
 class Update(Base):
-    """Bringing the SDLC up to date: never hanging, never leaving the repository half done."""
+    """Bringing the system up to date: never hanging, never leaving the repository half done."""
 
     def setUp(self):
         super().setUp()
@@ -181,7 +181,7 @@ class Update(Base):
         self.upstream("README.md", "two\n", "A clearer readme", version="1.1.0")
         out = self.run_guard()
         self.assertIn("updated with 1 new commit on origin/main (A clearer readme)", out)
-        self.assertIn("new SDLC version 1.1.0", out)
+        self.assertIn("new %s version 1.1.0" % os.path.basename(self.root), out)
         self.assertIn('"What to do"', out)
         self.assertEqual(self.git("rev-parse", "HEAD"), self.git("rev-parse", "origin/main"))
         self.assertIn("up to date with origin/main", self.run_guard())
@@ -259,7 +259,7 @@ class Installation(Base):
         self.write("skills/b/SKILL.md", "b\n")
         out = self.run_guard(env={"CLAUDECODE": "1"})
         self.assertIn("reinstall needed", out)
-        self.assertIn("bash sdlc-test/tools/install.sh claude-code", out)
+        self.assertIn("bash system-test/tools/install.sh claude-code", out)
         self.assertTrue(os.path.exists(notice))
         self.install()
         self.assertIn("Installation: current", self.run_guard(env={"CLAUDECODE": "1"}))
@@ -292,7 +292,7 @@ class Installation(Base):
 
     def test_opened_inside_the_sdlc(self):
         self.install()
-        self.assertIn("Opened inside the SDLC", self.run_guard())
+        self.assertIn("Opened inside the system", self.run_guard())
         self.assertNotIn("Opened inside", self.run_guard(env={"CLAUDE_PROJECT_DIR": self.work}))
 
 

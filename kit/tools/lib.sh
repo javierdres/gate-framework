@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Javier Núñez
 #
-# Shared functions for the SDLC's shell scripts, so they behave the same on macOS, Linux and
+# Shared functions for the system's shell scripts, so they behave the same on macOS, Linux and
 # Windows (Git Bash or WSL). Load it with `. tools/lib.sh`: it runs nothing on its own.
 
 # The operating system: mac, linux (WSL included), windows (Git Bash, MSYS, Cygwin) or other.
@@ -59,12 +59,12 @@ sdlc_backup() {
   cp -p "$3" "$dir/$(printf '%s' "$rel" | sed 's#/#__#g').$4"
 }
 
-# A skill of the SDLC made available where the assistant looks for skills. It is linked, so each
-# update of the SDLC reaches it; the link is relative, so it survives the working folder being
+# A skill of the system made available where the assistant looks for skills. It is linked, so each
+# update of the system reaches it; the link is relative, so it survives the working folder being
 # moved. Where links fail (Windows without developer mode), it is copied and the copy is marked
 # with .sdlc-copy, so the session start guard refreshes it. A folder with the same name that did
-# not come from the SDLC is never touched: returns 2.
-# Usage: sdlc_skill <skill folder in the SDLC> <destination> <relative link target>
+# not come from the system is never touched: returns 2.
+# Usage: sdlc_skill <skill folder in the system> <destination> <relative link target>
 sdlc_skill() {
   local src="${1%/}" dest="$2" rel="$3" name
   name="$(basename "$src")"
@@ -89,7 +89,7 @@ sdlc_skill() {
   cp -R "$src" "$dest" && : > "$dest/.sdlc-copy"
 }
 
-# Removes the links and marked copies of skills the SDLC no longer has. Anything else in the
+# Removes the links and marked copies of skills the system no longer has. Anything else in the
 # folder is the person's and stays. Prints the name of each one removed.
 # Usage: sdlc_prune_skills <sdlc> <skills folder of the assistant>
 sdlc_prune_skills() {
@@ -114,7 +114,7 @@ sdlc_org() {
 }
 
 # Each person's credentials live in their home folder with permissions 0600, named after the
-# organisation (~/.<org>-tracker-key), so another organisation's SDLC on the same machine never
+# organisation (~/.<org>-tracker-key), so another organisation's system on the same machine never
 # reads them. An older installation may have used the generic name (~/.tracker-key): the new
 # name is read first and the old one is the fallback. Usage: sdlc_credential <sdlc> <name>
 sdlc_credential() {

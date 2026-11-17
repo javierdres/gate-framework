@@ -28,7 +28,7 @@ bash tools/install.sh claude-code >/dev/null
 bash tools/install.sh kiro >/dev/null
 printf '\nMy own note about sdlc-acme-tools/ stays.\n' >> "$T/work/CLAUDE.md"
 # A working folder an older installer wired: the single-marker block, a backup left next to it.
-printf '# Mine\n\n<!-- sdlc:sdlc-acme -->\nRead and follow sdlc-acme/AGENTS.md, the organisation SDLC.\n\nMy own line.\n' \
+printf '# Mine\n\n<!-- sdlc:sdlc-acme -->\nRead and follow sdlc-acme/AGENTS.md, the system of the organisation.\n\nMy own line.\n' \
   > "$T/work/AGENTS.md"
 printf 'old\n' > "$T/work/CLAUDE.md.bak-20260101000000"
 printf 'See sdlc-acme/AGENTS.md\n' > "$T/work/NOTES.md"

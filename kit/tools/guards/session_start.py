@@ -3,8 +3,8 @@
 # Copyright (c) 2026 Javier Núñez
 """Session start guard. Prints the context the assistant needs before the person's first message.
 
-It reports the setup stage, brings the SDLC up to date when that is safe, checks whether the
-installation is older than the SDLC, identifies the person and hands over the profiles enabled
+It reports the setup stage, brings the system up to date when that is safe, checks whether the
+installation is older than the system, identifies the person and hands over the profiles enabled
 for them, runs the access check and lists what is still open in their log. It never fails the
 session: whatever it cannot check, it says.
 
@@ -12,7 +12,7 @@ Identity, declared in sdlc.yml under `identity:`:
     method: platform      runs identity.command (for example `gh api user --jq .login`) and
                           looks the answer up in the profiles table of GOVERNANCE.md
     method: ssh-signing   the person signs a fresh nonce with the key in `git config
-                          user.signingkey`, and the signature must verify against the SDLC's
+                          user.signingkey`, and the signature must verify against the system's
                           allowed_signers: holding the private key is what proves it
     method: declared      git's user.email, reported as not verified
 When the declared method does not verify the person, `identity.tracker_command` (a command that
@@ -158,12 +158,12 @@ def update():
     code, branch = git("symbolic-ref", "--quiet", "--short", "HEAD")
     branch = branch if code == 0 else ""
     if git("remote", "get-url", "origin")[0] != 0:
-        return ("no upstream yet: once the SDLC exists on the code platform, push it once with "
+        return ("no upstream yet: once the system exists on the code platform, push it once with "
                 "`git push -u origin %s`" % (branch or "main"))
     main = default_branch()
     reached = git(*(BOUNDED + ["fetch", "-q", "origin", main]), timeout=20)[0] == 0
     if git("rev-parse", "--verify", "--quiet", "refs/remotes/origin/" + main)[0] != 0:
-        return ("no upstream yet: once the SDLC exists on the code platform, push it once with "
+        return ("no upstream yet: once the system exists on the code platform, push it once with "
                 "`git push -u origin %s`" % main)
     _, count = git("rev-list", "--count", "%s..origin/%s" % (main, main))
     new = int(count) if count.isdigit() else 0
@@ -177,7 +177,7 @@ def update():
     state = bring_in(main, branch)
     news = "%d new commit%s on origin/%s (%s)" % (new, "" if new == 1 else "s", main, titles)
     if added:
-        news += ", with new SDLC version%s %s" % ("" if len(added) == 1 else "s", ", ".join(added))
+        news += ", with new %s version%s %s" % (os.path.basename(ROOT), "" if len(added) == 1 else "s", ", ".join(added))
     if state == "ok":
         text = ("updated with %s. Tell the person in one line at the greeting; what changed in the "
                 "instructions applies in full from the next session." % news)
@@ -190,7 +190,7 @@ def update():
                      % (branch or "a detached HEAD", main))
         return text
     return {
-        "in progress": "%s, not brought in: a merge, rebase or cherry-pick is half done in the SDLC "
+        "in progress": "%s, not brought in: a merge, rebase or cherry-pick is half done in the system "
                        "repository. Nothing was touched. Offer to finish it, then update." % news,
         "same files": "%s, not brought in: there are uncommitted changes in the same files. Nothing "
                       "was touched. Offer to commit or discard them, then update." % news,
@@ -339,7 +339,7 @@ def adapter_session(assistant):
 
 
 def opened_inside(event):
-    """The assistant was opened inside the SDLC instead of the working folder."""
+    """The assistant was opened inside the system instead of the working folder."""
     where = os.environ.get("CLAUDE_PROJECT_DIR") or event.get("cwd") or os.getcwd()
     try:
         return os.path.realpath(where) == os.path.realpath(ROOT)
@@ -430,7 +430,7 @@ def ssh_identity():
     if not key:
         return None, False, "no signing key configured in git"
     if not os.path.exists(signers):
-        return None, False, "allowed_signers is missing from the SDLC"
+        return None, False, "allowed_signers is missing from the system"
     key = os.path.expanduser(key)
     with tempfile.TemporaryDirectory() as tmp:
         nonce = os.path.join(tmp, "nonce")
@@ -464,7 +464,7 @@ def ssh_identity():
 
 def profiles_for(who):
     text = read(os.path.join(ROOT, "GOVERNANCE.md"))
-    # The heading may be translated: the SDLC is written in the organisation's language.
+    # The heading may be translated: the system is written in the organisation's language.
     m = re.search(r"^##\s+(Profiles enabled|Perfiles habilitados).*?\n(.*?)(?=^##\s|\Z)",
                   text, re.M | re.S | re.I)
     table = m.group(2) if m else ""
@@ -506,7 +506,7 @@ def session_notes(session, blocking):
                  "answer \"ok\"; with that answer, try again. One OK covers one action.")
     if config_value("autonomous_allowed", "permissions").lower() in ("true", "yes"):
         text += (" The organisation allows autonomous mode: only if the person asks for it explicitly, "
-                 "register it with `%s grant %s autonomous`; from then on the SDLC asks for nothing but "
+                 "register it with `%s grant %s autonomous`; from then on the system asks for nothing but "
                  "changes to the authorisations, and the assistant's own permission mode decides. Never "
                  "offer it yourself." % (tool, session))
     return text
@@ -520,11 +520,11 @@ def main(argv):
     event = read_event()
     assistant = assistant_in_use()
     name, work = os.path.basename(ROOT), os.path.dirname(ROOT)
-    lines = ["SDLC context"]
+    lines = ["%s context" % name]
     lines.append("- GATE version: %s" % (config_value("version", "gate") or "not declared"))
     if not config_value("built"):
-        lines.append("- The SDLC is not built yet: offer the establish skill before anything else.")
-    lines.append("- SDLC repository: %s" % update())
+        lines.append("- %s is not built yet: offer the establish skill before anything else." % name)
+    lines.append("- %s repository: %s" % (name, update()))
     notice = renamed()
     if notice:
         lines.append(notice)
@@ -534,7 +534,7 @@ def main(argv):
         refresh_copies()
         adapter_session(assistant or next(iter(sorted(installed())), None))
         if opened_inside(event):
-            lines.append("- Opened inside the SDLC: the assistant was opened in %s, not in the working "
+            lines.append("- Opened inside the system: the assistant was opened in %s, not in the working "
                          "folder %s, so the person's profile, log and the guards wired in the working folder "
                          "do not load here. Ask them to close it and open it again in %s. If they came with "
                          "a request about this repository, attend to it." % (name, work, work))
@@ -601,5 +601,5 @@ if __name__ == "__main__":
     try:
         sys.exit(main(sys.argv[1:]))
     except Exception as e:
-        print("SDLC context\n- The session start guard could not finish (%s). Continue, and say so." % type(e).__name__)
+        print("%s context\n- The session start guard could not finish (%s). Continue, and say so." % (os.path.basename(ROOT), type(e).__name__))
         sys.exit(0)

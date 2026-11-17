@@ -1,6 +1,6 @@
 # Method
 
-This SDLC follows [GATE](https://github.com/javierdres/gate-framework), at the version pinned
+This system follows [GATE](https://github.com/javierdres/gate-framework), at the version pinned
 in [`../GATE.md`](../GATE.md). GATE defines the cycle, the control points and the line between
 what the assistant does and what people decide. This folder is how this organisation runs it.
 

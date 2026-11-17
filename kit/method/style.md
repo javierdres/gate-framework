@@ -39,7 +39,7 @@ These rules hold in any language. The organisation adds examples in its own lang
   structures above. Sending something unrevised costs the reader time and the author
   credibility.
 
-These rules came from a review of an SDLC's own presentations that found dozens of sentences
+These rules came from a review of a system's own presentations that found dozens of sentences
 built this way, and from a proposal to management that lost its reader at the metric cards
 before reaching the point.
 

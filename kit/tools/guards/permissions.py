@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Javier Núñez
-"""Permissions guard for an SDLC built on GATE. Neutral: any assistant can call it.
+"""Permissions guard for a system built on GATE. Neutral: any assistant can call it.
 
     permissions.py check [--format claude|json|exit]   read the action on stdin, decide
     permissions.py grant <session> repo <path>          authorise a repository for a session

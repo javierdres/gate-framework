@@ -1,7 +1,7 @@
-# Changes to the SDLC
+# Changes to <system>
 
-What each version of the SDLC brings, why it was made and what someone who already has it
-installed has to do. Newest first. Every change request that changes the SDLC adds its entry
+What each version of <system> brings, why it was made and what someone who already has it
+installed has to do. Newest first. Every change request that changes <system> adds its entry
 here, under a new version.
 
 The format is read by the session start guard, so keep it: each version is a `## X.Y.Z · date`
@@ -15,9 +15,9 @@ version (1.1.0); a change that asks every person to do something different is a 
 
 ## 0.1.0 · <YYYY-MM-DD>
 
-### The SDLC of <Organisation> is scaffolded
+### <system> is scaffolded for <Organisation>
 
 Scaffolded from GATE `<gate version>`, with the guards, the installer and the first versions of
 the `establish` and `onboard` skills. The orchestrator builds the rest with `/establish`.
 
-**What to do.** Nothing yet: the orchestrator tells everyone when the SDLC is ready to install.
+**What to do.** Nothing yet: the orchestrator tells everyone when <system> is ready to install.

@@ -5,7 +5,7 @@
 
     python3 tools/adapters_check.py [<adapter>...]
 
-For each adapters/<assistant>/install.sh it installs a throwaway copy of the SDLC in a temporary
+For each adapters/<assistant>/install.sh it installs a throwaway copy of the system in a temporary
 working folder, with a temporary home, and reads what the assistant would load:
 
 - every guard registered on its event (session start, each message, before each tool), with a

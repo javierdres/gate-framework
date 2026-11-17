@@ -17,7 +17,7 @@ what to do instead. The validator checks both directions.
 
 ## Who approves
 
-Each scope has its custodian, named by role in `scopes.md`; who holds each role is in the SDLC's
+Each scope has its custodian, named by role in `scopes.md`; who holds each role is in the system's
 `GOVERNANCE.md`. A soft or recommended rule needs its scope's custodian. A hard rule needs every
 custodian, because it blocks everyone's changes. A seed adopted during `establish` follows the
 same path: it enters as a candidate and the same custodian decides.

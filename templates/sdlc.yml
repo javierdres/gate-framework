@@ -1,11 +1,11 @@
-# sdlc.yml — the organisation's SDLC, declared
+# sdlc.yml — the organisation's system, declared
 #
-# Lives at the root of the organisation's SDLC repository. /establish writes it
+# Lives at the root of the system's repository. /establish writes it
 # from the interview, and every skill reads it instead of asking again.
 # Whatever nobody knows yet is left as "to be defined", never invented.
 
 gate:
-  # The GATE commit this SDLC implements. Moving to a new one is a change
+  # The GATE commit this system implements. Moving to a new one is a change
   # request that also reviews the departures listed in GATE.md.
   version: ""
 
@@ -32,7 +32,7 @@ organisation:
 orchestrator:
   phase: formulation        # formulation | operation
   exit_criteria:            # observable, checked on the review date
-    - "A person other than the orchestrator installed the SDLC alone"
+    - "A person other than the orchestrator installed the system alone"
     - "A product owner used it on a real requirement"
     - "A builder took one of those without product questions"
     - "A rule harvested from real work entered the catalog"
@@ -48,7 +48,7 @@ assistants:
   chat_client: ""           # for roles outside the terminal; empty if none
 
 identity:
-  # How the SDLC tells who a person is. platform is the strongest; declared
+  # How the system tells who a person is. platform is the strongest; declared
   # only guides, and the real control stays with the platform's permissions.
   method: platform          # platform | ssh-signing | declared
   # For platform: a command that prints the person's account. Name the host when
@@ -66,7 +66,7 @@ identity:
   bot_pattern: ""
 
 permissions:
-  # Whether a person may put a session in autonomous mode: the SDLC stops asking
+  # Whether a person may put a session in autonomous mode: the system stops asking
   # and the assistant's own permission mode decides. Off unless the orchestrator
   # turns it on; the assistant can never grant it to itself.
   autonomous_allowed: false

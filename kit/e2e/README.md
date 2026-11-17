@@ -52,8 +52,8 @@ cap is `E2E_MAX_EFFECTS`, 20 by default.
 
 ## Evidence
 
-Every run leaves its evidence in `~/.<org>-e2e/evidence/<date-time>/`, a folder only its owner
-can read: `summary.md` with who ran it, from which SDLC commit, against which hosts, with which
+Every run leaves its evidence in `~/.<org>-e2e/evidence/<date-time>/`, a folder only its owner can
+read: `summary.md` with who ran it, from which commit of the system, against which hosts, with which
 authorisations, the result of each case, the effects that went out and the calls cut; `run.json`
 with the same data; `report/` with the browsable report; and `manifest.json` with the SHA-256 of
 every file, written last.

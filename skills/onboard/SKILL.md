@@ -14,13 +14,13 @@ consults: []
 
 ## Purpose
 
-Leave a person ready to work in the organisation's SDLC: requirements met, the SDLC installed,
+Leave a person ready to work in the organisation's system: requirements met, the system installed,
 their profile recorded, every access their profile needs verified, and a first demonstration on
 their own data.
 
 ## Preconditions
 
-The organisation's SDLC, built by `/establish`. The person's verifiable identity, as an account
+The organisation's system, built by `/establish`. The person's verifiable identity, as an account
 on the code platform or the tracker, and their row in the profiles table of `GOVERNANCE.md`.
 
 ## What it does
@@ -29,7 +29,7 @@ on the code platform or the tracker, and their row in the profiles table of `GOV
   access, welcome. Picks up wherever the session-start guard says it stopped.
 - **Requirements**: runs the checker and gives the exact command for the person's system for
   anything missing.
-- **Installation**: checks the SDLC repository sits inside a working folder and not loose in the
+- **Installation**: checks the system's repository sits inside a working folder and not loose in the
   home folder, explains what the installer does, runs it with approval, and asks the person to
   reopen the assistant in the working folder.
 - **Profile**: name, profiles and products, saved in `personal/profile.md`. Offers only the

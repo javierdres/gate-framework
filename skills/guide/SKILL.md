@@ -1,7 +1,7 @@
 ---
 skill: guide
 stage: foundation
-name: Explaining the SDLC
+name: Explaining the organisation's system
 triggered_by: [onboard, person]
 triggers: []
 gate: none
@@ -10,11 +10,11 @@ writes_outside: []
 consults: []
 ---
 
-# /guide — Explaining the SDLC
+# /guide — Explaining the organisation's system
 
 ## Purpose
 
-Help a person understand what the organisation's SDLC does for them and what they can ask for
+Help a person understand what the organisation's system does for them and what they can ask for
 today, in the language of their profile.
 
 ## Preconditions
@@ -24,11 +24,11 @@ The person's profile, and their local configuration readable by the assistant.
 ## What it does
 
 - **Welcome**, right after `/onboard`: a short live demonstration on the person's own data, such
-  as one of their tickets or a repository of their product, read through the SDLC. One per
+  as one of their tickets or a repository of their product, read through the system. One per
   profile, read only. If a query fails for lack of an access, it says so in one line and moves
   to the next.
 - **Why**: what changes compared with using the assistant on its own, said for that profile.
-- **Tour**: five minutes through the SDLC as that profile lives it, from the first request to
+- **Tour**: five minutes through the system as that profile lives it, from the first request to
   the last control point.
 - **What can I ask for**: what the profile can do today, checked against the person's local
   configuration, and how to complete whatever is missing. A skill whose own prerequisites do

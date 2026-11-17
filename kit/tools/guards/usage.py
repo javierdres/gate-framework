@@ -23,7 +23,7 @@ prints what it can and check says nothing.
 Only `windows()` knows the assistant's status format. An adapter for another assistant that
 exposes its usage maps it there; one that does not, simply has no usage line.
 
-Under the usage, the status line shows the SDLC's notices, only when there is one: the
+Under the usage, the status line shows the system's notices, only when there is one: the
 installation needs running again, what the person authorised for this session, autonomous mode.
 An organisation adds its own (change requests waiting for the person's review, a token about to
 expire) with tools/notices.py: any script that prints one line. It may call the network, so it
@@ -185,10 +185,10 @@ def notices_refresh():
 
 
 def notices(status, now):
-    """The SDLC's notices line, or an empty string when there is nothing to say."""
+    """The system's notices line, or an empty string when there is nothing to say."""
     parts = []
     if os.path.exists(os.path.join(ROOT, "personal", ".reinstall-needed")):
-        parts.append(YELLOW + "SDLC: reinstall needed" + END)
+        parts.append(YELLOW + "%s: reinstall needed" % os.path.basename(ROOT) + END)
     try:
         parts.append(granted(str(status.get("session_id") or "")))
     except Exception:

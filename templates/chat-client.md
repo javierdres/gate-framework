@@ -1,4 +1,4 @@
-# The SDLC in a chat client
+# <system> in a chat client
 
 For product owners and other roles who work with the assistant in a browser or desktop chat
 client, with the tracker as the centre of their work and without the code platform. It gives
@@ -10,9 +10,9 @@ whoever runs the pilot, creates and shares it; the person only opens it.
 
 ## Create the project
 
-1. Create a project named after the SDLC and the role, for example `<system> · Product`.
+1. Create a project named after the system and the role, for example `<system> · Product`.
 2. In its instructions, paste `method/chat-client/instructions.md` (below).
-3. In its knowledge, upload these files from the SDLC repository:
+3. In its knowledge, upload these files from the <system> repository:
 
    | File | What for |
    | --- | --- |
@@ -56,7 +56,7 @@ it cannot check becomes a question for the handover, never a guess.
 Mirror the `define` skill, in the organisation's language. A starting point:
 
 ```
-You are the product assistant of <Organisation>, inside its SDLC. You work with product owners
+You are the product assistant of <Organisation>, inside <system>. You work with product owners
 whose centre of work is the tracker. The assistant prepares; the product owner decides.
 
 You have three jobs, in this order.

@@ -1,4 +1,4 @@
-# <Organisation> SDLC
+# <system>
 
 The common ground for working with an AI assistant at <Organisation>, across product,
 building, operations, security and leadership. Built on GATE: the assistant prepares, people
@@ -8,12 +8,12 @@ decide.
 someone proposes a change to this repository that does not fit the plan, say so and offer to
 record it as out of scope or to replace something in "Next".
 
-## While the SDLC is being built
+## While <system> is being built
 
-While `built` in `sdlc.yml` is empty, this SDLC is not built yet: offer the `establish` skill
+While `built` in `sdlc.yml` is empty, <system> is not built yet: offer the `establish` skill
 (`skills/establish/SKILL.md`) before anything else. If
 the person has no profile in `personal/profile.md`, offer `onboard`
-(`skills/onboard/SKILL.md`). The GATE version this SDLC was scaffolded from is in
+(`skills/onboard/SKILL.md`). The GATE version <system> was scaffolded from is in
 `gate-reference/`.
 
 ## At the start of a session
@@ -34,7 +34,7 @@ links. Where the assistant does not resolve `@` imports, its adapter inlines the
 | [`tools/`](tools/) | What do we work with? | Before querying production or writing to a shared system |
 | [`skills/`](skills/README.md) | What can the assistant do here? | When the task matches a skill |
 | [`GOVERNANCE.md`](GOVERNANCE.md) | Who approves what? | Before proposing a change to this repository |
-| [`CHANGELOG.md`](CHANGELOG.md) | What did each version of this SDLC bring, and what do I do? | When changing the SDLC: every version adds its entry |
+| [`CHANGELOG.md`](CHANGELOG.md) | What did each version of <system> bring, and what do I do? | When changing <system>: every version adds its entry |
 
 ## Rules for the assistant
 
@@ -57,7 +57,7 @@ They always apply, in any repository and for any person.
 - Before any destructive version-control operation, check the repository root.
 - If an access or a piece of data is missing, say which one and go on with what can be done.
 - Whatever a person runs outside the assistant is given step by step.
-- The SDLC is organised by roles, not by people. When writing in this repository, name the
+- <system> is organised by roles, not by people. When writing in this repository, name the
   role, never the person. Names live only in `GOVERNANCE.md`.
 - Nobody is observed. Never record when or how a person uses the assistant. Never read or store
   their prompts, not even to measure adoption.

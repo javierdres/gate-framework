@@ -1,8 +1,8 @@
 > **English** · [Español](BUILDING.es.md)
 
-# Building your organisation's SDLC
+# Building your organisation's system
 
-This guide takes an orchestrator from GATE to a working SDLC of their own: a repository that
+This guide takes an orchestrator from GATE to a working system of their own: a repository that
 holds the organisation's method, its standards catalog, its products, its skills and the way
 each person gets in, running on the AI assistant the organisation chose.
 
@@ -11,13 +11,13 @@ will decide, what you will be asked, and what you will end up with. **If you are
 assistant**, it is your build specification: `/establish` follows it from top to bottom.
 
 Read [section 2 of GATE.md](GATE.md#2-before-stage-0-the-orchestrator-builds-the-sdlc) first.
-It explains why the SDLC is built this way; this guide says how.
+It explains why the system is built this way; this guide says how.
 
 ---
 
 ## 1. How to use this guide
 
-Instructions for the assistant building the SDLC:
+Instructions for the assistant building the system:
 
 - **Do not build anything before the interview in section 5 is finished** and its summary is
   confirmed. The skeleton `bin/bootstrap.py` wrote is the only thing that exists before it: it is
@@ -30,7 +30,7 @@ Instructions for the assistant building the SDLC:
   next. Every file that reaches a shared system follows the permission rule: nothing is
   published without the orchestrator's approval.
 - **Write everything in neutral formats** (section 3) and keep whatever is specific to your own
-  platform inside the adapter. Another assistant must be able to run this SDLC tomorrow by
+  platform inside the adapter. Another assistant must be able to run this system tomorrow by
   adding its adapter and nothing else.
 - When you wire your own platform, **read its current documentation** rather than relying on
   memory. Hook names, configuration paths and file names change between versions.
@@ -41,7 +41,7 @@ Instructions for the assistant building the SDLC:
   keys in `personal/profile.md` (`perfil`, `listo`); any other translation needs the guard
   adapted too.
 - **Nothing goes into the assistant's global configuration.** Instructions, skills and guards
-  are installed in the working folder, so this SDLC never collides with another one on the same
+  are installed in the working folder, so this system never collides with another one on the same
   machine (GATE section 8). Credential files carry the organisation in their name.
 - The catalog starts empty, or with the GATE seeds the orchestrator chooses. Each seed enters as
   a candidate that its custodian still has to approve. It fills with what happens to this team.
@@ -56,7 +56,7 @@ Instructions for the assistant building the SDLC:
   operations, support or other areas of the organisation (section 4). Every person clones it
   into their own working folder next to the repositories of their products. The assistant is opened in that working folder.
   The orchestrator scaffolds it there too, `~/Projects/<org>/<system>` for example: the
-  installer wires the folder that contains the SDLC, so an SDLC scaffolded loose in the home
+  installer wires the folder that contains the system, so a system scaffolded loose in the home
   folder, or inside another repository, wires the wrong one.
 - Persistent instructions every session loads, with the rules that always apply.
 - A plan with an objective, a review date and what is out of scope.
@@ -88,7 +88,7 @@ Instructions for the assistant building the SDLC:
 | Hooks before an action and at session start | Permissions, context at start, the log | The platform carries the load (below). Viable, weaker |
 | Connectors (Model Context Protocol) | Tracker and observability | API clients in `tools/`. Viable |
 
-When the assistant has no hooks, the SDLC says so in its plan, and compensates on the platform:
+When the assistant has no hooks, the system says so in its plan, and compensates on the platform:
 the assistant works with credentials that cannot write where it matters, the main branch is
 protected, and outward writes go through a script in `tools/` that shows the action and asks.
 
@@ -96,11 +96,11 @@ protected, and outward writes go through a script in `tools/` that shows the act
 
 | Piece | Neutral form | Lives in |
 |---|---|---|
-| Persistent instructions | `AGENTS.md` | Root of the SDLC repository, plus a small one in the working folder |
-| Skills | A folder per skill with a `SKILL.md`: a `name`, a `description` that says when to use it in the words a person would say, and plain instructions | `skills/` in the SDLC repository |
+| Persistent instructions | `AGENTS.md` | Root of the system's repository, plus a small one in the working folder |
+| Skills | A folder per skill with a `SKILL.md`: a `name`, a `description` that says when to use it in the words a person would say, and plain instructions | `skills/` in the system's repository |
 | Guards | Scripts that read the intended action as JSON on standard input and answer allow, ask or deny | `tools/guards/` |
 | Connectors | Model Context Protocol servers | Declared per assistant in its adapter |
-| Configuration | `sdlc.yml`: the organisation, its assistants, its tools, its scopes and the GATE version | Root of the SDLC repository |
+| Configuration | `sdlc.yml`: the organisation, its assistants, its tools, its scopes and the GATE version | Root of the system's repository |
 
 ### The guard contract
 
@@ -135,7 +135,7 @@ person's confirmation. Its tests, and those of the session start guard, are in
 
 ### The adapters
 
-An adapter is the only part of the SDLC that is specific to an assistant. It does three things:
+An adapter is the only part of the system that is specific to an assistant. It does three things:
 makes the assistant load `AGENTS.md`, makes it find the skills, and registers the guards on the
 right events. The assistant that runs `/establish` writes its own adapter by reading its
 platform's current documentation, and the final verification proves it works.
@@ -161,14 +161,14 @@ documentation, not yet verified on a real installation. If you verify one, contr
 
 People who do not work in a terminal, product most often, use a **chat client** with a project
 or workspace: the instructions for their role, the context files they need and a connector to
-the tracker. The SDLC keeps that package in `method/chat-client/` and says what to copy where;
+the tracker. The system keeps that package in `method/chat-client/` and says what to copy where;
 [`templates/chat-client.md`](templates/chat-client.md) is its starting point. The instructions
 mirror `define`. The knowledge is one file set per product, and it is a copy: whenever its
 source changes, it is uploaded again. The tracker connector runs with the person's own
 identity. Reading code, if the organisation wants it, takes a personal read-only token with an
 expiry. Whatever cannot be checked from there becomes a question for the handover.
 
-An organisation may run several assistants over the same SDLC. Each gets its own folder under
+An organisation may run several assistants over the same system. Each gets its own folder under
 `adapters/`, and the installer wires whichever the person uses. A check in the pipeline fails
 when a change to what one assistant loads (the instructions and their imports, the guards, the
 skills) leaves another adapter behind, and the lagging adapter is fixed in the same change
@@ -194,14 +194,14 @@ write uses it: one OK per action, for fifteen minutes.
 ## 4. Decisions only the orchestrator takes
 
 Each one has a default, so nothing blocks the build. All of them can change later by a change
-to the SDLC repository.
+to the system's repository.
 
 | Decision | Default |
 |---|---|
 | Which assistant, or assistants | The one the building roles already use. Record the version |
 | Name of the system, which is also its repository and folder | `sdlc-<org>` while it covers software; `ai-office-<org>` when it reaches beyond. `bootstrap.py names <org>` proposes more. It can change later with `tools/rename.sh`, but every person runs it once |
 | Code platform, tracker, production source of truth | What the organisation already uses. One source of truth per question |
-| How a person is identified | Their account on the code platform. Without platform accounts, an SSH signing key listed in the SDLC. Declared identity only as a last resort, and said so |
+| How a person is identified | Their account on the code platform. Without platform accounts, an SSH signing key listed in the system. Declared identity only as a last resort, and said so |
 | How the main branch is protected | The platform's protected branches and mandatory approvals. Without them, the server-side hook in `tools/server-hooks/` |
 | Who holds each role | The orchestrator covers every custodian role that has nobody yet |
 | Profiles enabled per person | Building profiles for everyone; product, operations and leadership by name |
@@ -210,7 +210,7 @@ to the SDLC repository.
 | Formulation exit criteria and review date | The four criteria in GATE.md section 2, reviewed four to six weeks after the build |
 | Language and writing standard | The organisation's language. Industry terms stay in English when that is how the team says them |
 | Autonomous mode | Not allowed: `permissions.autonomous_allowed: false` in `sdlc.yml`. When allowed, a person may ask for it explicitly for one session |
-| Where automated flows live | In the SDLC repository, so no product repository has to change during adoption. Product repositories are read only |
+| Where automated flows live | In the system's repository, so no product repository has to change during adoption. Product repositories are read only |
 | Out of scope | Whatever the orchestrator names in the interview, plus later phases until the first one works |
 
 ---
@@ -244,8 +244,8 @@ can just confirm it. Close with a summary to confirm before building anything.
   the meantime.
 - For each person: their verifiable identity (account on the code platform or the tracker, or
   the SSH signing key they will use) and the profiles enabled for them.
-- Whether the code platform has protected branches and change requests. If it does not, the
-  SDLC uses the server-side hook and signed commits instead.
+- Whether the code platform has protected branches and change requests. If it does not, the system
+  uses the server-side hook and signed commits instead.
 
 **The tools**
 
@@ -272,16 +272,16 @@ can just confirm it. Close with a summary to confirm before building anything.
 
 ## 6. Repository structure
 
-The SDLC always lives one level inside a working folder, never loose in the home folder nor
+The system always lives one level inside a working folder, never loose in the home folder nor
 inside another repository: the installer writes the instructions, skills and guards into the
 folder that contains it. To try it out without touching your real working folder, scaffold it
 into a throwaway one, `/tmp/try/<system>` for example, rather than somewhere fixed.
 
 ```
 <working folder>/
-├── AGENTS.md                 written by the installer; points to the SDLC and to personal/
+├── AGENTS.md                 written by the installer; points to the system and to personal/
 ├── <assistant adapter files> written by the installer for the assistant the person uses
-├── <system>/                the organisation's SDLC repository, named by the orchestrator
+├── <system>/                the system repository, named by the orchestrator
 │   ├── AGENTS.md             rules for the assistant and the map of the repository
 │   ├── sdlc.yml              organisation, assistants, tools, scopes, GATE version
 │   ├── allowed_signers       SSH signing keys per person, when identity uses them
@@ -290,7 +290,7 @@ into a throwaway one, `/tmp/try/<system>` for example, rather than somewhere fix
 │   ├── PLAN.md               what is built now, what comes next, what is out of scope
 │   ├── GOVERNANCE.md         roles, who approves what, who holds each role
 │   ├── CODEOWNERS            governance translated to the code platform
-│   ├── GATE.md               the GATE version implemented and where this SDLC departs
+│   ├── GATE.md               the GATE version implemented and where this system departs
 │   ├── CHANGELOG.md          what each version brought, why, and what to do
 │   ├── gate-reference/       read-only copy of GATE: framework, this guide, contracts
 │   ├── method/               cycle, profiles, permissions, log, session start,
@@ -352,17 +352,17 @@ before any destructive version-control operation; when an access is missing, say
 on with what can be done; whatever a person runs outside the assistant is given step by step;
 write by roles, never by names; nobody is observed; run the harvest when a review closes; keep
 the log without being asked; everyone who decides gets the document written for them; and the
-sentence rule: one claim per sentence or a connector that says the relation. If the SDLC runs on
+sentence rule: one claim per sentence or a connector that says the relation. If the system runs on
 more than one assistant, a change to what one loads is checked against the other adapters.
 
 **Session start (`method/session-start.md`).** The only copy of the menu. A direct request is
 handled without a menu, except that unfinished requirements or installation come first even
 then, because without them the guards are not running. From the profile stage on, pending setup
-is offered, not imposed. Opened inside the SDLC repository rather than the working folder, the
+is offered, not imposed. Opened inside the system's repository rather than the working folder, the
 assistant asks to reopen it there. If the start guard could not verify the person, the
 assistant verifies them through the tracker connector before any menu. Without a profile, a
 numbered profile menu inside a code block, with an option to work without the flow and two to
-learn about the SDLC. With a profile, a greeting with name and profile, and the tasks that
+learn about the system. With a profile, a greeting with name and profile, and the tasks that
 profile enables: product, building, review, operations and support, leadership, other. Only
 enabled profiles and tasks appear, and the options that remain keep their numbers. A declared
 profile that is not enabled is ignored, and the assistant offers to fix it. With a question
@@ -371,7 +371,7 @@ the assistant summarises what it understood and waits. If the person greets with
 it mentions in one line what is still open in their log.
 
 **Profiles (`method/profiles.md`).** It opens with the list of profile ids, the only names a
-profile has anywhere in the SDLC: in `GOVERNANCE.md`, `personal/profile.md`,
+profile has anywhere in the system: in `GOVERNANCE.md`, `personal/profile.md`,
 `tools/access-checks.tsv` and the session-start menu. GATE's list is `product`, `frontend`,
 `backend`, `fullstack`, `qa`, `operations`, `security`, `leadership` and `support`; the
 building profiles are `frontend`, `backend`, `fullstack` and `qa`. `/establish` removes the
@@ -392,7 +392,7 @@ that chains an authorised write with others that are not. The authorisation live
 `personal/grants/`, is registered through a command that passes the assistant's own
 confirmation, so it cannot authorise itself, and expires with the session. If the organisation
 allows it, a fourth level: **autonomous mode**, which a person asks for explicitly for one
-session. The SDLC then stops asking and the assistant's own permission mode decides. The
+session. The system then stops asking and the assistant's own permission mode decides. The
 assistant can never grant it to itself, and the platform's protected branches and approvals
 still apply.
 
@@ -459,13 +459,13 @@ rules for reading it honestly from GATE.md section 11. "Out of scope" always car
 that is never removed: recording how people use the assistant, or reading their prompts, even
 to measure adoption.
 
-**`CHANGELOG.md`.** The SDLC's own changelog: one entry per version, with what changed, why, and
+**`CHANGELOG.md`.** The system's own changelog: one entry per version, with what changed, why, and
 a "What to do" line for whoever already has it installed, even when the answer is "nothing".
-Every change to the SDLC adds its entry. The session start guard announces the versions an
+Every change to the system adds its entry. The session start guard announces the versions an
 update brought, with their "What to do", so nobody has to read the history to know they must
 reinstall.
 
-**`GATE.md` of the SDLC.** The GATE commit it implements, and a short map of which stage or
+**`GATE.md` of the system.** The GATE commit it implements, and a short map of which stage or
 principle each part implements and where it departs from the framework, each departure with its
 reason.
 
@@ -475,12 +475,12 @@ let `/onboard` do the rest. It includes a table of the available skills.
 
 ---
 
-## 8. The skills of the SDLC
+## 8. The skills of the system
 
 Each skill is a folder in `skills/` with a `SKILL.md` that implements one contract from
 [`skills/`](skills/) in this repository. The description says what it does and when to use it,
 in the words a person would say, because that is what the assistant uses to decide whether to
-load it. A skill enters the shared SDLC when a whole role uses it in any product, it does not
+load it. A skill enters the shared system when a whole role uses it in any product, it does not
 depend on one person's data or access, and it carries its own documentation.
 
 ### Entry skills
@@ -499,7 +499,7 @@ where a connector cannot do the job, such as bulk reads. It offers to clone the 
 the person's products into the working folder. Run again later, it shows only what fails or
 warns and resumes from that stage.
 
-**`guide`** explains the SDLC: why use it rather than the bare assistant, a five-minute walk
+**`guide`** explains the system: why use it rather than the bare assistant, a five-minute walk
 through it for the person's profile, and what that profile can ask for today, checked against
 their local configuration. A skill whose own prerequisites do not exist yet shows as built on
 first use, not as an error, and a personal credential close to its expiry is mentioned before
@@ -587,7 +587,7 @@ health view works from critical functions the leader declares (holder and backup
 chains and problems that persist across saved readings; it never labels a person as a flight,
 burnout or low-performance risk, and shows after-hours work for the team only. A private
 personal view compares nobody. The version for management names roles, not people. The effect
-of the SDLC is read with the rules of GATE.md section 11, from shared work only.
+of the system is read with the rules of GATE.md section 11, from shared work only.
 
 ---
 
@@ -595,9 +595,9 @@ of the SDLC is read with the rules of GATE.md section 11, from shared work only.
 
 | Piece | What it does |
 |---|---|
-| Installer | Checks the requirements first (git, ssh, a Python 3.8 or later that actually runs) and stops before touching anything. Idempotent. Creates `personal/` with profile, preferences and log. Writes its blocks between the sdlc markers in the working folder's instruction files. Links the skills, or copies them where links fail, never overwrites a skill of the person's with the same name and removes those the SDLC no longer has. Merges the guards and the base rules that always ask, leaves settings that are not valid JSON untouched and keeps a copy of whatever it changes in `personal/backups/`. Without an argument, it detects the assistant it runs in. Stamps a fingerprint per assistant. Stops if the repository sits loose in the home folder |
-| Session start guard | Brings the main branch up to date, reports the pending setup stage, verifies the identity and hands over the enabled profiles, checks access, detects an outdated installation, announces the SDLC versions the update brought with their "What to do", and hands over the log path with what is open. It never hangs on the network. It moves the default branch forward without switching branches, and sets local changes aside only when they do not touch the incoming files; otherwise it touches nothing and says why. When the fingerprint of skills, installer or adapter changed, it asks for a reinstall, which the assistant may run with the person's OK. It says so when the assistant was opened inside the SDLC, and verifies identity through a chain (code platform, tracker command, then the tracker connector) that never takes a bot account for a person |
-| Status line | Where the assistant has one, a line of SDLC notices that appears only when there is something to say: the installation lags the repository and needs reinstalling, change requests wait for the person's review, the authorisations in force for the session (or autonomous mode), a personal token close to its expiry. Anything that needs the network is refreshed in the background and cached, never on each redraw. Notices that depended on the assistant remembering to say them at the greeting got lost. The organisation's own notices come from `tools/notices.py`, run in the background behind a cache |
+| Installer | Checks the requirements first (git, ssh, a Python 3.8 or later that actually runs) and stops before touching anything. Idempotent. Creates `personal/` with profile, preferences and log. Writes its blocks between the sdlc markers in the working folder's instruction files. Links the skills, or copies them where links fail, never overwrites a skill of the person's with the same name and removes those the system no longer has. Merges the guards and the base rules that always ask, leaves settings that are not valid JSON untouched and keeps a copy of whatever it changes in `personal/backups/`. Without an argument, it detects the assistant it runs in. Stamps a fingerprint per assistant. Stops if the repository sits loose in the home folder |
+| Session start guard | Brings the main branch up to date, reports the pending setup stage, verifies the identity and hands over the enabled profiles, checks access, detects an outdated installation, announces the system versions the update brought with their "What to do", and hands over the log path with what is open. It never hangs on the network. It moves the default branch forward without switching branches, and sets local changes aside only when they do not touch the incoming files; otherwise it touches nothing and says why. When the fingerprint of skills, installer or adapter changed, it asks for a reinstall, which the assistant may run with the person's OK. It says so when the assistant was opened inside the system, and verifies identity through a chain (code platform, tracker command, then the tracker connector) that never takes a bot account for a person |
+| Status line | Where the assistant has one, a line of notices from the system that appears only when there is something to say: the installation lags the repository and needs reinstalling, change requests wait for the person's review, the authorisations in force for the session (or autonomous mode), a personal token close to its expiry. Anything that needs the network is refreshed in the background and cached, never on each redraw. Notices that depended on the assistant remembering to say them at the greeting got lost. The organisation's own notices come from `tools/notices.py`, run in the background behind a cache |
 | Per-message guard | A short reminder to update the log when the message moved something forward. Where the assistant can only block, it also records the person's typed OK as a single-use pass |
 | Usage guard | Where the assistant meters use in windows and exposes them, shows how much of each window is used and when it resets, and warns once when a window will run out before it resets at the current pace: the assistant suggests a lighter model and runs its subagents on one, and suggests the most capable model again after the reset. `tools/guards/usage.py` is the reference |
 | Permissions guard | Before every watched write, reads the session's authorisations and answers allow or ask. Production, merges and deletions always ask; infrastructure tools ask except for their read-only subcommands. On any error, asks. Approving a change request always asks |
@@ -636,7 +636,7 @@ standard library, with no dependencies.
 6. The product template and the folders of the pilot products named in the interview. Any
    other product gets its folder from the template when someone first works on it.
 7. `AGENTS.md` of the repository, and `GATE.md` with the version and the first departures.
-   Create the SDLC repository on the code platform and push it once with its upstream
+   Create the system's repository on the code platform and push it once with its upstream
    (`git push -u origin main`), with the orchestrator's OK. If the orchestrator decides to wait,
    the step is reported as skipped in the final verification, with the reason.
 8. Installer, guards, access checker, API clients and access guides.
@@ -652,7 +652,7 @@ standard library, with no dependencies.
 ## 11. Final verification
 
 ```
-  SDLC VERIFICATION
+  FINAL VERIFICATION
   ──────────────────────────────────────────────────────────
   ○  No file carries credentials or client data
   ○  Only GOVERNANCE.md has names (CODEOWNERS accounts only; licence notices aside)
@@ -699,7 +699,7 @@ rules. Everything else is in the plan and waits.
 neutral; each assistant gets its adapter. Each person uses whichever the orchestrator enabled,
 and the verification runs once per adapter.
 
-**What if our assistant has no hooks?** The SDLC still works, with weaker enforcement. The
+**What if our assistant has no hooks?** The system still works, with weaker enforcement. The
 assistant gets credentials that cannot write where it matters, the main branch is protected and
 outward writes go through a script that asks. The plan says so, so nobody assumes otherwise.
 
@@ -709,7 +709,7 @@ outward writes go through a script that asks. The plan says so, so nobody assume
 **Our git server has no protected branches or merge requests.** Use `tools/server-hooks/`: it
 keeps the main branch fast-forward only, requires every commit to be signed by a key listed in
 `allowed_signers`, and requires changes to arrive as a merge reviewed by someone else. The same
-keys give the SDLC a verifiable identity per person.
+keys give the system a verifiable identity per person.
 
 **Can we write the formats in our own language?** The documents, yes. The keys the guards and
 validators read (the rule frontmatter, `sdlc.yml`, the `<!-- sdlc:open -->` marker of the log)
@@ -719,7 +719,7 @@ stay in English, because translating them makes a check fail in silence.
 package and a tracker connector, plus a read-only access to the code of their own if the
 organisation wants the assistant to read it on their behalf.
 
-**Why do the automated flows live in the SDLC and not in each product?** So that adoption
+**Why do the automated flows live in the system and not in each product?** So that adoption
 requires no change in any product repository, and so that the flows describe what product
 defined rather than what the code does. An organisation that prefers them in each product can
 move them; record it as a departure.
@@ -738,7 +738,7 @@ so. When someone takes a role, one row changes.
 **Where do credentials go?** In each person's home, with restricted permissions and an expiry.
 Never in a repository, never in the chat, never one shared token.
 
-**How do we move to a new version of GATE?** By a change request to `GATE.md` in the SDLC that
+**How do we move to a new version of GATE?** By a change request to `GATE.md` in the system that
 updates the pinned commit and reviews the map of departures. Nothing updates on its own.
 
 **How do we give back what we learned?** Propose it to GATE as a candidate, told as a pattern,
@@ -748,7 +748,7 @@ with nothing that belongs to the organisation. See [CONTRIBUTING.md](CONTRIBUTIN
 is met, review the approach before building more. After that, by the monthly reading per
 audience in GATE.md section 11, with its rules for not fooling yourself.
 
-**Can we measure adoption by how people use the assistant?** No. The SDLC never records when or
+**Can we measure adoption by how people use the assistant?** No. The system never records when or
 how someone uses it, and never reads their prompts. Adoption shows in shared work, aggregated,
 and in a voluntary survey.
 

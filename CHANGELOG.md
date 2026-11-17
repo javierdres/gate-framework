@@ -1,11 +1,11 @@
 # Changelog
 
-What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
+What changed in GATE, and why. An organisation's system pins a commit; this file says what moving
 to a newer one brings.
 
-## 2026-11-17 · What a working SDLC learned, back in GATE
+## 2026-11-17 · What a working system learned, back in GATE
 
-An organisation has run an SDLC built on GATE every day for months, across product, building,
+An organisation has run a system built on GATE every day for months, across product, building,
 operations and leadership. What it learned, in its catalog, its tooling and its method, comes
 back here as patterns, without its names, products or data, so the next organisation does not
 pay for the same lessons again.
@@ -25,19 +25,19 @@ addressed before harvesting, and turns a rule a reviewer still flags by hand int
 automate.
 
 **Tooling proven in daily use.** The session start guard never hangs on the network, moves the
-default branch forward without switching branches, touches nothing when local changes collide
-with what arrives, and lists the new SDLC versions with their "What to do"; scaffolded SDLCs now
-start with their own `CHANGELOG.md` in that format. Each assistant's installation carries a
-fingerprint, and the status line keeps asking for a reinstall until it happens. The installer
-checks requirements before touching anything, keeps backups in `personal/backups/`, writes
-between name-independent markers and never overwrites a skill of the person's.
-`tools/adapters_check.py` catches an adapter that dropped a guard, and Kiro gets an adapter, still
-to be verified. Approving a change request always asks. Assistants that can only block take the
-person's typed OK as a single-use pass. Identity goes through a chain of sources that never takes
-a bot for a person. The access check runs in parallel under a hard deadline. `e2e/` becomes a
-runnable skeleton with an effects guard that is strict by default.
+default branch forward without switching branches, touches nothing when local changes collide with
+what arrives, and lists the new versions of the system with their "What to do"; scaffolded systems
+now start with their own `CHANGELOG.md` in that format. Each assistant's installation carries a
+fingerprint, and the status line keeps asking for a reinstall until it happens. The installer checks
+requirements before touching anything, keeps backups in `personal/backups/`, writes between
+name-independent markers and never overwrites a skill of the person's. `tools/adapters_check.py`
+catches an adapter that dropped a guard, and Kiro gets an adapter, still to be verified. Approving a
+change request always asks. Assistants that can only block take the person's typed OK as a
+single-use pass. Identity goes through a chain of sources that never takes a bot for a person. The
+access check runs in parallel under a hard deadline. `e2e/` becomes a runnable skeleton with an
+effects guard that is strict by default.
 
-**Method.** A new principle: nobody is observed. The SDLC never records how a person uses the
+**Method.** A new principle: nobody is observed. The system never records how a person uses the
 assistant nor reads their prompts, and adoption is measured from shared work. GATE.md adds how to
 measure the effect honestly, per audience and month by month, after a first total showed an
 improvement that did not exist. A new optional contract, `/pulse`, gives leadership a read-only
@@ -69,7 +69,7 @@ backups. It refuses to run inside an assistant session and does nothing the seco
 
 ## 2026-11-10 · A company that writes in Spanish and tracks in Linear
 
-A fourth simulation rebuilt an SDLC from scratch with the previous release: a company working in
+A fourth simulation rebuilt a system from scratch with the previous release: a company working in
 Spanish, on a self-managed GitLab, with Linear as its tracker and Grafana in production. It came
 out clean on the first try, every point of the final verification green or skipped on purpose,
 and the sixteen earlier fixes held. It also found what would still have hurt a company like
@@ -90,14 +90,14 @@ wrote instead of duplicating them.
 
 **Smaller fixes.** A person with no profile sees the profile menu again; the permissions
 method no longer contradicts the infrastructure reads; `/onboard` reports a check that depends
-on someone else, such as an SDLC not pushed yet, as pending rather than as the person's
+on someone else, such as a system not pushed yet, as pending rather than as the person's
 problem; the identity example names the host of a self-managed platform and quotes cleanly;
 the enabled profiles come without stray backticks; and the establish contract knows about
 skipped steps.
 
 ## 2026-11-10 · A first build that comes out clean
 
-A third simulation built the SDLC of an invented company end to end with GATE alone, and
+A third simulation built the system of an invented company end to end with GATE alone, and
 checked it in real assistant sessions. The method held: the skills behaved as their contracts
 say and every guard and catalog test passed. It also found sixteen places where the guide, the
 kit and the scaffold disagreed or left the orchestrator to guess. They are all fixed, so the
@@ -114,7 +114,7 @@ command. An organisation's own API clients in `tools/clients/` now take the HTTP
 so GET and HEAD pass and any other call asks; before, a write through them went unseen. Both
 come with tests.
 
-**Where the SDLC lives is no longer a guess.** The examples scaffold into
+**Where the system lives is no longer a guess.** The examples scaffold into
 `~/Projects/<org>/sdlc-<org>` instead of next to GATE, the scaffold warns when the folder the
 installer would wire is the home folder or another repository, and `/establish` checks it
 before starting. The skeleton is step one of the build order and the interview step two, which
@@ -152,21 +152,21 @@ session's model.
 **Claude Code wires it on its own.** Its adapter registers the status line, unless the person
 already has one, and the per-message check. Verified on Claude Code 2.1.314, which hands the
 five-hour and weekly windows to the status line. An assistant that does not expose its usage
-has no warning, and its SDLC says so in `PLAN.md`.
+has no warning, and its system says so in `PLAN.md`.
 
-Learned in an organisation's SDLC, where the status line also shows the balance of a paid
+Learned in an organisation's system, where the status line also shows the balance of a paid
 provider the team shares. That part stays there: a status line is a good place for whatever an
 organisation must not run out of, but which ones are its own business.
 
-## 2026-11-03 · Several SDLCs on one machine
+## 2026-11-03 · Several systems on one machine
 
-A person often carries more than one SDLC on the same computer, and an SDLC built on GATE had
+A person often carries more than one system on the same computer, and a system built on GATE had
 installed its skills in the assistant's global configuration. They showed up in every folder,
-including unrelated work, and two SDLCs with a skill of the same name competed for it. GATE's
+including unrelated work, and two systems with a skill of the same name competed for it. GATE's
 own adapter already installed in the working folder, but the rule was never written down, so
-nothing stopped an SDLC from drifting away from it.
+nothing stopped a system from drifting away from it.
 
-**The rule is now explicit.** Everything an organisation's SDLC installs lives in its working
+**The rule is now explicit.** Everything an organisation's system installs lives in its working
 folder, never in the assistant's global configuration. Section 8 of GATE explains why, the
 building guide lists it among the instructions for the assistant, the adapters guide repeats it
 for any new adapter, and the final verification checks it.
@@ -178,7 +178,7 @@ skills are not found. And when the working folder itself sits inside another rep
 with a home folder under version control, the assistant's automatic memory is shared across
 everything below it. The installer now warns about that case.
 
-**Credentials carry the organisation in their name**, so two SDLCs on the same machine never
+**Credentials carry the organisation in their name**, so two systems on the same machine never
 read each other's keys.
 
 ## 2026-10-20 · The guard and the review cannot be talked around
@@ -194,7 +194,7 @@ after a `cd` into another repository, and a push to a remote the repository does
 Quotes can no longer hide a self-authorisation, the authorisations file cannot be written by any
 command or file tool, a lowercase `delete` is still a deletion, and connector calls are judged
 by what they do: merges and deletions always ask, other writes ask unless authorised, reads pass.
-The Claude Code adapter now sends the file tools to the guard too, and a freshly scaffolded SDLC
+The Claude Code adapter now sends the file tools to the guard too, and a freshly scaffolded system
 has its guards active from the very first session, before anything is installed. Verified in a
 real Claude Code session, where `sh -c 'git push origin main'` was stopped.
 
@@ -215,8 +215,8 @@ adapter is copied; onboarding runs the shared checks before the profile exists; 
 
 ## 2026-10-20 · Everything the simulation found, fixed
 
-A second test built the SDLC of an invented health software company from scratch with GATE
-alone, and used it across the whole cycle. The method held and the SDLC added real value, but
+A second test built the system of an invented health software company from scratch with GATE
+alone, and used it across the whole cycle. The method held and the system added real value, but
 the test found 33 problems in the kit and the documents. This release fixes all of them.
 
 **The permissions guard.** Rewritten. It judges every segment of a chained command, always asks
@@ -237,7 +237,7 @@ upstream instead of failing to pull, identifies the person by platform account, 
 or declared email, hands over the profiles enabled for them, runs the access check, and finds the
 open items of the log in any language through a marker.
 
-**Identity and platforms without protection.** An SSH signing key listed in the SDLC is now a
+**Identity and platforms without protection.** An SSH signing key listed in the system is now a
 verifiable identity. `kit/tools/server-hooks/update` gives a plain git server what a code
 platform would: no rewrites of the main branch, signed commits, and merges reviewed by someone
 other than their author, lifted only during formulation.
@@ -245,7 +245,7 @@ other than their author, lifted only during formulation.
 **Missing pieces.** Contracts for `guide` and `save`; `tools/check-access.sh` with its
 per-profile checks; a ticket template that carries the dossier in phase one; a copy of GATE in
 `gate-reference/` with its own paths, so no link inside it breaks; `built` in `sdlc.yml`, so the
-instructions stop offering `establish` once the SDLC is verified; the push with upstream as a
+instructions stop offering `establish` once the system is verified; the push with upstream as a
 build step.
 
 **Clarified rules.** "What the change introduced" now has a border: the lines it adds or
@@ -261,41 +261,41 @@ was verified in a real session on Claude Code 2.1.304.
 
 ## 2026-10-20 · /establish works from the first minute
 
-The previous release told the orchestrator to scaffold the SDLC and run `/establish`, but a
+The previous release told the orchestrator to scaffold the system and run `/establish`, but a
 fresh scaffold had no such skill, nothing registered where an assistant looks for skills, and
 no copy of the guide the skill follows. The first step failed.
 
 `bootstrap.py sdlc` now writes executable `establish` and `onboard` skills in the open
 `SKILL.md` format, copies GATE, BUILDING and every contract into `gate-reference/`, and for
-Claude Code registers both skills inside the SDLC itself. `AGENTS.md` tells any other assistant
-to offer `establish` while the SDLC is not built. The adapters for assistants other than Claude
+Claude Code registers both skills inside the system itself. `AGENTS.md` tells any other assistant
+to offer `establish` while the system is not built. The adapters for assistants other than Claude
 Code are now marked as unverified starting points. The explainer video, its script and its
 poster are gone: they described an older GATE and added nothing the documents do not say.
 
 ## 2026-10-20 · The foundation an orchestrator builds from
 
-GATE was put into practice: a real organisation built its SDLC on it and ran it for six weeks.
-That showed what the framework lacked. It described an SDLC that already existed, and said
+GATE was put into practice: a real organisation built its system on it and ran it for six weeks.
+That showed what the framework lacked. It described a system that already existed, and said
 nothing about who builds it, with which assistant, or how. This release is about that.
 
 **The orchestrator and `/establish`.** A new section 2 and a ninth role. The orchestrator builds
-the organisation's SDLC together with the assistant, chooses which assistant, assigns roles and
-profiles, and decides when the SDLC is ready. `/establish` is the first skill: an interview with
+the system together with the assistant, chooses which assistant, assigns roles and
+profiles, and decides when the system is ready. `/establish` is the first skill: an interview with
 defaults, a build in layers, a final verification. [BUILDING.md](BUILDING.md), in English and in
 Spanish, is the complete guide it follows.
 
-**Any assistant.** The SDLC is written once in neutral formats: `AGENTS.md` for instructions,
+**Any assistant.** The system is written once in neutral formats: `AGENTS.md` for instructions,
 the open `SKILL.md` format for skills, guards that read the action as JSON on standard input,
 and Model Context Protocol for connectors. A thin adapter wires it to Claude Code, Gemini CLI,
-Kiro, Codex or any other. Without hooks, the platform carries the enforcement and the SDLC says
+Kiro, Codex or any other. Without hooks, the platform carries the enforcement and the system says
 so.
 
-**`bootstrap.py sdlc` and `kit/`.** One command writes the skeleton of the organisation's SDLC:
+**`bootstrap.py sdlc` and `kit/`.** One command writes the skeleton of the system:
 base files from the templates, the empty catalog with its validator, a working permissions
 guard with session-scoped authorisations, the session-start and log guards, an idempotent
 installer and the Claude Code adapter.
 
-**The formulation phase.** While the SDLC is being built the incompatibilities cannot hold. GATE
+**The formulation phase.** While the system is being built the incompatibilities cannot hold. GATE
 now accepts that on two conditions: the phase is declared and its exit is written before it
 starts. Once it ends, the orchestrator is bound like everyone else.
 
@@ -317,7 +317,7 @@ and the verifier signs. Stage 9 runs the full regression before each release. Pr
 review look only at what the change introduced, and a push clears the approval.
 
 **Indicators and anti-patterns.** Judgement at the gates, measured by how often each one rejects
-or corrects. The formulation with no exit, the SDLC tied to one assistant, the gate that never
+or corrects. The formulation with no exit, the system tied to one assistant, the gate that never
 says no, controls written only as instructions, the test that reads the code, the false red
 left on, and building more instead of putting it to use.
 

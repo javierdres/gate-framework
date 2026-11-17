@@ -88,7 +88,7 @@ class EndToEnd(unittest.TestCase):
 
 
 class Notices(unittest.TestCase):
-    """The SDLC's notices under the usage: only when there is one, never blocking the line."""
+    """The system's notices under the usage: only when there is one, never blocking the line."""
 
     def setUp(self):
         self.root = tempfile.mkdtemp()
@@ -123,7 +123,7 @@ class Notices(unittest.TestCase):
     def test_reinstall_and_grants(self):
         self.put("personal/.reinstall-needed", "claude-code\n")
         self.put("personal/grants/s1.json", json.dumps({"repo": ["/x/repo-a"], "tracker": ["ABC"]}))
-        self.assertEqual(self.status()[1], "SDLC: reinstall needed · authorised: repo-a, ABC")
+        self.assertEqual(self.status()[1], "%s: reinstall needed · authorised: repo-a, ABC" % os.path.basename(self.root))
 
     def test_autonomous_mode_only_where_the_organisation_allows_it(self):
         self.put("personal/grants/s1.json", json.dumps({"repo": [], "tracker": [], "autonomous": True}))

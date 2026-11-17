@@ -13,7 +13,7 @@ tracker authorisation for `ABC` covers it.
 
 Name each credential file after the organisation and the system, for example
 `~/.<org>-tracker-key`, never a generic `~/.tracker-key`. The same person may carry another
-organisation's SDLC on the same machine, and a generic name makes the two read each other's keys.
+organisation's system on the same machine, and a generic name makes the two read each other's keys.
 
 Scripts read a credential through `sdlc_credential` in `tools/lib.sh`, which takes the
 organisation's name first and the generic one as a fallback, so an older installation keeps

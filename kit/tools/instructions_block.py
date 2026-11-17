@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Javier Núñez
-"""Writes the SDLC's block in an instruction file of the working folder.
+"""Writes the system's block in an instruction file of the working folder.
 
     instructions_block.py <file> <backup file>      the block's body on standard input
 

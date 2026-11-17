@@ -5,7 +5,7 @@ onboarding, the plan and the access checker read from here.
 
 ## Profile ids
 
-The only names a profile has anywhere in this SDLC: `GOVERNANCE.md`, `personal/profile.md`,
+The only names a profile has anywhere in this system: `GOVERNANCE.md`, `personal/profile.md`,
 `tools/access-checks.tsv` and the session-start menu use exactly these. A new profile is added
 here first.
 

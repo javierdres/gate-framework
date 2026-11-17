@@ -1,11 +1,11 @@
 ---
 name: establish
-description: Builds this organisation's SDLC on GATE, together with the orchestrator. Interviews them, builds the SDLC layer by layer and closes with a final verification. Use it when the SDLC was just scaffolded and is not built yet, or when someone says "establish", "build our SDLC", "set up the SDLC", "start the SDLC", "construir el SDLC", "armar el SDLC" or "levantar el SDLC".
+description: Builds this organisation's system on GATE, together with the orchestrator. Interviews them, builds the system layer by layer and closes with a final verification. Use it when the system was just scaffolded and is not built yet, or when someone says "establish", "build our system", "set up the system", "start the system", "construir el sistema", "armar el sistema" or "levantar el sistema".
 ---
 
 # establish
 
-You build this organisation's SDLC together with its orchestrator. You prepare, the
+You build this organisation's system together with its orchestrator. You prepare, the
 orchestrator decides. This skill implements the `/establish` contract in
 `gate-reference/skills/establish/SKILL.md`.
 
@@ -70,7 +70,7 @@ so the permissions guard can tell a read from a write.
 When the code platform has no protected branches or merge requests, set up
 `tools/server-hooks/` as its README says, with `identity.method: ssh-signing` in `sdlc.yml`.
 
-As soon as the SDLC repository exists on the code platform, push it once with its upstream
+As soon as the system's repository exists on the code platform, push it once with its upstream
 (`git push -u origin main`), with the orchestrator's OK, so every later session can update it.
 
 Fill in `GATE.md` at the root with what implements what and the first departures, each with

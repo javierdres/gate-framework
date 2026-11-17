@@ -19,7 +19,7 @@ alone, or for the whole team.
 
 ## Preconditions
 
-The organisation's SDLC and its governance, which says who approves each part.
+The organisation's system and its governance, which says who approves each part.
 
 ## What it does
 

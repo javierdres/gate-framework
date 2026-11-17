@@ -31,16 +31,16 @@ the approach is reviewed before building more.
 
 Once people use it, the effect is read month by month, before and after adoption, per audience:
 
-| Audience | What to look at | If the SDLC works |
+| Audience | What to look at | If <system> works |
 | --- | --- | --- |
-| Adoption | What the SDLC leaves in shared work: rules harvested by people other than the orchestrator, use cases validated by product, the voluntary survey | Contributions come from people other than the orchestrator |
+| Adoption | What <system> leaves in shared work: rules harvested by people other than the orchestrator, use cases validated by product, the voluntary survey | Contributions come from people other than the orchestrator |
 | Builders | Review rounds after the first one, reverts and urgent fixes in production | Fewer rounds and fewer reverts |
 | Reviewers | Time to first review, comments that cite a rule, changes merged without review | Citations rise first, then fall as pre-review catches the obvious |
 | Product | Tickets with acceptance criteria, questions once work started, reopened tickets | More criteria, fewer late questions, fewer reopened |
 | Leadership | All of the above, in one business sentence | Less rework and fewer surprises in production |
 
 The rules for reading it are in GATE.md section 11: compare adopting domains with the rest,
-leave the SDLC's own repository and board out, three months in the same direction before
+leave <system>'s own repository and board out, three months in the same direction before
 calling a trend, expect it to get worse first, check staffing and process changes before
 attributing anything, drop a month with more than a tenth unread, never by person, and merge
 domains of one or two people.

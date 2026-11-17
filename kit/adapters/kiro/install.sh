@@ -14,13 +14,13 @@ HERE="$SDLC/adapters/kiro"
 KIRO="$WORK/.kiro"
 mkdir -p "$KIRO/steering" "$KIRO/skills" "$KIRO/hooks"
 
-# Writes a file of the SDLC's from a template, with the system's name and the Python command.
-# A file with the same name that the SDLC did not write (no sdlc marker) is left alone.
+# Writes a file of the system's own from a template, with the system's name and the Python command.
+# A file with the same name that the system did not write (no sdlc marker) is left alone.
 place() {  # place <template> <destination> <marker that proves it is ours>
   local tmp="$2.sdlc-new"
   sed -e "s#__NAME__#$NAME#g" -e "s#__PY__#$PY#g" "$1" > "$tmp"
   if [ -f "$2" ] && ! grep -q "$3" "$2"; then
-    rm -f "$tmp"; echo "! ${2#"$WORK"/} in the working folder is not the SDLC's; left untouched"; return 0
+    rm -f "$tmp"; echo "! ${2#"$WORK"/} in the working folder is not $NAME's; left untouched"; return 0
   fi
   if [ -f "$2" ] && cmp -s "$tmp" "$2"; then rm -f "$tmp"; return 0; fi
   [ -f "$2" ] && sdlc_backup "$SDLC" "$WORK" "$2" "$STAMP"
@@ -38,15 +38,15 @@ for dir in "$SDLC"/skills/*/; do
   set +e; sdlc_skill "$dir" "$KIRO/skills/$skill" "../../$NAME/skills/$skill"; r=$?; set -e
   case "$r" in
     0) ;;
-    2) echo "! .kiro/skills/$skill in the working folder is not the SDLC's; left untouched" ;;
+    2) echo "! .kiro/skills/$skill in the working folder is not $NAME's; left untouched" ;;
     *) echo "! Could not install the skill $skill" ;;
   esac
 done
 for skill in $(sdlc_prune_skills "$SDLC" "$KIRO/skills"); do
-  echo "OK  skill $skill removed: the SDLC no longer has it"
+  echo "OK  skill $skill removed: $NAME no longer has it"
 done
 
-# Hooks: a file of the SDLC's own, rewritten on every install. On Windows, Kiro runs hooks with
+# Hooks: a file of the system's own, rewritten on every install. On Windows, Kiro runs hooks with
 # cmd.exe, where the first bash on the PATH may be WSL's, which sees neither the person's tools
 # nor their credentials: Git Bash goes first on the hooks' PATH.
 hooks="$HERE/hooks.json"

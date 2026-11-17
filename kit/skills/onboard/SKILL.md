@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Leaves a person ready to work in this organisation's SDLC: requirements, installation, profile, access verified one at a time, and a short demonstration on their own data. Use it the first time someone opens the assistant in the SDLC, when the session start says setup is unfinished, or when someone says "onboard", "set me up", "configure", "install", "my access does not work", "configurar", "instalar" or "no me funciona".
+description: Leaves a person ready to work in this organisation's system: requirements, installation, profile, access verified one at a time, and a short demonstration on their own data. Use it the first time someone opens the assistant in the system, when the session start says setup is unfinished, or when someone says "onboard", "set me up", "configure", "install", "my access does not work", "configurar", "instalar" or "no me funciona".
 ---
 
 # onboard
@@ -49,7 +49,7 @@ name, profiles and products in `personal/profile.md`, following `method/template
 
 Read in `method/profiles.md` what their profile needs and explain why, and run
 `tools/check-access.sh <profile>`. A check that cannot pass yet for reasons outside the
-person, such as "SDLC remote reachable" while the orchestrator has not pushed the SDLC, is
+person, such as "System remote reachable" while the orchestrator has not pushed the system, is
 reported as pending with who it depends on, not as their problem. Then, for each access
 missing, one at a time: give the steps of its guide in `tools/guides/`, wait, and verify only
 that one before the next. Prefer company login and connectors over hand-made tokens, with the
@@ -59,7 +59,7 @@ connector with the person's own identity. When an access depends on someone else
 ask and carry on with the rest.
 
 **Their repositories.** If the person works on specific products, offer to clone those
-products' repositories into the working folder, next to the SDLC, reading them from
+products' repositories into the working folder, next to the system, reading them from
 `products/<product>/`. Cloning needs their confirmation.
 
 Whatever the person has to run outside the assistant is given step by step: how to open the
@@ -68,7 +68,7 @@ terminal, what to paste, what they will see, how to know it worked and what to d
 ## 5. Welcome
 
 When the access check is green, or what is missing depends on someone else and is recorded, run
-`guide` in its "welcome" mode. It shows on the person's own data what the SDLC does for them,
+`guide` in its "welcome" mode. It shows on the person's own data what the system does for them,
 and adds `ready: <today>` to `personal/profile.md`.
 
 ## When something stops working

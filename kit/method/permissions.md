@@ -58,12 +58,12 @@ python3 tools/guards/permissions.py grant <session> autonomous
 python3 tools/guards/permissions.py revoke <session> autonomous
 ```
 
-From then on the SDLC asks for nothing, not even the list above: whatever the assistant's own
+From then on the system asks for nothing, not even the list above: whatever the assistant's own
 permission mode decides is what happens. The guard still keeps the assistant from authorising
 itself, so registering any authorisation and touching `personal/grants/` keep asking. Like any
 authorisation, it lasts for that session only.
 
-It removes the SDLC's questions, not the assistant's, and not the platform's: protected
+It removes the system's questions, not the assistant's, and not the platform's: protected
 branches and mandatory approvals still apply. What is not an approval stays the same: verify
 before asserting, never duplicate, keep credentials out of repositories, and report what was
 done and what was not. On return, the person finds in their log and their tickets what

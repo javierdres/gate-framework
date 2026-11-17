@@ -2,10 +2,10 @@
 
 # GATE
 
-**Governed, Assisted, Traceable Engineering.** The foundation an orchestrator uses to build
-their own organisation's AI-assisted SDLC: the stages of the software life cycle, their inputs
-and outputs, the human control points, the actors of each one, and how to turn all of it into
-a working SDLC project of your own, on the AI assistant you choose.
+**Governed, Assisted, Traceable Engineering.** The foundation an orchestrator uses to build their
+own organisation's AI-assisted way of working: the stages of the software life cycle, their inputs
+and outputs, the human control points, the actors of each one, and how to turn all of it into a
+working system of your own, on the AI assistant you choose.
 
 Agnostic of company, domain, language, platform and AI assistant.
 
@@ -13,7 +13,7 @@ Assistance that stops where judgement begins.
 
 ## What GATE gives you
 
-GATE is the theory and the foundation. Your organisation's SDLC is the house built on it: a
+GATE is the theory and the foundation. Your organisation's system is the house built on it: a
 repository with your method, your standards catalog, your products, your skills, your
 governance and the way each person gets in.
 
@@ -23,17 +23,17 @@ assistant at once, a scaffold, neutral guards that enforce the permissions, and 
 contracts to implement.
 
 It works with Claude Code, Gemini CLI, Kiro, Codex or any assistant that loads persistent
-instructions, uses skills and can work in a repository. The orchestrator chooses; the SDLC is
+instructions, uses skills and can work in a repository. The orchestrator chooses; the system is
 written in neutral formats and a thin adapter wires it to that assistant.
 
-## Getting started: build your SDLC
+## Getting started: build your system
 
 ```
 python3 bin/bootstrap.py names <org>
 python3 bin/bootstrap.py sdlc ~/Projects/<org>/sdlc-<org> --assistant claude-code --org <org>
 ```
 
-That writes the skeleton of your organisation's SDLC: the base files, the empty standards
+That writes the skeleton of your organisation's system: the base files, the empty standards
 catalog with its validator, the permission, session and log guards, the installer and the
 adapter. Open your assistant inside it and run `/establish`: it interviews you, builds every
 layer following [BUILDING.md](BUILDING.md), and closes with a verification you can read point
@@ -49,32 +49,32 @@ from its platform's current documentation. Those adapters are not verified yet.
 **[BUILDING.md](BUILDING.md)** if you are the orchestrator. It says what you will decide, what
 you will be asked and what you will end up with.
 
-**[START-HERE.md](START-HERE.md)** once the SDLC exists. It answers the questions that come
+**[START-HERE.md](START-HERE.md)** once the system exists. It answers the questions that come
 next: how to start a new project, a new requirement on an existing one, and how to resolve an
 incident.
 
 ## The reference
 
 [GATE.md](GATE.md) is the full document. If you have ten minutes, read section 2 (the
-orchestrator and how the SDLC gets built), section 3 (the single entry point and the dossier)
+orchestrator and how the system gets built), section 3 (the single entry point and the dossier)
 and section 7 (the actors, and the line between what the AI does and what people do).
 
 ## What is here
 
 ```
-├── BUILDING.md         How an orchestrator builds the organisation's SDLC, on any assistant
+├── BUILDING.md         How an orchestrator builds the organisation's system, on any assistant
 ├── START-HERE.md       The three ways into the cycle, and what each one changes
 ├── GATE.md             The full framework
 ├── CONTRIBUTING.md     How the framework itself changes
 ├── CHANGELOG.md        What changed, and why
 ├── skills/             The 20 skill contracts: 3 foundation, 1 support, 14 cycle, 2 cross-cutting
-├── templates/          SDLC config, instructions, governance, plan, product, use cases,
+├── templates/          System config, instructions, governance, plan, product, use cases,
 │                       dossier, decision record, QA script, postmortem, rule, log
-├── kit/                What bootstrap.py copies into a new SDLC: the catalog, guards and
+├── kit/                What bootstrap.py copies into a new system: the catalog, guards and
 │                       their tests, installer, access checker, adapters, server hooks, method
 ├── adoption/           How to roll it out, step by step
 ├── bin/
-│   ├── bootstrap.py    Scaffolds the organisation's SDLC, a catalog, or a project's config
+│   ├── bootstrap.py    Scaffolds the organisation's system, a catalog, or a project's config
 │   ├── validate.py     Checks the contracts are complete and the chain closes
 │   ├── check_config.py Reports what a project's .gate/config.yml is missing
 │   └── build_pdf.py    Regenerates the PDF from the Markdown
@@ -85,7 +85,7 @@ and section 7 (the actors, and the line between what the AI does and what people
 ## What is deliberately not here
 
 **Your organisation's rules.** The catalog belongs to each organisation and lives in its own
-SDLC. This framework defines how it is fed, not what it says. See
+system. This framework defines how it is fed, not what it says. See
 [section 8](GATE.md#8-scopes-one-framework-many-contexts) for how the levels fit together.
 
 **Ceremonies, cadence or estimation.** GATE describes the journey of a piece of work and who
@@ -109,7 +109,7 @@ triggers B, B has to say it is triggered by A.
 
 ## The moments of human invocation
 
-Before the cycle, once each: `/establish` when an organisation builds its SDLC, and `/onboard`
+Before the cycle, once each: `/establish` when an organisation builds its system, and `/onboard`
 when a person joins it. In the cycle: `/init` when the need is born, `/build` when someone sits
 down to implement, `/review` when someone reviews, several times, `/verify` when someone tests,
 and `/deploy` when someone deploys.
@@ -129,7 +129,7 @@ because automation once executed more than it should have. The three role incomp
 exist because a small team with strong assistance converges fast, and sometimes in the wrong
 direction. Stage 12 exists because it is easy to find an empty standards catalog next to a
 change carrying a hundred and fifty discussion comments. And section 2 exists because GATE was
-put into practice in a real organisation, and building that SDLC taught what a foundation has
+put into practice in a real organisation, and building that system taught what a foundation has
 to give an orchestrator.
 
 It is a living framework, in use and under continuous improvement.
