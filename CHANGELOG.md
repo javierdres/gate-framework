@@ -3,6 +3,38 @@
 What changed in GATE, and why. An organisation's system pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-11-17 · Neutral identifiers, read with the old ones
+
+The previous entry left pending the names the kit reads. They change now, and every reader still
+accepts the older ones, so nothing breaks on the day a system moves.
+
+**What is new.** The config is `system.yml`. The instruction blocks go between
+`<!-- gate:begin -->` and `<!-- gate:end -->`, the log's open section is `<!-- gate:open -->`
+and a copied skill carries `.gate-copy`. The variables are `GATE_ASSISTANT`, `GATE_GRANTS_DIR`,
+`GATE_CONFIG`, `GATE_SESSION` and `GATE_ACCESS_DEADLINE`, the functions of `tools/lib.sh` are
+`gate_*`, the server key is `gate.formulation` and Kiro gets `.kiro/hooks/gate.json` and
+`.kiro/steering/gate.md`. The adapters receive `SYSTEM`. `bootstrap.py system` scaffolds, and
+`bootstrap.py names` proposes `deskmate-<org>` first, for a system that reaches any area with the
+assistant as each person's desk mate; `sdlc-<org>` stays for one that covers only software.
+
+**What keeps working.** The older names are read for at least three months and two dated
+entries, as CONTRIBUTING.md now sets: `sdlc.yml`, the `sdlc:` markers, `.sdlc-copy`, the
+`SDLC_*` variables, `sdlc.formulation` and Kiro's `sdlc.json` and `sdlc.md`. `$SDLC`, the
+`sdlc_*` functions and `bootstrap.py sdlc` stay as aliases with no end date, because an
+organisation's own scripts call them.
+
+**How a system moves.** `tools/migrate.sh` renames `sdlc.yml` to `system.yml` as a staged change
+and lists what it cannot change on its own. The installer replaces what it wrote in each working
+folder before, with backups, and leaves alone any file of the person's that only shares a name.
+The session start guard points the orchestrator to `migrate.sh` and tells each person when older
+names remain in their working folder.
+
+**What to do.** Bring the new `kit/` into your system and replace `gate-reference/`. The
+orchestrator runs `bash <system>/tools/migrate.sh` once and pushes the result as a change request.
+Once it is merged, everyone runs the installer again when the session start offers it. If the
+server-side hook is installed, set `git config gate.formulation` on the server instead of the
+older key while formulation lasts.
+
 ## 2026-11-17 · GATE no longer names the organisation's system
 
 Each organisation names its own system, yet GATE kept calling it "the SDLC" in its documents,
