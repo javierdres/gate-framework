@@ -34,6 +34,10 @@ A place to create the SDLC repository on the organisation's code platform.
 - **Runs the interview first** (BUILDING.md section 5), a few questions at a time, each with
   its default. Whatever nobody knows is marked "to be defined" and never invented. Closes with
   a summary the orchestrator confirms. Nothing is built before that.
+- Asks what the system will cover, software only or other areas too, shows the names GATE
+  proposes for that reach (`bootstrap.py names`) and records the one the orchestrator picks as
+  `system.name` in `sdlc.yml`. When it differs from the scaffolded folder, renames it with
+  `tools/rename.sh` before building anything.
 - Records the orchestrator's decisions (BUILDING.md section 4) in `sdlc.yml`, `GOVERNANCE.md`
   and `PLAN.md`, including the assistant and the version it will be verified against, and the
   formulation exit criteria with their review date.
@@ -56,7 +60,8 @@ A place to create the SDLC repository on the organisation's code platform.
 ## What it does NOT do
 
 - Does not write rules into the catalog. It starts empty, apart from examples marked as such.
-- Does not choose the assistant, the roles, the profiles or the scope. The orchestrator does.
+- Does not choose the system's name, the assistant, the roles, the profiles or the scope. It
+  proposes; the orchestrator decides.
 - Does not publish anything to a shared system without the orchestrator's approval.
 - Does not copy another organisation's rules, products, names or data.
 - Does not declare formulation over. Only the orchestrator does, against the exit criteria.

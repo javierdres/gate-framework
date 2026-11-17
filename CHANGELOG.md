@@ -3,6 +3,25 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-11-17 · Each organisation names its own system
+
+An organisation that took the method beyond software found the name `sdlc-<org>` no longer said
+what the system was, and that renaming it later meant every person fixing their working folder
+by hand. The name is now the orchestrator's decision from the start, and changing it later is
+one command per person.
+
+**GATE proposes, the orchestrator decides.** `bootstrap.py names <org>` lists names for the
+system with what each one tells a reader: `sdlc-<org>` while it covers the software life cycle,
+`ai-office-<org>` when it also covers operations, support or other areas. The scaffold takes
+the folder name as the system's name, refuses one that cannot be a folder, and records it in
+`sdlc.yml` under `system:` with its reach. `/establish` asks for it in the interview.
+
+**Renaming is safe once installed.** When the orchestrator changes `system.name`, the session
+start guard tells each person once and gives them the step to run outside the assistant.
+`tools/rename.sh` moves the folder with the person's files, rewrites only the lines the
+installer wrote for the old name, points the remote at the new one and installs again, with
+backups. It refuses to run inside an assistant session and does nothing the second time.
+
 ## 2026-11-10 · A company that writes in Spanish and tracks in Linear
 
 A fourth simulation rebuilt an SDLC from scratch with the previous release: a company working in

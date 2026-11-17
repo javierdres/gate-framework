@@ -13,9 +13,17 @@ gate:
 # instructions offer establish at the start of every session.
 built: ""
 
+# The system's name is the orchestrator's decision (bootstrap.py names proposes
+# some). It is the folder, the repository and the prefix of every import, so it
+# always matches the folder this repository is cloned into; when it changes,
+# the session start guard asks each person to run tools/rename.sh once.
+system:
+  name: ""                  # e.g. sdlc-acme, or ai-office-acme beyond software
+  reach: ""                 # software | beyond-software
+
 organisation:
   name: ""                  # display name, used in headings (bootstrap --name)
-  short_name: ""            # used in sdlc-<short_name> and in credential file names
+  short_name: ""            # used in the system's name and in credential file names
   builds: ""                # own products, internal systems, integrations...
   language: ""              # e.g. "es-CL"; technical terms kept in English
   regulatory_context: ""    # personal, health or financial data; standards

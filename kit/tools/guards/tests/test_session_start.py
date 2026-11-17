@@ -104,6 +104,15 @@ class SessionStart(unittest.TestCase):
         self.assertIn("thema zwei", out)
         self.assertNotIn("not built yet", out)
 
+    def test_asks_to_rename_once_the_system_is_renamed(self):
+        here = os.path.basename(self.root)
+        self.write("sdlc.yml", 'system:\n  name: "%s"\n  reach: "software"\n' % here)
+        self.assertNotIn("Renamed", self.run_guard())
+        self.write("sdlc.yml", 'system:\n  name: "ai-office-acme"   # beyond software\n')
+        out = self.run_guard()
+        self.assertIn("from %s to ai-office-acme" % here, out)
+        self.assertIn("tools/rename.sh", out)
+
     def test_stages(self):
         out = self.run_guard()
         self.assertIn("Setup stage: installation", out)

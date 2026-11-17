@@ -29,6 +29,7 @@ escribe en formatos neutrales y un adaptador liviano lo conecta a ese asistente.
 ## Para arrancar: construye tu SDLC
 
 ```
+python3 bin/bootstrap.py names <org>
 python3 bin/bootstrap.py sdlc ~/Projects/<org>/sdlc-<org> --assistant claude-code --org <org>
 ```
 

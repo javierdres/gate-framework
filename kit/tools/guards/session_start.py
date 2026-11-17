@@ -85,6 +85,21 @@ def update():
     return "up to date with %s" % upstream if code == 0 else "could not update from %s" % upstream
 
 
+def renamed():
+    """The orchestrator renamed the system in sdlc.yml and this folder still has the old name."""
+    name = config_value("name", "system")
+    here = os.path.basename(ROOT)
+    if not name or name == here:
+        return None
+    return ("- Renamed: the orchestrator renamed this system from %s to %s, and this copy still "
+            "has the old name. Tell the person once, at the greeting, and give them the "
+            "step-by-step to run outside the assistant: close the assistant, open a terminal, "
+            "paste `bash \"%s/tools/rename.sh\"`, read its OK lines, then open the assistant "
+            "again in %s. It moves the folder with their personal files, rewrites what the "
+            "installer wrote and installs again, with backups. Until then everything keeps "
+            "working under the old name." % (here, name, ROOT, os.path.dirname(ROOT)))
+
+
 def installation():
     stamp = read(os.path.join(PERSONAL, ".installed")).strip()
     if not stamp:
@@ -189,6 +204,9 @@ def main():
     if not config_value("built"):
         lines.append("- The SDLC is not built yet: offer the establish skill before anything else.")
     lines.append("- SDLC repository: %s" % update())
+    notice = renamed()
+    if notice:
+        lines.append(notice)
 
     stamp, state = installation()
     lines.append("- Installation: %s" % state)

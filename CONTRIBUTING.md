@@ -53,6 +53,7 @@ python3 kit/tools/guards/tests/test_permissions.py
 python3 kit/tools/guards/tests/test_session_start.py
 python3 kit/catalog/tests/test_catalog.py
 bash kit/tools/server-hooks/tests/test_update.sh
+bash kit/tools/tests/test_rename.sh
 ```
 
 ```

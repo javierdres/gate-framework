@@ -19,6 +19,13 @@ orchestrator decides. This skill implements the `/establish` contract in
    nor inside another repository; if it does not, stop and ask the orchestrator to move it
    (BUILDING.md section 6). If `organisation.name` is only the short name, ask for the display
    name in the interview.
+5. The system's name is the orchestrator's decision. In the interview ask what it will cover
+   (software only, or other areas too), show the proposals of
+   `python3 gate-reference/bin/bootstrap.py names <short name>` (with `--beyond-software` when
+   it reaches further) or, without that script, `sdlc-<org>` and `ai-office-<org>`, and record
+   the choice in `system.name` and `system.reach` of `sdlc.yml`. If it differs from this
+   folder's name, ask the orchestrator to close the assistant and run `tools/rename.sh <name>`
+   in a terminal before the build starts.
 3. Read `personal/establish-progress.md` if it exists: a previous session may have left the
    build halfway. Resume from the first layer not marked done.
 4. Tell the orchestrator in three lines what is about to happen: the interview, the build in
@@ -83,7 +90,8 @@ other than the orchestrator.
 ## Never
 
 - Never write rules into the catalog. It starts empty, apart from examples marked as such.
-- Never choose the assistant, the roles, the profiles or the scope. The orchestrator does.
+- Never choose the system's name, the assistant, the roles, the profiles or the scope. You
+  propose; the orchestrator decides.
 - Never publish anything to a shared system (push, change request, ticket) without the
   orchestrator's explicit OK.
 - Never copy another organisation's rules, products, names or data.

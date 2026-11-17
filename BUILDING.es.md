@@ -53,9 +53,12 @@ Instrucciones para el asistente que construye el SDLC:
 
 ## 2. Con qué terminas
 
-- Un repositorio, `sdlc-<org>`, que cada persona clona en su carpeta de trabajo, al lado de los
+- Un repositorio con el nombre que el orquestador eligió para el sistema, `<sistema>` desde
+  aquí: `sdlc-<org>` mientras cubre el ciclo de vida del software y `ai-office-<org>` cuando
+  también cubre operaciones, soporte u otras áreas de la organización (sección 4). Cada persona
+  lo clona en su carpeta de trabajo, al lado de los
   repositorios de sus productos. El asistente se abre en esa carpeta de trabajo.
-  El orquestador también lo crea ahí, por ejemplo en `~/Projects/<org>/sdlc-<org>`: el
+  El orquestador también lo crea ahí, por ejemplo en `~/Projects/<org>/<sistema>`: el
   instalador conecta la carpeta que contiene el SDLC, así que un SDLC creado suelto en el home, o
   dentro de otro repositorio, conecta la carpeta equivocada.
 - Instrucciones persistentes que carga cada sesión, con las reglas que aplican siempre.
@@ -140,7 +143,7 @@ anota esa versión en `sdlc.yml`.
 
 | Asistente | Instrucciones | Skills | Guardias |
 |---|---|---|---|
-| Claude Code | `CLAUDE.md` en la carpeta de trabajo, que importa `@sdlc-<org>/AGENTS.md` | Enlazadas o copiadas en `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse` |
+| Claude Code | `CLAUDE.md` en la carpeta de trabajo, que importa `@<sistema>/AGENTS.md` | Enlazadas o copiadas en `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse` |
 | Gemini CLI | `GEMINI.md`, o `AGENTS.md` como nombre del archivo de contexto en la configuración | Su carpeta de skills, en el mismo formato `SKILL.md` | `.gemini/settings.json`: los eventos antes de una herramienta y de sesión. Puede que haya que habilitar los hooks |
 | Kiro | Un archivo de steering en `.kiro/steering/` que apunta a `AGENTS.md` | `.kiro/skills/` | Los hooks de Kiro CLI antes de usar una herramienta y al iniciar la sesión; los nombres cambian entre versiones mayores |
 | Codex CLI | Lee `AGENTS.md` directamente | Su carpeta de skills, en el mismo formato | Su configuración de hooks, si la versión instalada la soporta |
@@ -171,7 +174,7 @@ cambiar después con un cambio al repositorio del SDLC.
 | Decisión | Por defecto |
 |---|---|
 | Qué asistente, o cuáles | El que ya usan los roles que construyen. Se anota la versión |
-| Nombre del repositorio | `sdlc-<org>` |
+| Nombre del sistema, que también es el de su repositorio y su carpeta | `sdlc-<org>` mientras cubre software y `ai-office-<org>` cuando va más allá. `bootstrap.py names <org>` propone otros. Se puede cambiar después con `tools/rename.sh`, aunque cada persona tiene que correrlo una vez |
 | Plataforma de código, herramienta de tickets y fuente de verdad de producción | Las que la organización ya usa. Una sola fuente de verdad por pregunta |
 | Cómo se identifica a una persona | Su cuenta en la plataforma de código. Sin cuentas de plataforma, una llave SSH de firma registrada en el SDLC. La identidad declarada, solo como último recurso y diciéndolo |
 | Cómo se protege la rama principal | Las ramas protegidas y las aprobaciones obligatorias de la plataforma. Sin ellas, el hook de servidor de `tools/server-hooks/` |
@@ -194,7 +197,11 @@ construir nada.
 
 **La organización**
 
-- Nombre corto, que se usa en el repositorio y en los encabezados.
+- Nombre corto, que se usa en el nombre del sistema y en los encabezados.
+- Qué va a cubrir el sistema: solo el ciclo de vida del software u otras áreas también
+  (operaciones, soporte, finanzas, legal). Muestra los nombres que propone `bootstrap.py names`
+  para ese alcance y deja que el orquestador elija uno o ponga el suyo. Si no coincide con la
+  carpeta que creó el scaffold, cámbialo con `tools/rename.sh <nombre>` antes de construir.
 - Qué construye: productos propios, sistemas internos, integraciones, servicios a clientes.
 - Tamaño de los equipos técnico y de producto, y si trabajan como uno solo o como varios.
 - Idioma y variante de los documentos, y qué términos técnicos el equipo dice en inglés.
@@ -245,13 +252,13 @@ construir nada.
 El SDLC vive siempre un nivel dentro de una carpeta de trabajo, nunca suelto en el home ni dentro
 de otro repositorio: el instalador escribe las instrucciones, las skills y los guardias en la
 carpeta que lo contiene. Para probarlo sin tocar tu carpeta de trabajo real, créalo en una
-carpeta desechable, por ejemplo `/tmp/prueba/sdlc-<org>`, y no en una ruta fija.
+carpeta desechable, por ejemplo `/tmp/prueba/<sistema>`, y no en una ruta fija.
 
 ```
 <carpeta de trabajo>/
 ├── AGENTS.md                 lo deja el instalador; apunta al SDLC y a personal/
 ├── <archivos del adaptador>  los deja el instalador para el asistente de la persona
-├── sdlc-<org>/               el repositorio del SDLC de la organización
+├── <sistema>/               el repositorio del SDLC de la organización, con el nombre que eligió el orquestador
 │   ├── AGENTS.md             reglas para el asistente y mapa del repositorio
 │   ├── sdlc.yml              organización, asistentes, herramientas, ámbitos, versión de GATE
 │   ├── allowed_signers       llaves SSH de firma por persona, si la identidad las usa
@@ -519,7 +526,7 @@ y la biblioteca estándar de Python, sin dependencias.
 
 1. El esqueleto del repositorio, con `personal/` ignorado por el control de versiones, que
    escribe el orquestador antes de abrir el asistente. `python3 bin/bootstrap.py sdlc
-   <carpeta de trabajo>/sdlc-<org> --assistant <id> --org <nombre corto> --name "<nombre visible>"`
+   <carpeta de trabajo>/<sistema> --assistant <id> --org <nombre corto> --name "<nombre visible>"`
    lo escribe: la estructura, los archivos base desde las plantillas, el catálogo vacío con su
    validador, los cuatro guardias, el instalador, una copia de GATE en `gate-reference/`, primeras versiones de
    las skills `establish` y `onboard` y, para Claude Code, su adaptador con las dos skills ya
