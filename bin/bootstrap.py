@@ -166,8 +166,8 @@ as a candidate, told as a pattern, with nothing that belongs to the organisation
 # The name is the folder, the repository and the prefix of every import in the working folder,
 # so it is chosen once, before scaffolding. GATE proposes; the orchestrator decides.
 NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{1,62}$")
-NAME_PREFIXES = ("sdlc-", "ai-office-", "ai-dev-", "gate-")
-NAME_SUFFIXES = ("-sdlc", "-ai-office", "-ai")
+NAME_PREFIXES = ("deskmate-", "sdlc-", "ai-office-", "ai-dev-", "gate-")
+NAME_SUFFIXES = ("-deskmate", "-sdlc", "-ai-office", "-ai")
 REACH = {
     "software": "across the software life cycle: product, building, operations, security and leadership",
     "beyond-software": "across the work of the organisation, software and beyond",
@@ -176,6 +176,7 @@ REACH = {
 
 def proposals(org, beyond):
     """Names worth considering, the recommended one first, each with what it tells a reader."""
+    first = ("deskmate-%s" % org, "for any area: the assistant as each person's desk mate")
     software = [
         ("sdlc-%s" % org, "says exactly what it is while it covers the software life cycle"),
         ("ai-dev-%s" % org, "for a team that thinks of it as the assistant of development"),
@@ -186,7 +187,7 @@ def proposals(org, beyond):
         ("%s-ai-office" % org, "the same, sorted next to the organisation's other repositories"),
         ("gate-%s" % org, "neutral: names the method, not the area it covers"),
     ]
-    return office + software[:1] if beyond else software + office[:1]
+    return [first] + (office + software[:1] if beyond else software + office[:1])
 
 
 def org_from(name):
@@ -242,7 +243,7 @@ def scaffold_system(target, assistant, org, display="", reach=""):
         print("x '%s' is not a usable system name: lowercase letters, digits and hyphens only." % system)
         print("  See the proposals with: python3 bin/bootstrap.py names <short name>")
         return 1
-    beyond = system.startswith("ai-office-") or system.endswith("-ai-office")
+    beyond = system.startswith(("ai-office-", "deskmate-")) or system.endswith(("-ai-office", "-deskmate"))
     reach = reach or ("beyond-software" if beyond else "software")
     if reach not in REACH:
         print("x unknown reach '%s'. One of: %s" % (reach, ", ".join(REACH)))

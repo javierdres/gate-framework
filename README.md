@@ -30,7 +30,7 @@ written in neutral formats and a thin adapter wires it to that assistant.
 
 ```
 python3 bin/bootstrap.py names <org>
-python3 bin/bootstrap.py sdlc ~/Projects/<org>/sdlc-<org> --assistant claude-code --org <org>
+python3 bin/bootstrap.py system ~/Projects/<org>/deskmate-<org> --assistant claude-code --org <org>
 ```
 
 That writes the skeleton of your organisation's system: the base files, the empty standards

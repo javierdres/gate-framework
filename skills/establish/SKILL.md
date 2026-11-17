@@ -6,7 +6,7 @@ triggered_by: [person]
 triggers: [onboard]
 gate: orchestrator gate
 gate_owner: Orchestrator
-writes_outside: [sdlc repository]
+writes_outside: [system repository]
 consults: []
 ---
 
@@ -37,9 +37,9 @@ A place to create the system's repository on the organisation's code platform.
   a summary the orchestrator confirms. Nothing is built before that.
 - Asks what the system will cover, software only or other areas too, shows the names GATE
   proposes for that reach (`bootstrap.py names`) and records the one the orchestrator picks as
-  `system.name` in `sdlc.yml`. When it differs from the scaffolded folder, renames it with
+  `system.name` in `system.yml`. When it differs from the scaffolded folder, renames it with
   `tools/rename.sh` before building anything.
-- Records the orchestrator's decisions (BUILDING.md section 4) in `sdlc.yml`, `GOVERNANCE.md`
+- Records the orchestrator's decisions (BUILDING.md section 4) in `system.yml`, `GOVERNANCE.md`
   and `PLAN.md`, including the assistant and the version it will be verified against, and the
   formulation exit criteria with their review date.
 - Builds the system **in layers, in the order of BUILDING.md section 10**, and shows each layer
@@ -77,6 +77,6 @@ verification are accepted before the build moves on.
 **Reads:** The orchestrator's answers to the interview, and whatever can be read off the
 organisation's existing repositories and tools.
 
-**Writes:** The organisation's system repository, with `sdlc.yml`, its governance and its plan,
+**Writes:** The organisation's system repository, with `system.yml`, its governance and its plan,
 and the final verification report. There is no work-item dossier yet: this is what makes the
 first one possible.

@@ -10,8 +10,9 @@ It is written for two readers at once. **If you are the orchestrator**, it tells
 will decide, what you will be asked, and what you will end up with. **If you are the
 assistant**, it is your build specification: `/establish` follows it from top to bottom.
 
-Read [section 2 of GATE.md](GATE.md#2-before-stage-0-the-orchestrator-builds-the-sdlc) first.
-It explains why the system is built this way; this guide says how.
+Read [section 2 of
+GATE.md](GATE.md#2-before-stage-0-the-orchestrator-builds-the-organisations-system) first. It
+explains why the system is built this way; this guide says how.
 
 ---
 
@@ -35,7 +36,7 @@ Instructions for the assistant building the system:
 - When you wire your own platform, **read its current documentation** rather than relying on
   memory. Hook names, configuration paths and file names change between versions.
 - Skill names are short and in English. Everything else is in the organisation's language,
-  except what the scripts read, which stays as GATE writes it: the keys of `sdlc.yml` and of the
+  except what the scripts read, which stays as GATE writes it: the keys of `system.yml` and of the
   rule format, the profile ids, and the markers in the log index. The guards also read the
   Spanish forms of the profiles heading in `GOVERNANCE.md` ("Perfiles habilitados") and of the
   keys in `personal/profile.md` (`perfil`, `listo`); any other translation needs the guard
@@ -52,8 +53,8 @@ Instructions for the assistant building the system:
 ## 2. What you end up with
 
 - A repository with the name the orchestrator chose for the system, `<system>` from here on:
-  `sdlc-<org>` while it covers the software life cycle, `ai-office-<org>` when it also covers
-  operations, support or other areas of the organisation (section 4). Every person clones it
+  `deskmate-<org>` for any area, with the assistant as each person's desk mate, or
+  `sdlc-<org>` when it covers only the software life cycle (section 4). Every person clones it
   into their own working folder next to the repositories of their products. The assistant is opened in that working folder.
   The orchestrator scaffolds it there too, `~/Projects/<org>/<system>` for example: the
   installer wires the folder that contains the system, so a system scaffolded loose in the home
@@ -100,7 +101,7 @@ protected, and outward writes go through a script in `tools/` that shows the act
 | Skills | A folder per skill with a `SKILL.md`: a `name`, a `description` that says when to use it in the words a person would say, and plain instructions | `skills/` in the system's repository |
 | Guards | Scripts that read the intended action as JSON on standard input and answer allow, ask or deny | `tools/guards/` |
 | Connectors | Model Context Protocol servers | Declared per assistant in its adapter |
-| Configuration | `sdlc.yml`: the organisation, its assistants, its tools, its scopes and the GATE version | Root of the system's repository |
+| Configuration | `system.yml`: the organisation, its assistants, its tools, its scopes and the GATE version | Root of the system's repository |
 
 ### The guard contract
 
@@ -123,9 +124,9 @@ Every guard follows the same contract, whatever assistant calls it.
   person on an assistant whose hooks can only allow or block had no way to approve a single
   write.
 
-`bin/bootstrap.py sdlc` writes a working reference guard, `tools/guards/permissions.py`, with
+`bin/bootstrap.py system` writes a working reference guard, `tools/guards/permissions.py`, with
 session-scoped authorisations, the list of actions that are never delegated, and the autonomous
-mode the organisation may allow in `sdlc.yml` (`permissions.autonomous_allowed`, off by
+mode the organisation may allow in `system.yml` (`permissions.autonomous_allowed`, off by
 default). It is
 conservative: an authorisation covers only a simple command it reads completely, and a write
 inside `sh -c`, `eval`, a subshell or a command substitution always asks. It also watches the
@@ -142,7 +143,7 @@ platform's current documentation, and the final verification proves it works.
 
 What follows is a starting point for the assistants most organisations ask about. Hook names
 and paths change between versions: check them against the version you run, and record that
-version in `sdlc.yml`.
+version in `system.yml`.
 
 | Assistant | Instructions | Skills | Guards |
 |---|---|---|---|
@@ -178,7 +179,7 @@ behind.
 That check is `tools/adapters_check.py`: it installs a throwaway copy with each adapter and
 verifies that every guard is registered on its event, every skill is found and a second install
 changes nothing. Every adapter keeps the same conventions, so that holds. The instructions sit
-between `<!-- sdlc:begin -->` and `<!-- sdlc:end -->` and are rewritten on every install. Guards
+between `<!-- gate:begin -->` and `<!-- gate:end -->` and are rewritten on every install. Guards
 are found again by their script name and replaced in place. Hooks go through the working folder
 and never break a session when the script is missing. Skills are linked, or copied and marked
 where links fail. Whatever is replaced is copied to `personal/backups/` first. Renaming the
@@ -199,7 +200,7 @@ to the system's repository.
 | Decision | Default |
 |---|---|
 | Which assistant, or assistants | The one the building roles already use. Record the version |
-| Name of the system, which is also its repository and folder | `sdlc-<org>` while it covers software; `ai-office-<org>` when it reaches beyond. `bootstrap.py names <org>` proposes more. It can change later with `tools/rename.sh`, but every person runs it once |
+| Name of the system, which is also its repository and folder | `deskmate-<org>` for any area; `sdlc-<org>` when it covers only software. `bootstrap.py names <org>` proposes more. It can change later with `tools/rename.sh`, but every person runs it once |
 | Code platform, tracker, production source of truth | What the organisation already uses. One source of truth per question |
 | How a person is identified | Their account on the code platform. Without platform accounts, an SSH signing key listed in the system. Declared identity only as a last resort, and said so |
 | How the main branch is protected | The platform's protected branches and mandatory approvals. Without them, the server-side hook in `tools/server-hooks/` |
@@ -209,7 +210,7 @@ to the system's repository.
 | Rule scopes | Cross-cutting, product, security, operations, plus one per technical layer the team actually has |
 | Formulation exit criteria and review date | The four criteria in GATE.md section 2, reviewed four to six weeks after the build |
 | Language and writing standard | The organisation's language. Industry terms stay in English when that is how the team says them |
-| Autonomous mode | Not allowed: `permissions.autonomous_allowed: false` in `sdlc.yml`. When allowed, a person may ask for it explicitly for one session |
+| Autonomous mode | Not allowed: `permissions.autonomous_allowed: false` in `system.yml`. When allowed, a person may ask for it explicitly for one session |
 | Where automated flows live | In the system's repository, so no product repository has to change during adoption. Product repositories are read only |
 | Out of scope | Whatever the orchestrator names in the interview, plus later phases until the first one works |
 
@@ -283,7 +284,7 @@ into a throwaway one, `/tmp/try/<system>` for example, rather than somewhere fix
 ├── <assistant adapter files> written by the installer for the assistant the person uses
 ├── <system>/                the system repository, named by the orchestrator
 │   ├── AGENTS.md             rules for the assistant and the map of the repository
-│   ├── sdlc.yml              organisation, assistants, tools, scopes, GATE version
+│   ├── system.yml              organisation, assistants, tools, scopes, GATE version
 │   ├── allowed_signers       SSH signing keys per person, when identity uses them
 │   ├── README.md             what it is, for people, in one page
 │   ├── ONBOARDING.md         how to start
@@ -595,7 +596,7 @@ of the system is read with the rules of GATE.md section 11, from shared work onl
 
 | Piece | What it does |
 |---|---|
-| Installer | Checks the requirements first (git, ssh, a Python 3.8 or later that actually runs) and stops before touching anything. Idempotent. Creates `personal/` with profile, preferences and log. Writes its blocks between the sdlc markers in the working folder's instruction files. Links the skills, or copies them where links fail, never overwrites a skill of the person's with the same name and removes those the system no longer has. Merges the guards and the base rules that always ask, leaves settings that are not valid JSON untouched and keeps a copy of whatever it changes in `personal/backups/`. Without an argument, it detects the assistant it runs in. Stamps a fingerprint per assistant. Stops if the repository sits loose in the home folder |
+| Installer | Checks the requirements first (git, ssh, a Python 3.8 or later that actually runs) and stops before touching anything. Idempotent. Creates `personal/` with profile, preferences and log. Writes its blocks between the gate markers in the working folder's instruction files. Links the skills, or copies them where links fail, never overwrites a skill of the person's with the same name and removes those the system no longer has. Merges the guards and the base rules that always ask, leaves settings that are not valid JSON untouched and keeps a copy of whatever it changes in `personal/backups/`. Without an argument, it detects the assistant it runs in. Stamps a fingerprint per assistant. Stops if the repository sits loose in the home folder |
 | Session start guard | Brings the main branch up to date, reports the pending setup stage, verifies the identity and hands over the enabled profiles, checks access, detects an outdated installation, announces the system versions the update brought with their "What to do", and hands over the log path with what is open. It never hangs on the network. It moves the default branch forward without switching branches, and sets local changes aside only when they do not touch the incoming files; otherwise it touches nothing and says why. When the fingerprint of skills, installer or adapter changed, it asks for a reinstall, which the assistant may run with the person's OK. It says so when the assistant was opened inside the system, and verifies identity through a chain (code platform, tracker command, then the tracker connector) that never takes a bot account for a person |
 | Status line | Where the assistant has one, a line of notices from the system that appears only when there is something to say: the installation lags the repository and needs reinstalling, change requests wait for the person's review, the authorisations in force for the session (or autonomous mode), a personal token close to its expiry. Anything that needs the network is refreshed in the background and cached, never on each redraw. Notices that depended on the assistant remembering to say them at the greeting got lost. The organisation's own notices come from `tools/notices.py`, run in the background behind a cache |
 | Per-message guard | A short reminder to update the log when the message moved something forward. Where the assistant can only block, it also records the person's typed OK as a single-use pass |
@@ -618,7 +619,7 @@ standard library, with no dependencies.
 1. The skeleton of the repository, with `personal/` ignored by version control, written by the
    orchestrator before opening the assistant. First `python3 bin/bootstrap.py names <short name>`
    (add `--beyond-software` when it will cover more than software) proposes names; the
-   orchestrator picks one. Then `python3 bin/bootstrap.py sdlc
+   orchestrator picks one. Then `python3 bin/bootstrap.py system
    <working folder>/<system> --assistant <id> --org <short name> --name "<display name>"`
    writes it: the structure,
    the base files from the templates, the empty catalog with its validator, the four guards,
@@ -627,7 +628,7 @@ standard library, with no dependencies.
    already registered.
    `/establish` fills in and writes the rest.
 2. The interview, with its summary confirmed. Nothing below starts before it.
-3. `sdlc.yml`, `GOVERNANCE.md`, `CODEOWNERS` and `PLAN.md`, from the interview.
+3. `system.yml`, `GOVERNANCE.md`, `CODEOWNERS` and `PLAN.md`, from the interview.
 4. The method: README, profiles, permissions, log, style, session start, flows, templates, and
    the chat-client package if a role needs it.
 5. The catalog, with its format, its scopes, its false-positive record and the seeds the
@@ -645,7 +646,7 @@ standard library, with no dependencies.
     skeleton wrote.
 11. The phase one skills: `define`, `self-review`, `harvest`, and `e2e` with its runner.
 12. README, ONBOARDING and the first entry of `CHANGELOG.md`.
-13. The final verification. When it closes, write today's date in `built` in `sdlc.yml`.
+13. The final verification. When it closes, write today's date in `built` in `system.yml`.
 
 ---
 
@@ -668,7 +669,7 @@ standard library, with no dependencies.
   ○  A failing guard asks instead of letting through
   ○  The guard and catalog tests pass
   ○  Approving a change request asks even when authorised
-  ○  Autonomous mode is refused unless sdlc.yml allows it
+  ○  Autonomous mode is refused unless system.yml allows it
   ○  With a second assistant, the adapter drift check passes
   ○  Session start reports identity, profiles and access
   ○  define produces a test ticket ready for development
@@ -712,7 +713,7 @@ keeps the main branch fast-forward only, requires every commit to be signed by a
 keys give the system a verifiable identity per person.
 
 **Can we write the formats in our own language?** The documents, yes. The keys the guards and
-validators read (the rule frontmatter, `sdlc.yml`, the `<!-- sdlc:open -->` marker of the log)
+validators read (the rule frontmatter, `system.yml`, the `<!-- gate:open -->` marker of the log)
 stay in English, because translating them makes a check fail in silence.
 
 **Can product work without the code platform?** Yes. Through a chat client with the role's
@@ -739,7 +740,10 @@ so. When someone takes a role, one row changes.
 Never in a repository, never in the chat, never one shared token.
 
 **How do we move to a new version of GATE?** By a change request to `GATE.md` in the system that
-updates the pinned commit and reviews the map of departures. Nothing updates on its own.
+updates the pinned commit and reviews the map of departures. Nothing updates on its own. When
+the new version renames something the kit reads, its entry in GATE's `CHANGELOG.md` says so: the
+kit keeps reading the older name for the window CONTRIBUTING.md sets, `tools/migrate.sh` moves
+the repository once, and each person's installer moves their working folder.
 
 **How do we give back what we learned?** Propose it to GATE as a candidate, told as a pattern,
 with nothing that belongs to the organisation. See [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -753,5 +757,5 @@ how someone uses it, and never reads their prompts. Adoption shows in shared wor
 and in a voluntary survey.
 
 **Can someone leave the assistant working while they are away?** Only if the organisation allows
-autonomous mode in `sdlc.yml`, and only when the person asks for it for that session. The
+autonomous mode in `system.yml`, and only when the person asks for it for that session. The
 platform's protected branches and approvals still hold.

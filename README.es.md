@@ -30,7 +30,7 @@ escribe en formatos neutrales y un adaptador liviano lo conecta a ese asistente.
 
 ```
 python3 bin/bootstrap.py names <org>
-python3 bin/bootstrap.py sdlc ~/Projects/<org>/sdlc-<org> --assistant claude-code --org <org>
+python3 bin/bootstrap.py system ~/Projects/<org>/deskmate-<org> --assistant claude-code --org <org>
 ```
 
 Eso escribe el esqueleto del sistema de tu organización: los archivos base, el catálogo de

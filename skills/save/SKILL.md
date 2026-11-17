@@ -6,7 +6,7 @@ triggered_by: [person]
 triggers: []
 gate: per-change gate
 gate_owner: The custodian of the part that changes
-writes_outside: [sdlc repository]
+writes_outside: [system repository]
 consults: [catalog]
 ---
 

@@ -9,7 +9,7 @@ Si solo vas a leer una cosa sobre GATE, lee esta.
 
 **Antes de cualquiera de estas, el sistema de la organización tiene que existir.** Si todavía no
 existe, eres el orquestador y empiezas en [BUILDING.es.md](BUILDING.es.md): `python3
-bin/bootstrap.py sdlc` y después `/establish` en el asistente que elegiste. Luego cada persona se
+bin/bootstrap.py system` y después `/establish` en el asistente que elegiste. Luego cada persona se
 suma con `/onboard`. Todo lo que sigue supone que eso ya está hecho.
 
 ---
@@ -206,7 +206,7 @@ No necesitas el framework completo. El piso es más bajo de lo que parece:
 - Tres personas que cumplan las [tres incompatibilidades de rol](GATE.md#the-three-incompatibilities)
 - Credenciales personales por persona
 - Una convención de ramas que enlace con el ticket
-- Un catálogo de estándares vacío con su validador de formato, que escribe `bootstrap.py sdlc`
+- Un catálogo de estándares vacío con su validador de formato, que escribe `bootstrap.py system`
 
 Con eso construyes el sistema y llegas al paso 3 de la [adopción](adoption/README.md), que es la
 revisión previa, y ya

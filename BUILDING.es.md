@@ -10,8 +10,9 @@ Está escrita para dos lectores a la vez. **Si eres el orquestador**, te dice qu
 qué te van a preguntar y con qué vas a terminar. **Si eres el asistente**, es tu especificación
 de construcción: `/establish` la sigue de principio a fin.
 
-Lee primero la [sección 2 de GATE.md](GATE.md#2-before-stage-0-the-orchestrator-builds-the-sdlc).
-Ahí se explica por qué el sistema se construye así; esta guía dice cómo.
+Lee primero la [sección 2 de
+GATE.md](GATE.md#2-before-stage-0-the-orchestrator-builds-the-organisations-system). Ahí se explica
+por qué el sistema se construye así; esta guía dice cómo.
 
 ---
 
@@ -36,7 +37,7 @@ Instrucciones para el asistente que construye el sistema:
   entre versiones.
 - Los nombres de las skills van cortos y en inglés. Todo lo demás, en el idioma de la
   organización, salvo lo que leen los scripts, que queda como lo escribe GATE: las claves
-  de `sdlc.yml` y del formato de reglas, los identificadores de perfil y las marcas del índice de
+  de `system.yml` y del formato de reglas, los identificadores de perfil y las marcas del índice de
   la bitácora. Los guardias también leen en español el título de perfiles de `GOVERNANCE.md`
   («Perfiles habilitados») y las claves de `personal/profile.md` (`perfil`, `listo`); cualquier
   otra traducción obliga a adaptar el guardia.
@@ -55,9 +56,9 @@ Instrucciones para el asistente que construye el sistema:
 ## 2. Con qué terminas
 
 - Un repositorio con el nombre que el orquestador eligió para el sistema, `<sistema>` desde aquí:
-  `sdlc-<org>` mientras cubre el ciclo de vida del software y `ai-office-<org>` cuando también cubre
-  operaciones, soporte u otras áreas de la organización (sección 4). Cada persona lo clona en su
-  carpeta de trabajo, al lado de los repositorios de sus productos. El asistente se abre en esa
+  `deskmate-<org>` para cualquier área, porque el asistente trabaja al lado de cada persona, o
+  `sdlc-<org>` cuando cubre solo el ciclo de vida del software (sección 4). Cada persona lo clona en
+  su carpeta de trabajo, al lado de los repositorios de sus productos. El asistente se abre en esa
   carpeta de trabajo. El orquestador también lo crea ahí, por ejemplo en
   `~/Projects/<org>/<sistema>`: el instalador conecta la carpeta que contiene el sistema, así que un
   sistema creado suelto en el home, o dentro de otro repositorio, conecta la carpeta equivocada.
@@ -105,7 +106,7 @@ acción y pide OK.
 | Skills | Una carpeta por skill con su `SKILL.md`: un `name`, una `description` que dice cuándo usarla con las palabras que diría una persona, e instrucciones en texto | `skills/` en el repositorio del sistema |
 | Guardias | Scripts que leen la acción como JSON por la entrada estándar y responden permitir, preguntar o denegar | `tools/guards/` |
 | Conectores | Servidores Model Context Protocol | Se declaran por asistente, en su adaptador |
-| Configuración | `sdlc.yml`: la organización, sus asistentes, sus herramientas, sus ámbitos y la versión de GATE | En la raíz del repositorio del sistema |
+| Configuración | `system.yml`: la organización, sus asistentes, sus herramientas, sus ámbitos y la versión de GATE | En la raíz del repositorio del sistema |
 
 ### El contrato de los guardias
 
@@ -129,9 +130,9 @@ Todo guardia sigue el mismo contrato, lo llame el asistente que lo llame.
   siempre. Sin esto, quien usaba un asistente cuyos hooks solo dejan pasar o bloquean no tenía
   cómo aprobar una escritura puntual.
 
-`bin/bootstrap.py sdlc` deja un guardia de referencia que funciona, `tools/guards/permissions.py`,
+`bin/bootstrap.py system` deja un guardia de referencia que funciona, `tools/guards/permissions.py`,
 con autorizaciones por sesión, la lista de acciones que nunca se delegan y el modo autónomo que
-la organización puede permitir en `sdlc.yml` (`permissions.autonomous_allowed`, apagado por
+la organización puede permitir en `system.yml` (`permissions.autonomous_allowed`, apagado por
 defecto). Es conservador: una
 autorización cubre solo un comando simple que lee completo, y una escritura dentro de `sh -c`,
 `eval`, un subshell o una sustitución de comandos siempre pregunta. También vigila las
@@ -148,7 +149,7 @@ leyendo la documentación actual de su plataforma, y la verificación final prue
 
 Lo que sigue es un punto de partida para los asistentes por los que más se pregunta. Los nombres
 de los hooks y las rutas cambian entre versiones: compruébalos contra la versión que usas y
-anota esa versión en `sdlc.yml`.
+anota esa versión en `system.yml`.
 
 | Asistente | Instrucciones | Skills | Guardias |
 |---|---|---|---|
@@ -185,8 +186,8 @@ primero ya dejó atrás.
 Esa verificación es `tools/adapters_check.py`. Instala una copia desechable con cada adaptador y
 revisa que cada guardia quede registrado en su evento, que el asistente encuentre todas las
 skills y que una segunda instalación no cambie nada. Para que eso se cumpla, todos los
-adaptadores siguen las mismas convenciones. Las instrucciones van entre `<!-- sdlc:begin -->` y
-`<!-- sdlc:end -->` y se reescriben en cada instalación. Los guardias se reconocen por el nombre
+adaptadores siguen las mismas convenciones. Las instrucciones van entre `<!-- gate:begin -->` y
+`<!-- gate:end -->` y se reescriben en cada instalación. Los guardias se reconocen por el nombre
 de su script y se reemplazan en su lugar. Los hooks pasan por la carpeta de trabajo y nunca
 rompen una sesión cuando el script no está en la rama. Las skills se enlazan, y donde no se
 puede enlazar se copian con una marca. Antes de reemplazar algo, el instalador guarda una copia
@@ -208,7 +209,7 @@ cambiar después con un cambio al repositorio del sistema.
 | Decisión | Por defecto |
 |---|---|
 | Qué asistente, o cuáles | El que ya usan los roles que construyen. Se anota la versión |
-| Nombre del sistema, que también es el de su repositorio y su carpeta | `sdlc-<org>` mientras cubre software y `ai-office-<org>` cuando va más allá. `bootstrap.py names <org>` propone otros. Se puede cambiar después con `tools/rename.sh`, aunque cada persona tiene que correrlo una vez |
+| Nombre del sistema, que también es el de su repositorio y su carpeta | `deskmate-<org>` para cualquier área y `sdlc-<org>` cuando cubre solo software. `bootstrap.py names <org>` propone otros. Se puede cambiar después con `tools/rename.sh`, aunque cada persona tiene que correrlo una vez |
 | Plataforma de código, herramienta de tickets y fuente de verdad de producción | Las que la organización ya usa. Una sola fuente de verdad por pregunta |
 | Cómo se identifica a una persona | Su cuenta en la plataforma de código. Sin cuentas de plataforma, una llave SSH de firma registrada en el sistema. La identidad declarada, solo como último recurso y diciéndolo |
 | Cómo se protege la rama principal | Las ramas protegidas y las aprobaciones obligatorias de la plataforma. Sin ellas, el hook de servidor de `tools/server-hooks/` |
@@ -218,7 +219,7 @@ cambiar después con un cambio al repositorio del sistema.
 | Ámbitos de reglas | Transversal, producto, seguridad, operación, y uno por cada capa técnica que el equipo tenga de verdad |
 | Criterios de salida de la formulación y fecha de revisión | Los cuatro criterios de la sección 2 de GATE.md, revisados entre cuatro y seis semanas después de la construcción |
 | Idioma y estándar de escritura | El de la organización. Los términos técnicos se dejan en inglés cuando así los dice el equipo |
-| Modo autónomo | No se permite: `permissions.autonomous_allowed: false` en `sdlc.yml`. Si se permite, una persona puede pedirlo explícitamente para una sesión |
+| Modo autónomo | No se permite: `permissions.autonomous_allowed: false` en `system.yml`. Si se permite, una persona puede pedirlo explícitamente para una sesión |
 | Dónde viven las pruebas de flujo | En el repositorio del sistema, para que la adopción no obligue a cambiar ningún repositorio de producto. En los repositorios de productos solo se lee |
 | Fuera de alcance | Lo que el orquestador nombre en la entrevista, más las fases siguientes hasta que la primera funcione |
 
@@ -295,7 +296,7 @@ carpeta desechable, por ejemplo `/tmp/prueba/<sistema>`, y no en una ruta fija.
 ├── <archivos del adaptador>  los deja el instalador para el asistente de la persona
 ├── <sistema>/               el repositorio del sistema de la organización, con el nombre que eligió el orquestador
 │   ├── AGENTS.md             reglas para el asistente y mapa del repositorio
-│   ├── sdlc.yml              organización, asistentes, herramientas, ámbitos, versión de GATE
+│   ├── system.yml              organización, asistentes, herramientas, ámbitos, versión de GATE
 │   ├── allowed_signers       llaves SSH de firma por persona, si la identidad las usa
 │   ├── README.md             qué es, para personas, en una página
 │   ├── ONBOARDING.md         cómo se empieza
@@ -638,14 +639,14 @@ y la biblioteca estándar de Python, sin dependencias.
 ## 10. Orden de construcción
 
 1. El esqueleto del repositorio, con `personal/` ignorado por el control de versiones, que
-   escribe el orquestador antes de abrir el asistente. `python3 bin/bootstrap.py sdlc
+   escribe el orquestador antes de abrir el asistente. `python3 bin/bootstrap.py system
    <carpeta de trabajo>/<sistema> --assistant <id> --org <nombre corto> --name "<nombre visible>"`
    lo escribe: la estructura, los archivos base desde las plantillas, el catálogo vacío con su
    validador, los cuatro guardias, el instalador, una copia de GATE en `gate-reference/`, primeras
    versiones de las skills `establish`, `onboard` y `guide` y, para Claude Code, su adaptador con
    `establish` y `onboard` ya registradas. `/establish` completa y escribe el resto.
 2. La entrevista, con su resumen confirmado. Nada de lo que sigue parte antes.
-3. `sdlc.yml`, `GOVERNANCE.md`, `CODEOWNERS` y `PLAN.md`, a partir de la entrevista.
+3. `system.yml`, `GOVERNANCE.md`, `CODEOWNERS` y `PLAN.md`, a partir de la entrevista.
 4. El método: README, perfiles, permisos, bitácora, estilo, inicio de sesión, flujos, plantillas,
    y el paquete del cliente de chat si algún rol lo necesita.
 5. El catálogo, con su formato, sus ámbitos, su registro de descartes y las semillas que eligió
@@ -664,7 +665,7 @@ y la biblioteca estándar de Python, sin dependencias.
     que dejó el esqueleto.
 11. Las skills de la fase uno: `define`, `self-review`, `harvest`, y `e2e` con su runner.
 12. README, ONBOARDING y la primera entrada de `CHANGELOG.md`.
-13. La verificación final. Al cerrarla, se anota la fecha del día en `built` de `sdlc.yml`.
+13. La verificación final. Al cerrarla, se anota la fecha del día en `built` de `system.yml`.
 
 ---
 
@@ -687,7 +688,7 @@ y la biblioteca estándar de Python, sin dependencias.
   ○  Un guardia que falla pregunta en vez de dejar pasar
   ○  Las pruebas de los guardias y del catálogo pasan
   ○  Aprobar un merge request pide OK aunque haya autorización
-  ○  El modo autónomo se rechaza si sdlc.yml no lo permite
+  ○  El modo autónomo se rechaza si system.yml no lo permite
   ○  Con un segundo asistente, la verificación de adaptadores pasa
   ○  El inicio de sesión informa identidad, perfiles y accesos
   ○  define produce un ticket de prueba listo para desarrollo
@@ -732,8 +733,8 @@ llave registrada en `allowed_signers` y exige que los cambios lleguen como un me
 otra persona. Las mismas llaves le dan al sistema una identidad verificable por persona.
 
 **¿Podemos escribir los formatos en nuestro idioma?** Los documentos, sí. Las claves que leen
-los guardias y los validadores (el frontmatter de las reglas, `sdlc.yml`, la marca
-`<!-- sdlc:open -->` de la bitácora) se quedan en inglés, porque al traducirlas una verificación
+los guardias y los validadores (el frontmatter de las reglas, `system.yml`, la marca
+`<!-- gate:open -->` de la bitácora) se quedan en inglés, porque al traducirlas una verificación
 falla sin avisar.
 
 **¿Producto puede trabajar sin la plataforma de código?** Sí. Desde un cliente de chat con el
@@ -760,7 +761,11 @@ gobierno lo dice. Cuando alguien asume un rol, se cambia una fila.
 vencimiento. Nunca en un repositorio, nunca en el chat, nunca un token compartido.
 
 **¿Cómo pasamos a una versión nueva de GATE?** Con un merge request al `GATE.md` del sistema, que
-actualiza el commit fijado y revisa el mapa de diferencias. Nada se actualiza solo.
+actualiza el commit fijado y revisa el mapa de diferencias. Nada se actualiza solo. Cuando la
+versión nueva cambia el nombre de algo que lee el kit, su entrada en el `CHANGELOG.md` de GATE lo
+avisa. El kit sigue leyendo el nombre anterior durante el plazo que fija CONTRIBUTING.md, el
+orquestador mueve el repositorio una vez con `tools/migrate.sh` y el instalador de cada persona
+mueve su carpeta de trabajo.
 
 **¿Cómo devolvemos lo que aprendimos?** Proponiéndolo a GATE como candidato, contado como patrón
 y sin nada que pertenezca a la organización. Ver [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -774,5 +779,5 @@ registra cuándo ni cómo lo usa alguien ni lee sus prompts. La adopción se mid
 a partir del trabajo compartido y de una encuesta voluntaria.
 
 **¿Alguien puede dejar el asistente trabajando mientras no está?** Solo si la organización
-permite el modo autónomo en `sdlc.yml` y la persona lo pide para esa sesión. Las
+permite el modo autónomo en `system.yml` y la persona lo pide para esa sesión. Las
 ramas protegidas y las aprobaciones de la plataforma siguen rigiendo.

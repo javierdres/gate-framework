@@ -10,14 +10,14 @@ chooses the assistant, scaffolds the system and lets `/establish` build it with 
 [BUILDING.md](../BUILDING.md).
 
 ```
-python3 bin/bootstrap.py sdlc ~/Projects/<org>/sdlc-<org> --assistant <id> --org <org>
+python3 bin/bootstrap.py system ~/Projects/<org>/deskmate-<org> --assistant <id> --org <org>
 ```
 
 That writes the skeleton: base files, the empty catalog with its validator, the guards, the
 installer and the adapter. `/establish` then interviews the orchestrator and fills in every
 layer.
 
-- [ ] Orchestrator named, assistant chosen and its version recorded in `sdlc.yml`
+- [ ] Orchestrator named, assistant chosen and its version recorded in `system.yml`
 - [ ] Interview summary confirmed by the orchestrator
 - [ ] Formulation phase declared in `GOVERNANCE.md`, with exit criteria and a review date
 - [ ] Final verification run, every point green or named as pending with who it depends on

@@ -63,6 +63,8 @@ python3 kit/tools/adapters_check.py
 bash kit/tools/server-hooks/tests/test_update.sh
 bash kit/tools/tests/test_rename.sh
 bash kit/tools/tests/test_install.sh
+bash kit/tools/tests/test_older_names.sh
+bash bin/tests/test_scaffold.sh
 sh kit/e2e/run-unit-tests.sh
 ```
 
@@ -70,8 +72,8 @@ Run them in a terminal, not inside an assistant session: some scripts refuse to 
 the assistant's environment variables change what the installer detects.
 
 ```
-python3 bin/bootstrap.py sdlc /tmp/sdlc-test --assistant claude-code --org test
-python3 /tmp/sdlc-test/catalog/bin/validate.py
+python3 bin/bootstrap.py system /tmp/deskmate-test --assistant claude-code --org test
+python3 /tmp/deskmate-test/catalog/bin/validate.py
 ```
 
 If you touched `GATE.md`, regenerate the PDF.
@@ -81,6 +83,15 @@ python3 bin/build_pdf.py GATE.md
 ```
 
 Record what changed and why in `CHANGELOG.md`.
+
+## Deprecations
+
+Systems built on GATE move to a new version when their orchestrator decides, so a name the kit
+reads (a file, a marker, an environment variable, a function) never changes from one day to the
+next. The new name is written from the change that introduces it, and the old one is still read
+for at least three months and two dated entries of `CHANGELOG.md`. Removing it is announced in
+an entry of its own, with its "What to do". The shell names an organisation's own scripts call,
+`$SDLC` and the `sdlc_*` functions of `tools/lib.sh`, stay as aliases with no end date.
 
 ## Licence of contributions
 
