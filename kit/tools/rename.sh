@@ -3,11 +3,11 @@
 # Copyright (c) 2026 Javier Núñez
 #
 # Renames this system in the person's working folder, once, after the orchestrator changed its
-# name in sdlc.yml. Run it in a terminal with the assistant closed: the assistant runs from this
+# name in system.yml. Run it in a terminal with the assistant closed: the assistant runs from this
 # folder, and moving it under an open session breaks that session.
 #
-#   tools/rename.sh                 takes the new name from system.name in sdlc.yml
-#   tools/rename.sh <new name>      the orchestrator, renaming it before changing sdlc.yml
+#   tools/rename.sh                 takes the new name from system.name in system.yml
+#   tools/rename.sh <new name>      the orchestrator, renaming it before changing system.yml
 #
 # Moves the folder, points the remote at the new repository name and installs again for every
 # assistant installed before. The installer does the rest: the instructions block sits between
@@ -16,17 +16,19 @@
 # Idempotent: with the folder already renamed it only repairs the working folder.
 set -euo pipefail
 
-OLD_SDLC="$(cd "$(dirname "$0")/.." && pwd)"
-WORK="$(dirname "$OLD_SDLC")"
-OLD="$(basename "$OLD_SDLC")"
+OLD_SYSTEM="$(cd "$(dirname "$0")/.." && pwd)"
+WORK="$(dirname "$OLD_SYSTEM")"
+OLD="$(basename "$OLD_SYSTEM")"
 
 NEW="${1:-}"
 if [ -z "$NEW" ]; then
-  NEW="$(sed -n '/^system:/,/^[^ ]/s/^  name:[ ]*"\{0,1\}\([a-z0-9-]*\)"\{0,1\}.*/\1/p' "$OLD_SDLC/sdlc.yml" 2>/dev/null | head -1)"
+  . "$OLD_SYSTEM/tools/lib.sh"
+  NEW="$(sed -n '/^system:/,/^[^ ]/s/^  name:[ ]*"\{0,1\}\([a-z0-9-]*\)"\{0,1\}.*/\1/p' "$(gate_config "$OLD_SYSTEM")" \
+    2>/dev/null | head -1)"
 fi
 if [ -z "$NEW" ]; then
   sed -n '4,16p' "$0" | sed 's/^# \{0,1\}//'
-  echo "x sdlc.yml declares no system.name, and no new name was given."
+  echo "x system.yml declares no system.name, and no new name was given."
   exit 2
 fi
 if ! printf '%s' "$NEW" | grep -Eq '^[a-z0-9][a-z0-9-]{1,62}$'; then
@@ -48,14 +50,14 @@ fi
 
 # The assistants the person installed for, to install again under the new name.
 ASSISTANTS=""
-for f in "$OLD_SDLC"/personal/.installed-*; do
+for f in "$OLD_SYSTEM"/personal/.installed-*; do
   [ -f "$f" ] && ASSISTANTS="$ASSISTANTS ${f##*/.installed-}"
 done
-[ -n "$ASSISTANTS" ] || ASSISTANTS="$(cut -d' ' -f2 "$OLD_SDLC/personal/.installed" 2>/dev/null || true)"
+[ -n "$ASSISTANTS" ] || ASSISTANTS="$(cut -d' ' -f2 "$OLD_SYSTEM/personal/.installed" 2>/dev/null || true)"
 
 # 1. The folder. personal/ (profile, log, grants, backups) travels with it.
 mv "$WORK/$OLD" "$WORK/$NEW"
-SDLC="$WORK/$NEW"
+SYSTEM="$WORK/$NEW"
 echo "OK  $OLD moved to $NEW"
 
 # 2. Skill links that pointed into the old folder are dangling now; the installer makes them
@@ -68,18 +70,18 @@ for base in "$WORK"/.claude/skills "$WORK"/.gemini/skills "$WORK"/.kiro/skills "
 done
 
 # 3. The remote. Code platforms redirect a renamed repository for a while, not forever.
-URL="$(git -C "$SDLC" remote get-url origin 2>/dev/null || true)"
+URL="$(git -C "$SYSTEM" remote get-url origin 2>/dev/null || true)"
 if [ -n "$URL" ] && printf '%s' "$URL" | grep -q "/$OLD\(\.git\)\{0,1\}$"; then
   NEW_URL="$(printf '%s' "$URL" | sed "s#/$OLD\(\.git\)\{0,1\}\$#/$NEW\1#")"
-  git -C "$SDLC" remote set-url origin "$NEW_URL"
+  git -C "$SYSTEM" remote set-url origin "$NEW_URL"
   echo "OK  remote now $NEW_URL"
 fi
 
 # 4. Install again, so the instructions block, the guards, the status line and the skills all
 #    carry the new name.
-if [ -n "$ASSISTANTS" ] && [ -f "$SDLC/tools/install.sh" ]; then
+if [ -n "$ASSISTANTS" ] && [ -f "$SYSTEM/tools/install.sh" ]; then
   for assistant in $ASSISTANTS; do
-    bash "$SDLC/tools/install.sh" "$assistant"
+    bash "$SYSTEM/tools/install.sh" "$assistant"
   done
 else
   echo "! Not installed before. Run $NEW/tools/install.sh <assistant> when ready."

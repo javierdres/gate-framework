@@ -136,8 +136,10 @@ test('the environment file must be private, and only declared hosts are reached'
 
 test('env lines and the organisation name', () => {
   assert.deepEqual(parseEnv("export A=1\n\n# c\nB='two words'\nnot a line\n"), { A: '1', B: 'two words' })
-  const sdlc = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-sdlc-'))
-  assert.equal(orgName(sdlc), 'sdlc')
-  fs.writeFileSync(path.join(sdlc, 'sdlc.yml'), 'organisation:\n  name: "Acme"\n  short_name: "acme"   # x\n')
-  assert.equal(orgName(sdlc), 'acme')
+  const system = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-system-'))
+  assert.equal(orgName(system), 'system')
+  fs.writeFileSync(path.join(system, 'sdlc.yml'), 'organisation:\n  name: "Acme"\n  short_name: "older"\n')
+  assert.equal(orgName(system), 'older')
+  fs.writeFileSync(path.join(system, 'system.yml'), 'organisation:\n  name: "Acme"\n  short_name: "acme"   # x\n')
+  assert.equal(orgName(system), 'acme')
 })

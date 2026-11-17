@@ -24,7 +24,7 @@ personal data.
 
 `personal/sessions/README.md` has two parts: **Open**, with the live critical and pending items,
 each linking to its summary; and **By topic**, one line per summary. The headings can be in the
-organisation's language; the installer leaves a `<!-- sdlc:open -->` marker under the first one,
+organisation's language; the installer leaves a `<!-- gate:open -->` marker under the first one,
 and that marker is what the session start guard looks for, so keep it.
 
 ## When resuming

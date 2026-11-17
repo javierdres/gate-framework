@@ -10,6 +10,7 @@ check the reason as well as the decision. Run them after every change to the gua
 """
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -40,7 +41,7 @@ class Guard(unittest.TestCase):
         cls.repo = os.path.realpath(cls.repo)
 
     def run_guard(self, payload, fmt="json", raw=None):
-        env = dict(os.environ, SDLC_GRANTS_DIR=self.grants)
+        env = dict(os.environ, GATE_GRANTS_DIR=self.grants)
         data = raw if raw is not None else json.dumps(payload)
         args = [sys.executable, GUARD, "check"] + (["--format", fmt] if fmt else [])
         p = subprocess.run(args, input=data, capture_output=True, text=True, env=env)
@@ -52,7 +53,7 @@ class Guard(unittest.TestCase):
                 "session_id": session, "cwd": self.repo}
 
     def grant(self, session, kind, value):
-        env = dict(os.environ, SDLC_GRANTS_DIR=self.grants)
+        env = dict(os.environ, GATE_GRANTS_DIR=self.grants)
         subprocess.run([sys.executable, GUARD, "grant", session, kind, value],
                        capture_output=True, text=True, env=env, check=True)
 
@@ -295,14 +296,14 @@ class Ported(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.grants = os.path.join(self.tmp, "grants")
-        self.config = os.path.join(self.tmp, "sdlc.yml")
+        self.config = os.path.join(self.tmp, "system.yml")
         self.repo = os.path.realpath(os.path.join(self.tmp, "repo-a"))
         os.makedirs(self.repo)
         sh(["git", "init", "-q", "-b", "main"], self.repo)
         sh(["git", "remote", "add", "origin", "git@code.example.com:grp/sub/repo-a.git"], self.repo)
         sh(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "x"], self.repo)
         sh(["git", "checkout", "-q", "-b", "feature/x"], self.repo)
-        self.env = dict(os.environ, SDLC_GRANTS_DIR=self.grants, SDLC_CONFIG=self.config)
+        self.env = dict(os.environ, GATE_GRANTS_DIR=self.grants, GATE_CONFIG=self.config)
 
     def allow_autonomous(self, value):
         with open(self.config, "w") as f:
@@ -325,6 +326,23 @@ class Ported(unittest.TestCase):
     def decision(self, event):
         out = self.guard(event)[1]
         return (out or {}).get("decision"), (out or {}).get("reason", "")
+
+    def test_older_names_are_still_read(self):
+        old = os.path.join(self.tmp, "sdlc.yml")
+        with open(old, "w") as f:
+            f.write("permissions:\n  autonomous_allowed: true\n")
+        older = dict(os.environ, SDLC_GRANTS_DIR=self.grants, SDLC_CONFIG=old)
+        self.assertEqual(self.cli("grant", "s", "autonomous", env=older).returncode, 0)
+        self.assertTrue(os.path.exists(os.path.join(self.grants, "s.json")))
+        # A system that has not run tools/migrate.sh keeps its config in sdlc.yml.
+        system = os.path.join(self.tmp, "older-system")
+        os.makedirs(os.path.join(system, "tools", "guards"))
+        shutil.copy(GUARD, os.path.join(system, "tools", "guards"))
+        shutil.copy(old, system)
+        p = subprocess.run([sys.executable, os.path.join(system, "tools", "guards", "permissions.py"),
+                            "grant", "t", "autonomous"], capture_output=True, text=True,
+                           env=dict(os.environ, GATE_GRANTS_DIR=self.grants))
+        self.assertEqual(p.returncode, 0, p.stdout)
 
     # (a) autonomous mode is the organisation's opt-in, and never covers the grants
     def test_autonomous_needs_the_opt_in(self):

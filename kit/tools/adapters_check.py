@@ -28,12 +28,12 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-NAME = "sdlc-check"
+NAME = "gate-check"
 # What every adapter registers: the guard and the moment it runs.
 REQUIRED = (("session", "session_start.py"), ("message", "log_reminder.py"), ("tool", "permissions.py"))
 # Guards an adapter registers only where its assistant supports them.
 OPTIONAL = {"claude-code": (("message", "usage.py"),)}
-COPY = ("AGENTS.md", "sdlc.yml", "skills", "tools", "adapters")
+COPY = ("AGENTS.md", "system.yml", "sdlc.yml", "skills", "tools", "adapters")
 SCRIPT = re.compile(r"tools/guards/([\w.-]+\.py)")
 
 
@@ -85,11 +85,11 @@ def snapshot(work):
     return h.hexdigest()
 
 
-def install(sdlc, adapter, home):
+def install(system, adapter, home):
     env = {k: v for k, v in os.environ.items()
-           if not k.startswith(("CLAUDE", "GEMINI", "KIRO", "CODEX", "SDLC_"))}
+           if not k.startswith(("CLAUDE", "GEMINI", "KIRO", "CODEX", "GATE_", "SDLC_"))}
     env.update(HOME=home, GIT_CONFIG_GLOBAL=os.path.join(home, ".gitconfig"), GIT_CONFIG_NOSYSTEM="1")
-    return subprocess.run(["bash", os.path.join(sdlc, "tools", "install.sh"), adapter],
+    return subprocess.run(["bash", os.path.join(system, "tools", "install.sh"), adapter],
                           capture_output=True, text=True, env=env, timeout=120)
 
 
@@ -98,17 +98,17 @@ def check(adapter):
     tmp = tempfile.mkdtemp()
     try:
         work, home = os.path.join(tmp, "work"), os.path.join(tmp, "home")
-        sdlc = os.path.join(work, NAME)
+        system = os.path.join(work, NAME)
         os.makedirs(home)
         for item in COPY:
             src = os.path.join(ROOT, item)
             if os.path.isdir(src):
-                shutil.copytree(src, os.path.join(sdlc, item), symlinks=True,
+                shutil.copytree(src, os.path.join(system, item), symlinks=True,
                                 ignore=shutil.ignore_patterns("__pycache__", "node_modules", "personal"))
             elif os.path.isfile(src):
-                os.makedirs(sdlc, exist_ok=True)
-                shutil.copy2(src, os.path.join(sdlc, item))
-        p = install(sdlc, adapter, home)
+                os.makedirs(system, exist_ok=True)
+                shutil.copy2(src, os.path.join(system, item))
+        p = install(system, adapter, home)
         if p.returncode != 0:
             return ["the installer failed: %s" % (p.stdout + p.stderr).strip().splitlines()[-1:]], []
         if adapter not in READERS:
@@ -123,17 +123,17 @@ def check(adapter):
             if (moment, script) not in moments:
                 problems.append("does not run %s on %s" % (script, moment))
         for _, script, command in sorted(found):
-            if not os.path.isfile(os.path.join(sdlc, "tools", "guards", script)):
+            if not os.path.isfile(os.path.join(system, "tools", "guards", script)):
                 problems.append("runs %s, which tools/guards/ does not have" % script)
             if "%s/tools/guards/" % NAME not in command:
                 problems.append("runs %s through a path that does not go through the working folder: %s"
                                 % (script, command))
-        for skill in sorted(os.listdir(os.path.join(sdlc, "skills"))):
-            if os.path.isfile(os.path.join(sdlc, "skills", skill, "SKILL.md")) and \
+        for skill in sorted(os.listdir(os.path.join(system, "skills"))):
+            if os.path.isfile(os.path.join(system, "skills", skill, "SKILL.md")) and \
                     not os.path.isfile(os.path.join(skills, skill, "SKILL.md")):
                 problems.append("does not make the skill %s available" % skill)
         before = snapshot(work)
-        p = install(sdlc, adapter, home)
+        p = install(system, adapter, home)
         if p.returncode != 0 or snapshot(work) != before:
             problems.append("a second install changes something; it must change nothing")
         return problems, []

@@ -14,7 +14,7 @@
 # command exits 0. When it fails and its configured test passes, the access is "configured but
 # not answering": expired, revoked or offline. Never put a credential in that file.
 #
-# Every check runs at the same time, under a hard deadline (SDLC_ACCESS_DEADLINE, 8 seconds by
+# Every check runs at the same time, under a hard deadline (GATE_ACCESS_DEADLINE, 8 seconds by
 # default): whatever is still running then is stopped with every process it started, and fails.
 set -uo pipefail
 
@@ -23,13 +23,13 @@ if [ "${1:-}" = "--summary" ]; then SUMMARY=1; shift; fi
 PROFILES="${1:-}"
 DIR="$(cd "$(dirname "$0")" && pwd)"
 CHECKS="$DIR/access-checks.tsv"
-DEADLINE="${SDLC_ACCESS_DEADLINE:-8}"
+DEADLINE="${GATE_ACCESS_DEADLINE:-${SDLC_ACCESS_DEADLINE:-8}}"   # SDLC_: the older name
 
 if [ -z "$PROFILES" ] || [ ! -f "$CHECKS" ]; then
   sed -n '4,18p' "$0" | sed 's/^# \{0,1\}//'
   exit 2
 fi
-TMP="$(mktemp -d 2>/dev/null || { mkdir -p "/tmp/sdlc-access-$$" && echo "/tmp/sdlc-access-$$"; })"
+TMP="$(mktemp -d 2>/dev/null || { mkdir -p "/tmp/gate-access-$$" && echo "/tmp/gate-access-$$"; })"
 trap 'rm -rf "$TMP"' EXIT
 
 applies() {  # applies <profile of the check>

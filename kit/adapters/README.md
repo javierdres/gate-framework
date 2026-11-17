@@ -22,21 +22,22 @@ loads in every session: some assistants do not follow links. An adapter whose as
 resolve `@` imports inlines that file when it installs.
 
 Each adapter lives in `adapters/<assistant>/` with an `install.sh` that `tools/install.sh`
-calls with `SDLC`, `WORK`, `NAME`, `STAMP`, `BACKUPS` and `PY` (the Python command that runs on
-this machine) set. Without an argument, `tools/install.sh` tells the assistant from the
-variables each one sets (`sdlc_assistant` in `tools/lib.sh`). Record the assistant and the
-version it was verified against in `sdlc.yml`, and run the final verification once per adapter.
+calls with `SYSTEM` (also exported as `SDLC`, its older name), `WORK`, `NAME`, `STAMP`,
+`BACKUPS` and `PY` (the Python command that runs on this machine) set. Without an argument,
+`tools/install.sh` tells the assistant from the variables each one sets (`gate_assistant` in
+`tools/lib.sh`). Record the assistant and the version it was verified against in `system.yml`,
+and run the final verification once per adapter.
 
 What every adapter keeps to, so a second install changes nothing and a rename needs no rewrite:
 
-- The instructions go between `<!-- sdlc:begin -->` and `<!-- sdlc:end -->`
+- The instructions go between `<!-- gate:begin -->` and `<!-- gate:end -->`
   (`tools/instructions_block.py`), and files the adapter owns whole are rewritten on every
   install. A file of the person's with the same name is never touched: the adapter warns.
 - Guards are found again by their script name, `tools/guards/<guard>`, and replaced in place.
   Hooks go through the working folder, never an absolute path, and never break a session when
   the script is missing on a branch.
-- Skills are linked with `sdlc_skill`, copied and marked where links fail, and links to skills
-  the system no longer has are removed (`sdlc_prune_skills`).
+- Skills are linked with `gate_skill`, copied and marked where links fail, and links to skills
+  the system no longer has are removed (`gate_prune_skills`).
 - Whatever it replaces is copied to `personal/backups/` first.
 - An optional `session.py` runs at every session start, for what the assistant picks up without
   reinstalling (the Claude Code one registers the status line).
@@ -68,7 +69,7 @@ end to end; the others come from each platform's public documentation:
 
 | Assistant | Instructions | Skills | Guards |
 | --- | --- | --- | --- |
-| Claude Code | `CLAUDE.md` importing `@<sdlc>/AGENTS.md` | `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse`, and `statusLine` for usage (its `rate_limits` arrive after the first answer, on the subscription plans its documentation lists; check yours). Automated by `claude-code/install.sh`, verified on 2.1.304; usage verified on 2.1.314 |
+| Claude Code | `CLAUDE.md` importing `@<system>/AGENTS.md` | `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse`, and `statusLine` for usage (its `rate_limits` arrive after the first answer, on the subscription plans its documentation lists; check yours). Automated by `claude-code/install.sh`, verified on 2.1.304; usage verified on 2.1.314 |
 | Gemini CLI | `GEMINI.md`, or `AGENTS.md` set as the context file name | Its skills folder | `.gemini/settings.json`, before-tool and session events. Hooks may need enabling |
 | Kiro | A steering file in `.kiro/steering/` pointing to `AGENTS.md` | `.kiro/skills/` | `.kiro/hooks/`: session start, each message and pre-tool use, block-only. Automated by `kiro/install.sh`, version to verify |
 | Codex CLI | Reads `AGENTS.md` natively | Its skills folder | Its hook configuration, where the installed version supports it |

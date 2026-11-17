@@ -110,7 +110,7 @@ class Notices(unittest.TestCase):
             f.write(text)
 
     def status(self):
-        env = {k: v for k, v in os.environ.items() if not k.startswith("SDLC_")}
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("GATE_", "SDLC_"))}
         env["HOME"] = self.home
         p = subprocess.run([sys.executable, os.path.join(self.root, "tools", "guards", "usage.py"), "status"],
                            input=json.dumps({"model": {"display_name": "Opus"}, "session_id": "s1"}),
@@ -128,7 +128,7 @@ class Notices(unittest.TestCase):
     def test_autonomous_mode_only_where_the_organisation_allows_it(self):
         self.put("personal/grants/s1.json", json.dumps({"repo": [], "tracker": [], "autonomous": True}))
         self.assertEqual(self.status(), ["Opus"])
-        self.put("sdlc.yml", "permissions:\n  autonomous_allowed: true\n")
+        self.put("system.yml", "permissions:\n  autonomous_allowed: true\n")
         self.assertEqual(self.status()[1], "autonomous mode")
 
     def test_extension_runs_in_the_background_behind_a_cache(self):

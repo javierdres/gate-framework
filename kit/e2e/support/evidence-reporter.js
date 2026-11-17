@@ -12,11 +12,11 @@ import os from 'node:os'
 import path from 'node:path'
 
 import { readLines } from './effects.js'
-import { SDLC } from './environment.js'
+import { SYSTEM } from './environment.js'
 
 const git = (...args) => {
   try {
-    return execFileSync('git', ['-C', SDLC, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+    return execFileSync('git', ['-C', SYSTEM, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
   } catch {
     return ''
   }
@@ -37,7 +37,7 @@ export default class EvidenceReporter {
       started: new Date().toISOString(),
       who: git('config', 'user.email') || os.userInfo().username,
       machine: os.hostname(),
-      sdlc: { commit: git('rev-parse', 'HEAD'), branch: git('rev-parse', '--abbrev-ref', 'HEAD'), dirty: Boolean(git('status', '--porcelain', '--', 'e2e', 'products')) },
+      system: { commit: git('rev-parse', 'HEAD'), branch: git('rev-parse', '--abbrev-ref', 'HEAD'), dirty: Boolean(git('status', '--porcelain', '--', 'e2e', 'products')) },
       playwright: config.version,
       unattended: Boolean(process.env.CI || process.env.E2E_UNATTENDED),
       authorisedEffects: process.env.E2E_EFFECTS || '',
@@ -79,7 +79,7 @@ export default class EvidenceReporter {
       '',
       `- Who: ${meta.who} on ${meta.machine}`,
       `- From ${meta.started} to ${meta.ended}, result ${meta.result}`,
-      `- System: ${meta.sdlc.branch} @ ${meta.sdlc.commit.slice(0, 10)}${meta.sdlc.dirty ? ' (uncommitted changes in e2e or products)' : ''}, Playwright ${meta.playwright}`,
+      `- System: ${meta.system.branch} @ ${meta.system.commit.slice(0, 10)}${meta.system.dirty ? ' (uncommitted changes in e2e or products)' : ''}, Playwright ${meta.playwright}`,
       `- Unattended: ${meta.unattended ? 'yes, so no effect could go out' : 'no'}`,
       `- Authorised effects: ${meta.authorisedEffects || 'none'}, cap ${meta.cap}`,
       ...meta.products.map((p) => `- ${p.product}: ${p.host || 'no environment declared'}, simulated: ${p.simulated || 'none'}`),

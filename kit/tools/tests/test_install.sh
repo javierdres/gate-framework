@@ -22,40 +22,40 @@ check() {  # check <description> <command...>
 # The checks that follow need that adapter. bootstrap.py keeps only the one the organisation chose,
 # so in a scaffolded system the others are skipped rather than failed.
 needs() { if [ -z "$1" ] || [ -d "$S/adapters/$1" ]; then skipping=""; else skipping="$1"; fi; }
-for v in $(env | grep -E '^(CLAUDE|GEMINI|KIRO_|CODEX|SDLC_)[A-Za-z_]*=' | cut -d= -f1); do unset "$v"; done
+for v in $(env | grep -E '^(CLAUDE|GEMINI|KIRO_|CODEX|GATE_|SDLC_)[A-Za-z_]*=' | cut -d= -f1); do unset "$v"; done
 export HOME="$T/home" GIT_CONFIG_GLOBAL="$T/home/.gitconfig" GIT_CONFIG_NOSYSTEM=1 TERM_PROGRAM=
 mkdir -p "$HOME"
-digest() { (cd "$1" && find . -path ./sdlc-acme/personal/backups -prune -o \( -type f -o -type l \) -print \
+digest() { (cd "$1" && find . -path ./deskmate-acme/personal/backups -prune -o \( -type f -o -type l \) -print \
   | LC_ALL=C sort | while read -r f; do printf '%s ' "$f"; if [ -L "$f" ]; then readlink "$f"; else cksum < "$f"; fi; done); }
 
 W="$T/work"
 mkdir -p "$W"
-cp -R "$KIT" "$W/sdlc-acme"
-rm -rf "$W/sdlc-acme/personal"
-printf 'organisation:\n  name: "Acme"\n  short_name: "acme"\n' > "$W/sdlc-acme/sdlc.yml"
-printf 'tracker-key\n' >> "$W/sdlc-acme/tools/clients/credentials"
-S="$W/sdlc-acme"
+cp -R "$KIT" "$W/deskmate-acme"
+rm -rf "$W/deskmate-acme/personal"
+printf 'organisation:\n  name: "Acme"\n  short_name: "acme"\n' > "$W/deskmate-acme/system.yml"
+printf 'tracker-key\n' >> "$W/deskmate-acme/tools/clients/credentials"
+S="$W/deskmate-acme"
 
 # lib.sh
 . "$S/tools/lib.sh"
 mkdir -p "$T/bin"; printf '#!/bin/sh\nexit 1\n' > "$T/bin/python3"; chmod +x "$T/bin/python3"
 check "finds a Python that runs, skipping one that only exists" sh -c \
-  "PATH='$T/bin:$PATH' bash -c '. \"$S/tools/lib.sh\"; [ \"\$(sdlc_python)\" != python3 ]'"
+  "PATH='$T/bin:$PATH' bash -c '. \"$S/tools/lib.sh\"; [ \"\$(gate_python)\" != python3 ]'"
 check "tells the assistant from its environment" sh -c \
-  "[ \"\$(CLAUDECODE=1 bash -c '. \"$S/tools/lib.sh\"; sdlc_assistant')\" = claude-code ]"
-check "an explicit SDLC_ASSISTANT wins" sh -c \
-  "[ \"\$(CLAUDECODE=1 SDLC_ASSISTANT=kiro bash -c '. \"$S/tools/lib.sh\"; sdlc_assistant')\" = kiro ]"
+  "[ \"\$(CLAUDECODE=1 bash -c '. \"$S/tools/lib.sh\"; gate_assistant')\" = claude-code ]"
+check "an explicit GATE_ASSISTANT wins" sh -c \
+  "[ \"\$(CLAUDECODE=1 GATE_ASSISTANT=kiro bash -c '. \"$S/tools/lib.sh\"; gate_assistant')\" = kiro ]"
 
 # What an older installer, and the person, left in the working folder.
 needs claude-code
 printf 'old\n' > "$HOME/.tracker-key"
-printf '# Mine\n\n<!-- sdlc:sdlc-acme -->\n@sdlc-acme/AGENTS.md\n@sdlc-acme/personal/profile.md\n' > "$W/CLAUDE.md"
+printf '# Mine\n\n<!-- sdlc:deskmate-acme -->\n@deskmate-acme/AGENTS.md\n@deskmate-acme/personal/profile.md\n' > "$W/CLAUDE.md"
 printf 'x\n' > "$W/CLAUDE.md.bak-20260101000000"
 mkdir -p "$W/.claude/skills/onboard" "$W/.claude/skills/mine" "$W/.claude/skills/retired"
 printf 'my own onboard\n' > "$W/.claude/skills/onboard/SKILL.md"
 printf 'mine\n' > "$W/.claude/skills/mine/SKILL.md"
 : > "$W/.claude/skills/retired/.sdlc-copy"
-ln -s ../../sdlc-acme/skills/gone "$W/.claude/skills/gone"
+ln -s ../../deskmate-acme/skills/gone "$W/.claude/skills/gone"
 cat > "$W/.claude/settings.json" <<EOF
 {"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [
   {"type": "command", "command": "python3 '$S/tools/guards/permissions.py' check --format claude"},
@@ -69,26 +69,26 @@ out="$(CLAUDECODE=1 bash "$S/tools/install.sh" 2>&1)"
 check "installs for the assistant it runs inside" test -f "$S/personal/.installed-claude-code"
 check "writes the fingerprint session start compares" sh -c \
   "[ \"\$(cat '$S/personal/.installed-claude-code')\" = \"\$(python3 '$S/tools/guards/session_start.py' --fingerprint claude-code)\" ]"
-check "migrates the older single-marker block" sh -c "grep -qx '<!-- sdlc:begin -->' '$W/CLAUDE.md' && ! grep -q 'sdlc:sdlc-acme' '$W/CLAUDE.md'"
+check "migrates the older single-marker block" sh -c "grep -qx '<!-- gate:begin -->' '$W/CLAUDE.md' && ! grep -q 'sdlc:deskmate-acme' '$W/CLAUDE.md'"
 check "keeps the person's lines" grep -qx '# Mine' "$W/CLAUDE.md"
 check "moves older backups out of the working folder" sh -c "[ ! -e '$W/CLAUDE.md.bak-20260101000000' ] && ls '$S/personal/backups/CLAUDE.md.bak-20260101000000'"
 check "backs up what it changes in personal/backups" sh -c "ls '$S'/personal/backups/.claude__settings.json.* '$S'/personal/backups/CLAUDE.md.2*"
 check "never overwrites a skill of the person's with the same name" grep -qx 'my own onboard' "$W/.claude/skills/onboard/SKILL.md"
-check "and says so" sh -c "printf '%s' \"\$0\" | grep -q 'skills/onboard in the working folder is not sdlc-acme'" "$out"
-check "links the system's skills, relative" sh -c "[ \"\$(readlink '$W/.claude/skills/establish')\" = ../../sdlc-acme/skills/establish ]"
+check "and says so" sh -c "printf '%s' \"\$0\" | grep -q 'skills/onboard in the working folder is not deskmate-acme'" "$out"
+check "links the system's skills, relative" sh -c "[ \"\$(readlink '$W/.claude/skills/establish')\" = ../../deskmate-acme/skills/establish ]"
 check "removes links and copies of skills the system no longer has" sh -c "[ ! -e '$W/.claude/skills/retired' ] && [ ! -L '$W/.claude/skills/gone' ]"
 check "leaves the person's own skills alone" test -f "$W/.claude/skills/mine/SKILL.md"
 check "replaces the absolute-path guard, without duplicating it" sh -c \
-  "[ \"\$(grep -c 'tools/guards/permissions.py' '$W/.claude/settings.json')\" = 1 ] && grep -q 'CLAUDE_PROJECT_DIR/sdlc-acme/tools/guards/permissions.py' '$W/.claude/settings.json'"
+  "[ \"\$(grep -c 'tools/guards/permissions.py' '$W/.claude/settings.json')\" = 1 ] && grep -q 'CLAUDE_PROJECT_DIR/deskmate-acme/tools/guards/permissions.py' '$W/.claude/settings.json'"
 check "keeps the person's own hook and rules" sh -c "grep -q my-own-hook '$W/.claude/settings.json' && grep -q 'rm -rf' '$W/.claude/settings.json'"
 check "merges the base rules that always ask" grep -q 'gh pr merge' "$W/.claude/settings.json"
 check "hooks never break a session" sh -c "grep -q '|| true' '$W/.claude/settings.json' && grep -q '\"timeout\"' '$W/.claude/settings.json'"
 check "moves the status line to a project-relative path" sh -c \
-  "grep -q 'CLAUDE_PROJECT_DIR:-.}/sdlc-acme/tools/guards/usage.py' '$W/.claude/settings.json' && ! grep -q \"'$S\" '$W/.claude/settings.json'"
+  "grep -q 'CLAUDE_PROJECT_DIR:-.}/deskmate-acme/tools/guards/usage.py' '$W/.claude/settings.json' && ! grep -q \"'$S\" '$W/.claude/settings.json'"
 check "moves a credential to the organisation's name and links the old one" sh -c \
   "[ -f '$HOME/.acme-tracker-key' ] && [ -L '$HOME/.tracker-key' ] && [ \"\$(cat '$HOME/.tracker-key')\" = old ]"
 check "reads the credential under the new name" sh -c \
-  "[ \"\$(bash -c '. \"$S/tools/lib.sh\"; sdlc_credential \"$S\" tracker-key')\" = '$HOME/.acme-tracker-key' ]"
+  "[ \"\$(bash -c '. \"$S/tools/lib.sh\"; gate_credential \"$S\" tracker-key')\" = '$HOME/.acme-tracker-key' ]"
 before="$(digest "$W")"
 bash "$S/tools/install.sh" claude-code >/dev/null 2>&1
 check "a second run changes nothing" test "$before" = "$(digest "$W")"
@@ -104,7 +104,7 @@ check "tolerates invalid JSON settings: warns and leaves them" sh -c \
 needs kiro
 check "kiro: installs alongside" bash "$S/tools/install.sh" kiro
 check "kiro: the permissions guard blocks, the message guard records the OK" sh -c \
-  "grep -q 'permissions.py check --format exit' '$W/.kiro/hooks/sdlc.json' && grep -q 'log_reminder.py --passes' '$W/.kiro/hooks/sdlc.json'"
+  "grep -q 'permissions.py check --format exit' '$W/.kiro/hooks/gate.json' && grep -q 'log_reminder.py --passes' '$W/.kiro/hooks/gate.json'"
 check "kiro: its own fingerprint" test -f "$S/personal/.installed-kiro"
 
 # Requirements first: nothing is touched when one is missing.
@@ -112,9 +112,9 @@ needs ""
 mkdir -p "$T/nossh" "$T/w2"
 for c in bash git dirname basename date grep sed uname env cat; do ln -sf "$(command -v $c)" "$T/nossh/$c"; done
 ln -sf "$(command -v python3)" "$T/nossh/python3"
-cp -R "$KIT" "$T/w2/sdlc-acme"; rm -rf "$T/w2/sdlc-acme/personal"
+cp -R "$KIT" "$T/w2/deskmate-acme"; rm -rf "$T/w2/deskmate-acme/personal"
 check "stops before touching anything when a requirement is missing" sh -c \
-  "! PATH='$T/nossh' bash '$T/w2/sdlc-acme/tools/install.sh' claude-code && [ ! -e '$T/w2/AGENTS.md' ] && [ ! -e '$T/w2/sdlc-acme/personal' ]"
+  "! PATH='$T/nossh' bash '$T/w2/deskmate-acme/tools/install.sh' claude-code && [ ! -e '$T/w2/AGENTS.md' ] && [ ! -e '$T/w2/deskmate-acme/personal' ]"
 
 # The adapters check, on the kit and on a copy where an adapter fell behind.
 check "every adapter wires every guard" python3 "$KIT/tools/adapters_check.py"

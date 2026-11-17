@@ -12,14 +12,16 @@ On the default branch only:
 - No deletion and no history rewrite: fast-forward only.
 - Every new commit signed with an SSH key listed in `allowed_signers`, which also gives the system
   a verifiable identity per person without platform accounts (`identity.method: ssh-signing` in
-  `sdlc.yml`).
+  `system.yml`).
 - Changes arrive as a merge commit signed by its reviewer: the signature's identity in
   `allowed_signers` must match the merge's `Reviewed-by: <identity>` trailer, and that person
   must not have signed any of the commits being merged. Author fields are never trusted, since
   anyone can write them. A review is then a branch, a conversation in its ticket, and a merge
   the reviewer signs.
-- During formulation, the orchestrator sets `git config sdlc.formulation true` in the bare
+- During formulation, the orchestrator sets `git config gate.formulation true` in the bare
   repository and the review requirement is lifted. Removing it is part of ending formulation.
+  A repository set up with the older key, `sdlc.formulation`, keeps working while the new one
+  is not set.
 
 ## Setting it up
 

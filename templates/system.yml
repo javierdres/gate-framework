@@ -1,4 +1,4 @@
-# sdlc.yml — the organisation's system, declared
+# system.yml — the organisation's system, declared
 #
 # Lives at the root of the system's repository. /establish writes it
 # from the interview, and every skill reads it instead of asking again.
@@ -18,7 +18,7 @@ built: ""
 # always matches the folder this repository is cloned into; when it changes,
 # the session start guard asks each person to run tools/rename.sh once.
 system:
-  name: ""                  # e.g. sdlc-acme, or ai-office-acme beyond software
+  name: ""                  # e.g. deskmate-acme, or sdlc-acme for software only
   reach: ""                 # software | beyond-software
 
 organisation:

@@ -8,17 +8,21 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-export const SDLC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
-export const PRODUCTS_DIR = process.env.E2E_PRODUCTS_DIR || path.join(SDLC, 'products')
+export const SYSTEM = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
+// The older name of the same folder, kept for the organisation's own tests that import it.
+export const SDLC = SYSTEM
+export const PRODUCTS_DIR = process.env.E2E_PRODUCTS_DIR || path.join(SYSTEM, 'products')
 
-// organisation.short_name from sdlc.yml, so two organisations' runs never share a folder.
-export const orgName = (sdlc = SDLC) => {
+// organisation.short_name from system.yml (sdlc.yml before tools/migrate.sh), so two
+// organisations' runs never share a folder.
+export const orgName = (system = SYSTEM) => {
+  const config = ['system.yml', 'sdlc.yml'].map((f) => path.join(system, f)).find((f) => fs.existsSync(f))
   try {
-    const text = fs.readFileSync(path.join(sdlc, 'sdlc.yml'), 'utf8')
+    const text = fs.readFileSync(config, 'utf8')
     const m = text.match(/^organisation:\n(?:[ \t]+.*\n|\s*\n)*?[ \t]+short_name:[ \t]*["']?([A-Za-z0-9_-]+)/m)
-    return m ? m[1] : 'sdlc'
+    return m ? m[1] : 'system'
   } catch {
-    return 'sdlc'
+    return 'system'
   }
 }
 

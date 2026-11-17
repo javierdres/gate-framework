@@ -7,7 +7,7 @@
     permissions.py grant <session> repo <path>          authorise a repository for a session
     permissions.py grant <session> tracker <KEY>        authorise a tracker project
     permissions.py show <session>
-    permissions.py grant <session> autonomous           autonomous mode, only where sdlc.yml allows it
+    permissions.py grant <session> autonomous           autonomous mode, only where system.yml allows it
     permissions.py revoke <session> [repo <path> | tracker <KEY> | autonomous]
 
 Three levels. Local work is not this guard's business and passes untouched. Outward writes ask
@@ -24,7 +24,7 @@ repository instead of running inside it (`gh pr create -R`, `glab mr create --re
 home folder is never authorised as a repository, even when it is one.
 
 Autonomous mode is an opt-in of the organisation: `permissions.autonomous_allowed: true` in
-sdlc.yml. Only then, and only when the person asks for it explicitly, `grant <session>
+system.yml. Only then, and only when the person asks for it explicitly, `grant <session>
 autonomous` records it, and from there the guard protects nothing but the authorisations
 themselves; the assistant's own permission mode decides the rest, merges and deletions
 included. Granting goes through the person's confirmation like any other grant, so the assistant
@@ -58,8 +58,9 @@ commands; file tools (fs_write, write_file, str_replace...) are file writes; and
 named `server___tool`, `server/tool`, `@server/tool` or `mcp_server_tool` are read as
 `mcp__server__tool`.
 
-Environment: SDLC_GRANTS_DIR moves the grants folder and SDLC_CONFIG the sdlc.yml it reads,
-both for tests.
+Environment: GATE_GRANTS_DIR moves the grants folder and GATE_CONFIG the system.yml it reads,
+both for tests (the older SDLC_GRANTS_DIR and SDLC_CONFIG are read too). A system that has not run
+tools/migrate.sh yet keeps its config in sdlc.yml, which is read when system.yml is missing.
 """
 import io
 import json
@@ -72,8 +73,11 @@ import time
 from urllib.parse import unquote
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GRANTS = os.environ.get("SDLC_GRANTS_DIR") or os.path.join(ROOT, "personal", "grants")
-CONFIG = os.environ.get("SDLC_CONFIG") or os.path.join(ROOT, "sdlc.yml")
+GRANTS = (os.environ.get("GATE_GRANTS_DIR") or os.environ.get("SDLC_GRANTS_DIR")
+          or os.path.join(ROOT, "personal", "grants"))
+CONFIG = (os.environ.get("GATE_CONFIG") or os.environ.get("SDLC_CONFIG")
+          or next((p for p in (os.path.join(ROOT, n) for n in ("system.yml", "sdlc.yml"))
+                   if os.path.exists(p)), os.path.join(ROOT, "system.yml")))
 TTL = 3 * 24 * 3600
 PASS_TTL = 15 * 60
 FORMATS = ("claude", "json", "exit")
@@ -218,7 +222,7 @@ def spend_pass(session):
 
 
 def config_value(key, section):
-    """A flat read of one key of one section of sdlc.yml: enough for the opt-in this guard needs."""
+    """A flat read of one key of one section of the config: enough for the opt-in this guard needs."""
     try:
         with io.open(CONFIG, encoding="utf-8") as f:
             text = f.read()
@@ -532,7 +536,8 @@ def judge(event):
     tool, args = normalise(event)
     if args is None:
         return "ask", "The guard could not read the action's arguments, so it asks.", "never"
-    session = str(event.get("session_id") or event.get("sessionId") or os.environ.get("SDLC_SESSION", ""))
+    session = str(event.get("session_id") or event.get("sessionId") or os.environ.get("GATE_SESSION")
+                  or os.environ.get("SDLC_SESSION", ""))
     cwd = event.get("cwd") or os.getcwd()
     grants = load(session)
 
@@ -613,7 +618,8 @@ def check(argv):
         event = json.loads(raw) if raw.strip() else {}
         decision, reason, level = judge(event)
         if isinstance(event, dict):
-            session = str(event.get("session_id") or event.get("sessionId") or os.environ.get("SDLC_SESSION", ""))
+            session = str(event.get("session_id") or event.get("sessionId") or os.environ.get("GATE_SESSION")
+                          or os.environ.get("SDLC_SESSION", ""))
     except Exception as e:
         decision, reason, level = "ask", "The guard could not decide (%s), so it asks." % type(e).__name__, None
     # An assistant that can only block gets the person's OK as a pass: it covers one action.
@@ -634,7 +640,7 @@ def check(argv):
 def grant(session, data, kind, value):
     if kind == "autonomous":
         if not autonomous_allowed():
-            print("x autonomous mode is not enabled for this organisation: sdlc.yml has no "
+            print("x autonomous mode is not enabled for this organisation: system.yml has no "
                   "permissions.autonomous_allowed: true. Every outward write keeps asking.")
             return 1
         data["autonomous"] = True
@@ -681,7 +687,7 @@ def main(argv):
         print(json.dumps(data, indent=2))
         if data.get("autonomous") is True:
             print("autonomous mode: %s" % ("active" if autonomous_allowed() else
-                                           "recorded, but sdlc.yml no longer allows it, so it does not count"))
+                                           "recorded, but system.yml no longer allows it, so it does not count"))
         return 0
     if action == "grant" and (len(argv) == 4 and argv[2] in ("repo", "tracker") or argv[2:] == ["autonomous"]):
         return grant(session, data, argv[2], argv[3] if len(argv) == 4 else None)

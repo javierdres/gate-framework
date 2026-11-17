@@ -4,7 +4,7 @@ Lets the system run in Kiro with the same instructions, skills and guards as any
 Nothing is copied: everything points at the system's repository, so each update reaches Kiro too.
 
 **Verified against:** to verify. It comes from Kiro's public documentation (steering, hooks and
-skills) and has not been run on a real installation yet. Record the version in `sdlc.yml` once
+skills) and has not been run on a real installation yet. Record the version in `system.yml` once
 the final verification passes on it.
 
 ## What the installer leaves in the working folder
@@ -13,9 +13,9 @@ the final verification passes on it.
 
 | In the working folder | From | What for |
 | --- | --- | --- |
-| `.kiro/steering/sdlc.md` | `steering.md` | Loads `AGENTS.md`, the profile and the preferences in every session |
+| `.kiro/steering/gate.md` | `steering.md` | Loads `AGENTS.md`, the profile and the preferences in every session |
 | `.kiro/skills/<skill>` | `skills/` | The same skills, linked (copied where links fail) |
-| `.kiro/hooks/sdlc.json` | `hooks.json` | Session start, the per-message guard and the permissions guard |
+| `.kiro/hooks/gate.json` | `hooks.json` | Session start, the per-message guard and the permissions guard |
 
 The steering and hooks files are the system's own and are rewritten on every install: the
 person's own go in other files. Connectors (Model Context Protocol servers) are not written by
@@ -37,7 +37,7 @@ There is no usage status line.
   receives the session id on standard input.
 - That the per-message hook receives the person's message (in its input or in `USER_PROMPT`).
 - That Kiro follows the skill links in `.kiro/skills/`.
-- How Kiro is recognised from its environment (`sdlc_assistant` in `tools/lib.sh`); if it is
+- How Kiro is recognised from its environment (`gate_assistant` in `tools/lib.sh`); if it is
   not, name it: `tools/install.sh kiro`.
 - On Windows, that the hooks run in Git Bash.
 

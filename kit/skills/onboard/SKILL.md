@@ -39,7 +39,7 @@ assistant in the working folder, not inside this repository.
 
 ## 3. Profile
 
-Identify the person the way `identity` in `sdlc.yml` says (platform account, SSH signing key or,
+Identify the person the way `identity` in `system.yml` says (platform account, SSH signing key or,
 as a last resort, declared), never by the name they type. When the identity is only declared,
 say so: the profiles then guide, and the real control is the platform's permissions. Read their
 row in the profiles table of `GOVERNANCE.md` and offer only the profiles enabled there. Save

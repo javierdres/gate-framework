@@ -20,7 +20,7 @@ its page and its `api` helper go through the effects guard.
 ## The environment file
 
 Each product reads `~/.<org>-e2e/<product>.env` (or `$E2E_HOME/<product>.env`), where `<org>` is
-`organisation.short_name` in `sdlc.yml`. It lives outside the repository, belongs to the person,
+`organisation.short_name` in `system.yml`. It lives outside the repository, belongs to the person,
 never passes through the chat and must be `0600`: the run refuses it otherwise.
 
 | Key | What it holds |

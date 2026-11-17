@@ -5,10 +5,11 @@
 
     instructions_block.py <file> <backup file>      the block's body on standard input
 
-The block sits between `<!-- sdlc:begin -->` and `<!-- sdlc:end -->`. The markers do not carry
+The block sits between `<!-- gate:begin -->` and `<!-- gate:end -->`. The markers do not carry
 the system's name, so the block is found again after a rename, and it is rewritten whole on
-every install: whatever the person wrote outside it stays as it was. A block in the older
-single-marker form (`<!-- sdlc:<name> -->` followed by its lines) is replaced in place.
+every install: whatever the person wrote outside it stays as it was. Older installers wrote
+`<!-- sdlc:begin -->` and `<!-- sdlc:end -->`, or a single marker with the name
+(`<!-- sdlc:<name> -->` followed by its lines): either is replaced in place.
 
 The file is copied to the backup path before it changes, never when nothing changes. Prints
 what it did: created, added, updated, migrated or unchanged.
@@ -19,7 +20,8 @@ import re
 import shutil
 import sys
 
-BEGIN, END = "<!-- sdlc:begin -->", "<!-- sdlc:end -->"
+BEGIN, END = "<!-- gate:begin -->", "<!-- gate:end -->"
+OLD_BEGIN, OLD_END = "<!-- sdlc:begin -->", "<!-- sdlc:end -->"
 # The older form: one marker with the name, then the block's lines up to a blank line.
 OLD = re.compile(r"^<!-- sdlc:(?!begin -->|end -->|open -->)[A-Za-z0-9._-]+ -->\n(?:[^\n]+\n?)*", re.M)
 
@@ -44,11 +46,17 @@ def main(argv):
     with io.open(path, encoding="utf-8") as f:
         text = f.read()
     start, end = text.find(BEGIN), text.find(END)
+    old_start, old_end = text.find(OLD_BEGIN), text.find(OLD_END)
     if 0 <= start < end:
         stop = end + len(END)
         if text[stop:stop + 1] == "\n":
             stop += 1
         new, what = text[:start] + block + text[stop:], "updated"
+    elif 0 <= old_start < old_end:
+        stop = old_end + len(OLD_END)
+        if text[stop:stop + 1] == "\n":
+            stop += 1
+        new, what = text[:old_start] + block + text[stop:], "migrated"
     elif OLD.search(text):
         new, what = OLD.sub(lambda m: block, text, count=1), "migrated"
     else:

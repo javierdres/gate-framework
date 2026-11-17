@@ -12,14 +12,17 @@
 #     of that signature in allowed_signers, who signed none of the commits being merged, and
 #     whom the merge names in a `Reviewed-by: <identity>` trailer. Author fields are never
 #     trusted, because anyone can write them. Lifted only while the repository is in formulation:
-#       git config sdlc.formulation true     (set by the orchestrator, removed when it ends)
+#       git config gate.formulation true     (set by the orchestrator, removed when it ends)
+#     The older keys sdlc.formulation and sdlc.defaultbranch are still read when the new ones are
+#     not set.
 #
 # allowed_signers is read from the default branch itself, so adding a person is a reviewed change.
 set -euo pipefail
 
 ref="$1"; old="$2"; new="$3"
 zero="0000000000000000000000000000000000000000"
-default="refs/heads/$(git config --get sdlc.defaultbranch || echo main)"
+branch="$(git config --get gate.defaultbranch || git config --get sdlc.defaultbranch || echo main)"
+default="refs/heads/$branch"
 
 [ "$ref" = "$default" ] || exit 0
 
@@ -40,7 +43,9 @@ for c in $(git rev-list "$range"); do
     || deny "commit ${c:0:8} is not signed by a key in allowed_signers"
 done
 
-[ "$(git config --get --bool sdlc.formulation || echo false)" = "true" ] && exit 0
+formulation="$(git config --get --bool gate.formulation \
+  || git config --get --bool sdlc.formulation || echo false)"
+[ "$formulation" = "true" ] && exit 0
 
 signer() { git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile="$signers" log -1 --format=%GS "$1"; }
 

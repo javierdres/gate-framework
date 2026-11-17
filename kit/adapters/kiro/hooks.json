@@ -7,7 +7,7 @@
       "trigger": "SessionStart",
       "action": {
         "type": "command",
-        "command": "bash -c \"SDLC_ASSISTANT=kiro __PY__ __NAME__/tools/guards/session_start.py --guards block 2>/dev/null || true\""
+        "command": "bash -c \"GATE_ASSISTANT=kiro __PY__ __NAME__/tools/guards/session_start.py --guards block 2>/dev/null || true\""
       },
       "timeout": 30
     },
@@ -17,7 +17,7 @@
       "trigger": "UserPromptSubmit",
       "action": {
         "type": "command",
-        "command": "bash -c \"SDLC_ASSISTANT=kiro __PY__ __NAME__/tools/guards/log_reminder.py --passes 2>/dev/null || true\""
+        "command": "bash -c \"GATE_ASSISTANT=kiro __PY__ __NAME__/tools/guards/log_reminder.py --passes 2>/dev/null || true\""
       },
       "timeout": 5
     },
@@ -27,7 +27,7 @@
       "trigger": "PreToolUse",
       "action": {
         "type": "command",
-        "command": "bash -c \"[ -f __NAME__/tools/guards/permissions.py ] || exit 0; SDLC_ASSISTANT=kiro __PY__ __NAME__/tools/guards/permissions.py check --format exit\""
+        "command": "bash -c \"[ -f __NAME__/tools/guards/permissions.py ] || exit 0; GATE_ASSISTANT=kiro __PY__ __NAME__/tools/guards/permissions.py check --format exit\""
       },
       "timeout": 10
     }

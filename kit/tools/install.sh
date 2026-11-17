@@ -11,14 +11,15 @@
 # touching anything, and keeps a copy of whatever it changes in personal/backups/.
 set -euo pipefail
 
-SDLC="$(cd "$(dirname "$0")/.." && pwd)"
-WORK="$(dirname "$SDLC")"
-NAME="$(basename "$SDLC")"
+SYSTEM="$(cd "$(dirname "$0")/.." && pwd)"
+SDLC="$SYSTEM"   # the older name of the same folder, kept for adapters and scripts that use it
+WORK="$(dirname "$SYSTEM")"
+NAME="$(basename "$SYSTEM")"
 STAMP="$(date +%Y%m%d%H%M%S)"
-BACKUPS="$SDLC/personal/backups"
-. "$SDLC/tools/lib.sh"
+BACKUPS="$SYSTEM/personal/backups"
+. "$SYSTEM/tools/lib.sh"
 
-ASSISTANT="${1:-$(sdlc_assistant)}"
+ASSISTANT="${1:-$(gate_assistant)}"
 case "$ASSISTANT" in
   -h|--help) sed -n '4,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   "") sed -n '4,11p' "$0" | sed 's/^# \{0,1\}//'
@@ -38,12 +39,12 @@ if [ "$WORK" = "$HOME" ] || [ "$WORK" = "/" ]; then
 fi
 missing=""
 for c in git ssh; do command -v "$c" >/dev/null 2>&1 || missing="$missing $c"; done
-PY="$(sdlc_python)" || missing="$missing python-3.8-or-later"
+PY="$(gate_python)" || missing="$missing python-3.8-or-later"
 if [ -n "$missing" ]; then
   echo "x Missing on this machine:$missing. Install them and run this again; nothing was changed."
   exit 1
 fi
-export SDLC WORK NAME STAMP BACKUPS PY PYTHONUTF8=1
+export SYSTEM SDLC WORK NAME STAMP BACKUPS PY PYTHONUTF8=1
 
 # The working folder inside another repository (a home folder under version control, say) makes
 # the assistant treat every working folder below it as one project, and some assistants share
@@ -57,13 +58,18 @@ if [ -n "$ENCLOSING" ]; then
 fi
 
 # 1. personal/: profile, preferences, grants, log and backups. Ignored by version control.
-mkdir -p "$SDLC/personal/sessions" "$SDLC/personal/grants" "$BACKUPS"
-chmod 700 "$SDLC/personal/grants" "$BACKUPS"
-[ -e "$SDLC/personal/profile.md" ] || : > "$SDLC/personal/profile.md"
-[ -e "$SDLC/personal/preferences.md" ] || printf '# My preferences\n' > "$SDLC/personal/preferences.md"
-[ -e "$SDLC/personal/sessions/README.md" ] || printf '# Work log\n\n## Open\n<!-- sdlc:open -->\n\n## By topic\n' \
-  > "$SDLC/personal/sessions/README.md"
-grep -qx 'personal/' "$SDLC/.gitignore" 2>/dev/null || echo 'personal/' >> "$SDLC/.gitignore"
+mkdir -p "$SYSTEM/personal/sessions" "$SYSTEM/personal/grants" "$BACKUPS"
+chmod 700 "$SYSTEM/personal/grants" "$BACKUPS"
+[ -e "$SYSTEM/personal/profile.md" ] || : > "$SYSTEM/personal/profile.md"
+[ -e "$SYSTEM/personal/preferences.md" ] || printf '# My preferences\n' > "$SYSTEM/personal/preferences.md"
+[ -e "$SYSTEM/personal/sessions/README.md" ] || printf '# Work log\n\n## Open\n<!-- gate:open -->\n\n## By topic\n' \
+  > "$SYSTEM/personal/sessions/README.md"
+# An older installer marked the log's open section with sdlc:open.
+if grep -q '<!-- sdlc:open -->' "$SYSTEM/personal/sessions/README.md"; then
+  sed 's/<!-- sdlc:open -->/<!-- gate:open -->/' "$SYSTEM/personal/sessions/README.md" > "$BACKUPS/.log.$STAMP" \
+    && cat "$BACKUPS/.log.$STAMP" > "$SYSTEM/personal/sessions/README.md" && rm -f "$BACKUPS/.log.$STAMP"
+fi
+grep -qx 'personal/' "$SYSTEM/.gitignore" 2>/dev/null || echo 'personal/' >> "$SYSTEM/.gitignore"
 
 # Older installers left their backups next to the person's files: they move to personal/backups/.
 moved=0
@@ -74,10 +80,10 @@ for f in "$WORK"/*.bak-* "$WORK"/.*/*.bak-*; do
 done
 [ "$moved" = 0 ] || echo "OK  $moved older backups moved to $NAME/personal/backups/"
 
-# 2. The working folder's AGENTS.md. The block between the sdlc markers belongs to the system
+# 2. The working folder's AGENTS.md. The block between the gate markers belongs to the system
 #    and is rewritten on every install; whatever is outside it belongs to the person.
 # shellcheck disable=SC2086
-result="$($PY "$SDLC/tools/instructions_block.py" "$WORK/AGENTS.md" "$BACKUPS/AGENTS.md.$STAMP" <<EOF
+result="$($PY "$SYSTEM/tools/instructions_block.py" "$WORK/AGENTS.md" "$BACKUPS/AGENTS.md.$STAMP" <<EOF
 Read and follow $NAME/AGENTS.md, the organisation's system, in every session.
 The person's profile is in $NAME/personal/profile.md and their preferences in
 $NAME/personal/preferences.md.
@@ -86,7 +92,7 @@ EOF
 [ "$result" = unchanged ] || echo "OK  AGENTS.md in the working folder: $NAME block $result"
 
 # 3. The adapter for the person's assistant.
-ADAPTER="$SDLC/adapters/$ASSISTANT/install.sh"
+ADAPTER="$SYSTEM/adapters/$ASSISTANT/install.sh"
 if [ -f "$ADAPTER" ]; then
   bash "$ADAPTER"
 else
@@ -96,9 +102,9 @@ else
 fi
 
 # 4. Credentials carry the organisation's name (tools/clients/README.md).
-if [ -f "$SDLC/tools/clients/credentials" ]; then
+if [ -f "$SYSTEM/tools/clients/credentials" ]; then
   # shellcheck disable=SC2046
-  for n in $(sdlc_migrate_credentials "$SDLC" $(grep -v '^[[:space:]]*#' "$SDLC/tools/clients/credentials")); do
+  for n in $(gate_migrate_credentials "$SYSTEM" $(grep -v '^[[:space:]]*#' "$SYSTEM/tools/clients/credentials")); do
     echo "OK  credential ~/.$n moved to the organisation's name; the old name links to it"
   done
 fi
@@ -106,10 +112,10 @@ fi
 # 5. The fingerprint the session start guard compares against, to tell when this install is
 #    outdated. personal/.installed keeps the last one in the older form, which rename.sh reads.
 # shellcheck disable=SC2086
-FP="$($PY "$SDLC/tools/guards/session_start.py" --fingerprint "$ASSISTANT")"
-printf '%s\n' "$FP" > "$SDLC/personal/.installed-$ASSISTANT"
-printf '%s %s\n' "$FP" "$ASSISTANT" > "$SDLC/personal/.installed"
-rm -f "$SDLC/personal/.reinstall-needed"
+FP="$($PY "$SYSTEM/tools/guards/session_start.py" --fingerprint "$ASSISTANT")"
+printf '%s\n' "$FP" > "$SYSTEM/personal/.installed-$ASSISTANT"
+printf '%s %s\n' "$FP" "$ASSISTANT" > "$SYSTEM/personal/.installed"
+rm -f "$SYSTEM/personal/.reinstall-needed"
 
 echo "OK  $NAME installed in $WORK for $ASSISTANT"
 echo "    Open your assistant in $WORK (not inside $NAME) and say hello."

@@ -50,7 +50,7 @@ behalf, is always blocked.
 ## Autonomous mode
 
 For leaving work running and finding it done on return. It exists only if the organisation
-allows it in `sdlc.yml` (`permissions.autonomous_allowed: true`); it is off by default. When it
+allows it in `system.yml` (`permissions.autonomous_allowed: true`); it is off by default. When it
 is allowed and the person asks for it explicitly, for this session, the assistant registers it:
 
 ```bash

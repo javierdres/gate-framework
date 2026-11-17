@@ -10,7 +10,7 @@ record it as out of scope or to replace something in "Next".
 
 ## While <system> is being built
 
-While `built` in `sdlc.yml` is empty, <system> is not built yet: offer the `establish` skill
+While `built` in `system.yml` is empty, <system> is not built yet: offer the `establish` skill
 (`skills/establish/SKILL.md`) before anything else. If
 the person has no profile in `personal/profile.md`, offer `onboard`
 (`skills/onboard/SKILL.md`). The GATE version <system> was scaffolded from is in

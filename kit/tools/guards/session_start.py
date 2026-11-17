@@ -8,7 +8,7 @@ installation is older than the system, identifies the person and hands over the 
 for them, runs the access check and lists what is still open in their log. It never fails the
 session: whatever it cannot check, it says.
 
-Identity, declared in sdlc.yml under `identity:`:
+Identity, declared in system.yml under `identity:`:
     method: platform      runs identity.command (for example `gh api user --jq .login`) and
                           looks the answer up in the profiles table of GOVERNANCE.md
     method: ssh-signing   the person signs a fresh nonce with the key in `git config
@@ -42,6 +42,14 @@ import threading
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PERSONAL = os.path.join(ROOT, "personal")
 SKILL_FOLDERS = (".claude/skills", ".kiro/skills", ".gemini/skills", ".agents/skills", ".codex/skills")
+# The mark on a skill copied where links fail; the second is what older installers wrote.
+COPY_MARKS = (".gate-copy", ".sdlc-copy")
+
+
+def config_path():
+    """system.yml, or sdlc.yml in a system that has not run tools/migrate.sh yet."""
+    new, old = os.path.join(ROOT, "system.yml"), os.path.join(ROOT, "sdlc.yml")
+    return old if os.path.exists(old) and not os.path.exists(new) else new
 OPEN_HEADINGS = re.compile(r"^##\s+(open|abierto|abiertos|pendiente|pendientes|en curso)\b", re.I | re.M)
 
 
@@ -63,12 +71,12 @@ def run(args, timeout=10, cwd=ROOT, env=None):
 
 
 def config_value(key, section=None):
-    """A flat read of sdlc.yml, enough for the few keys this guard needs.
+    """A flat read of the config, enough for the few keys this guard needs.
 
     A value may be bare, in single quotes, or in double quotes with backslash escapes; a `#`
     starts a comment only outside quotes.
     """
-    text = read(os.path.join(ROOT, "sdlc.yml"))
+    text = read(config_path())
     if section:
         m = re.search(r"^%s:\n((?:[ \t]+.*\n?|\s*\n)*)" % re.escape(section), text, re.M)
         text = m.group(1) if m else ""
@@ -137,7 +145,7 @@ def bring_in(main, branch):
     if set(local.split()) & set(incoming.split()):
         return "same files"
     # The autostash commit needs an identity; a person without one gets a neutral one, only here.
-    ident = [] if git("config", "user.email")[1] else ["-c", "user.name=sdlc", "-c", "user.email=sdlc@localhost"]
+    ident = [] if git("config", "user.email")[1] else ["-c", "user.name=gate", "-c", "user.email=gate@localhost"]
     _, before = git("rev-parse", "-q", "--verify", "refs/stash")
     code, _ = git(*(ident + ["rebase", "-q", "--autostash", "origin/" + main]), timeout=30)
     if code != 0:
@@ -205,7 +213,7 @@ def update():
 
 
 def renamed():
-    """The orchestrator renamed the system in sdlc.yml and this folder still has the old name."""
+    """The orchestrator renamed the system in its config and this folder still has the old name."""
     name = config_value("name", "system")
     here = os.path.basename(ROOT)
     if not name or name == here:
@@ -221,10 +229,11 @@ def renamed():
 
 def assistant_in_use():
     """The assistant this session runs in, from the variables each one sets, or None. An
-    adapter's hooks may declare it with SDLC_ASSISTANT, which wins (tools/lib.sh does the same)."""
+    adapter's hooks may declare it with GATE_ASSISTANT (or the older SDLC_ASSISTANT), which wins
+    (tools/lib.sh does the same)."""
     env = os.environ
-    if env.get("SDLC_ASSISTANT"):
-        return env["SDLC_ASSISTANT"]
+    if env.get("GATE_ASSISTANT") or env.get("SDLC_ASSISTANT"):
+        return env.get("GATE_ASSISTANT") or env["SDLC_ASSISTANT"]
     if env.get("CLAUDECODE") or env.get("CLAUDE_PROJECT_DIR"):
         return "claude-code"
     if env.get("GEMINI_CLI"):
@@ -309,8 +318,8 @@ def installation(assistant):
 
 def refresh_copies():
     """Where links could not be made (Windows without developer mode), the installer copied the
-    skills and marked each copy with .sdlc-copy. They are copied again at every session, so they
-    get what the update brought."""
+    skills and marked each copy with .gate-copy (.sdlc-copy in older installations). They are
+    copied again at every session, so they get what the update brought."""
     work = os.path.dirname(ROOT)
     for folder in SKILL_FOLDERS:
         base = os.path.join(work, folder)
@@ -318,14 +327,14 @@ def refresh_copies():
             continue
         for name in os.listdir(base):
             dest, src = os.path.join(base, name), os.path.join(ROOT, "skills", name)
-            if os.path.islink(dest) or not os.path.exists(os.path.join(dest, ".sdlc-copy")):
+            if os.path.islink(dest) or not any(os.path.exists(os.path.join(dest, m)) for m in COPY_MARKS):
                 continue
             if not os.path.isfile(os.path.join(src, "SKILL.md")):
                 continue
             try:
                 shutil.rmtree(dest)
                 shutil.copytree(src, dest)
-                io.open(os.path.join(dest, ".sdlc-copy"), "w").close()
+                io.open(os.path.join(dest, COPY_MARKS[0]), "w").close()
             except OSError:
                 pass
 
@@ -364,7 +373,7 @@ def read_event():
 
 
 def identity():
-    """The primary source declared in sdlc.yml: (who, verified, how)."""
+    """The primary source declared in system.yml: (who, verified, how)."""
     method = config_value("method", "identity") or "declared"
     if method == "platform":
         command = config_value("command", "identity")
@@ -381,7 +390,7 @@ def identity():
 
 def identities():
     """The chain of sources, strongest first: the declared method, then the tracker command if
-    sdlc.yml declares one (`identity.tracker_command`). A bot account (`identity.bot_pattern`) is
+    system.yml declares one (`identity.tracker_command`). A bot account (`identity.bot_pattern`) is
     never a person: it is skipped, and the chain goes on."""
     pattern = config_value("bot_pattern", "identity") or r"(\[bot\]$|[-_.]bot$|^bot[-_.])"
     found = [identity()]
@@ -435,7 +444,7 @@ def ssh_identity():
     with tempfile.TemporaryDirectory() as tmp:
         nonce = os.path.join(tmp, "nonce")
         with io.open(nonce, "w") as f:
-            f.write("sdlc-identity %s %s\n" % (os.getpid(), os.urandom(16).hex()))
+            f.write("gate-identity %s %s\n" % (os.getpid(), os.urandom(16).hex()))
         candidates = [key] + ([key[:-4]] if key.endswith(".pub") else [])
         signed = False
         for k in candidates:
@@ -482,7 +491,7 @@ def profiles_for(who):
 
 def open_items():
     index = read(os.path.join(PERSONAL, "sessions", "README.md"))
-    start = index.find("<!-- sdlc:open -->")
+    start = max(index.find("<!-- gate:open -->"), index.find("<!-- sdlc:open -->"))
     if start < 0:
         m = OPEN_HEADINGS.search(index)
         start = m.end() if m else -1

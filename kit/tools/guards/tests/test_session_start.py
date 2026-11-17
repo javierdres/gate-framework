@@ -35,7 +35,7 @@ class Base(unittest.TestCase):
         sh(["git", "init", "-q", "-b", "main"], self.root)
         self.home = tempfile.mkdtemp()
         clean = {k: v for k, v in os.environ.items()
-                 if not k.startswith(("CLAUDE", "GEMINI", "KIRO", "CODEX", "SDLC_"))}
+                 if not k.startswith(("CLAUDE", "GEMINI", "KIRO", "CODEX", "GATE_", "SDLC_"))}
         self.env = dict(clean, HOME=self.home, GIT_CONFIG_GLOBAL=os.path.join(self.home, ".gitconfig"),
                         GIT_CONFIG_NOSYSTEM="1", SSH_AUTH_SOCK="", TERM_PROGRAM="")
 
@@ -68,7 +68,7 @@ class Base(unittest.TestCase):
 
 class SessionStart(Base):
     def test_reads_escaped_and_commented_values(self):
-        self.write("sdlc.yml", 'gate:\n  version: "abc1234"   # pinned\nbuilt: ""\nidentity:\n'
+        self.write("system.yml", 'gate:\n  version: "abc1234"   # pinned\nbuilt: ""\nidentity:\n'
                    '  method: platform\n  command: "printf \\"%s\\" \\"person-1 #x\\""   # a comment\n')
         self.write("GOVERNANCE.md", "## Profiles enabled\n\n| Person | Identity | Profiles |\n| --- | --- | --- |\n"
                    "| Someone | person-1 #x | backend |\n")
@@ -79,7 +79,7 @@ class SessionStart(Base):
         self.assertIn("Profiles enabled: backend", out)
 
     def test_spanish_headings_keys_and_quoted_commands(self):
-        self.write("sdlc.yml", "identity:\n  method: platform\n  command: 'printf ''%s'' persona-1'\n")
+        self.write("system.yml", "identity:\n  method: platform\n  command: 'printf ''%s'' persona-1'\n")
         self.write("GOVERNANCE.md", "## Perfiles habilitados\n\n| Persona | Identidad | Perfiles |\n| --- | --- | --- |\n"
                    "| Alguien | persona-1 | `backend`, `leadership` |\n")
         self.write("personal/profile.md", "nombre: Alguien\nperfil: backend\nlisto: 2026-11-10\n")
@@ -98,7 +98,7 @@ class SessionStart(Base):
                 pub[w] = f.read().split()
         self.write("allowed_signers", "a@x namespaces=\"git\" %s %s\nb@x namespaces=\"git\" %s %s\n"
                    % (pub["a"][0], pub["a"][1], pub["b"][0], pub["b"][1]))
-        self.write("sdlc.yml", "identity:\n  method: ssh-signing\n")
+        self.write("system.yml", "identity:\n  method: ssh-signing\n")
         self.write("GOVERNANCE.md", "## Profiles enabled\n\n| Person | Identity | Profiles |\n| --- | --- | --- |\n"
                    "| A | a@x | backend |\n| B | b@x | product |\n")
         sh(["git", "config", "user.signingkey", os.path.join(self.home, "a.pub")], self.root, self.env)
@@ -114,19 +114,21 @@ class SessionStart(Base):
         self.assertIn("could not sign", out)
 
     def test_open_items_in_any_language(self):
-        self.write("sdlc.yml", "built: 2026-10-01\n")
+        self.write("system.yml", "built: 2026-10-01\n")
         self.write("personal/sessions/README.md", "# Bitácora\n\n## Abierto\n\n- tema uno\n\n## Por tema\n- x\n")
         self.assertIn("tema uno", self.run_guard())
-        self.write("personal/sessions/README.md", "# Log\n\n## Offen\n<!-- sdlc:open -->\n- thema zwei\n\n## Rest\n")
+        self.write("personal/sessions/README.md", "# Log\n\n## Offen\n<!-- gate:open -->\n- thema zwei\n\n## Rest\n")
         out = self.run_guard()
         self.assertIn("thema zwei", out)
         self.assertNotIn("not built yet", out)
+        self.write("personal/sessions/README.md", "# Log\n\n## Offen\n<!-- sdlc:open -->\n- thema drei\n\n## Rest\n")
+        self.assertIn("thema drei", self.run_guard())
 
     def test_asks_to_rename_once_the_system_is_renamed(self):
         here = os.path.basename(self.root)
-        self.write("sdlc.yml", 'system:\n  name: "%s"\n  reach: "software"\n' % here)
+        self.write("system.yml", 'system:\n  name: "%s"\n  reach: "software"\n' % here)
         self.assertNotIn("Renamed", self.run_guard())
-        self.write("sdlc.yml", 'system:\n  name: "ai-office-acme"   # beyond software\n')
+        self.write("system.yml", 'system:\n  name: "ai-office-acme"   # beyond software\n')
         out = self.run_guard()
         self.assertIn("from %s to ai-office-acme" % here, out)
         self.assertIn("tools/rename.sh", out)
@@ -269,7 +271,7 @@ class Installation(Base):
         self.write("adapters/claude-code/install.sh", "echo one\n")
         self.write("adapters/kiro/install.sh", "echo two\n")
         self.install("claude-code")
-        self.assertIn("no installation for kiro yet", self.run_guard(env={"SDLC_ASSISTANT": "kiro"}))
+        self.assertIn("no installation for kiro yet", self.run_guard(env={"GATE_ASSISTANT": "kiro"}))
         self.install("kiro")
         self.write("adapters/kiro/hooks.json", "{}\n")
         self.assertIn("Installation: current", self.run_guard(env={"CLAUDECODE": "1"}))
@@ -287,10 +289,10 @@ class Installation(Base):
         self.put(os.path.join(mine, "SKILL.md"), "mine\n")
         self.run_guard()
         self.assertEqual(self.read(os.path.join(copy, "SKILL.md")), "new\n")
-        self.assertTrue(os.path.exists(os.path.join(copy, ".sdlc-copy")))
+        self.assertTrue(os.path.exists(os.path.join(copy, ".gate-copy")))
         self.assertEqual(self.read(os.path.join(mine, "SKILL.md")), "mine\n")
 
-    def test_opened_inside_the_sdlc(self):
+    def test_opened_inside_the_system(self):
         self.install()
         self.assertIn("Opened inside the system", self.run_guard())
         self.assertNotIn("Opened inside", self.run_guard(env={"CLAUDE_PROJECT_DIR": self.work}))
@@ -303,7 +305,7 @@ class Identity(Base):
              "| A | person-a | backend, sre |\n| Everyone else | — | product |\n")
 
     def test_tracker_command_when_the_platform_does_not_answer(self):
-        self.write("sdlc.yml", "identity:\n  method: platform\n  command: \"false\"\n"
+        self.write("system.yml", "identity:\n  method: platform\n  command: \"false\"\n"
                    "  tracker_command: \"echo person-a\"\n")
         self.write("GOVERNANCE.md", self.TABLE)
         out = self.run_guard()
@@ -311,7 +313,7 @@ class Identity(Base):
         self.assertIn("Profiles enabled: backend, sre", out)
 
     def test_bot_accounts_are_never_a_person(self):
-        self.write("sdlc.yml", "identity:\n  method: platform\n  command: \"echo release-bot\"\n")
+        self.write("system.yml", "identity:\n  method: platform\n  command: \"echo release-bot\"\n")
         self.write("GOVERNANCE.md", self.TABLE.replace("person-a", "release-bot"))
         out = self.run_guard()
         self.assertIn("release-bot is a bot account", out)
@@ -319,7 +321,7 @@ class Identity(Base):
         self.assertIn("by default because the identity is not verified: product", out)
 
     def test_declared_profiles_never_widen_and_access_covers_the_union(self):
-        self.write("sdlc.yml", "identity:\n  method: platform\n  command: \"echo person-a\"\n")
+        self.write("system.yml", "identity:\n  method: platform\n  command: \"echo person-a\"\n")
         self.write("GOVERNANCE.md", self.TABLE)
         self.write("personal/.installed-claude-code", "x\n")
         self.write("personal/profile.md", "name: A\nprofile: backend, sre, leadership\nready: 2026-01-01\n")
@@ -329,13 +331,13 @@ class Identity(Base):
         self.assertIn("Access: checked backend,sre", out)
 
     def test_session_notes(self):
-        self.write("sdlc.yml", "permissions:\n  autonomous_allowed: false\n")
+        self.write("system.yml", "permissions:\n  autonomous_allowed: false\n")
         out = self.run_guard(event={"session_id": "s-1"})
         self.assertIn("Session s-1", out)
         self.assertIn("grant s-1 repo", out)
         self.assertNotIn("autonomous", out)
         self.assertNotIn("cannot show a confirmation", out)
-        self.write("sdlc.yml", "permissions:\n  autonomous_allowed: true\n")
+        self.write("system.yml", "permissions:\n  autonomous_allowed: true\n")
         out = self.run_guard("--guards", "block", event={"session_id": "s-1"})
         self.assertIn("grant s-1 autonomous", out)
         self.assertIn("cannot show a confirmation", out)

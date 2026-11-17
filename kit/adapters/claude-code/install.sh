@@ -2,15 +2,16 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Javier Núñez
 #
-# Claude Code adapter. Called by tools/install.sh with SDLC, WORK, NAME, STAMP, BACKUPS and PY
-# set. Verify the hook event names against the Claude Code version recorded in sdlc.yml.
+# Claude Code adapter. Called by tools/install.sh with SYSTEM, WORK, NAME, STAMP, BACKUPS and PY
+# set. Verify the hook event names against the Claude Code version recorded in system.yml.
 set -euo pipefail
-. "$SDLC/tools/lib.sh"
+SYSTEM="${SYSTEM:-$SDLC}"
+. "$SYSTEM/tools/lib.sh"
 
 # Instructions: CLAUDE.md in the working folder imports the neutral AGENTS.md and the person's
-# files. The block between the sdlc markers is rewritten on every install.
+# files. The block between the gate markers is rewritten on every install.
 # shellcheck disable=SC2086
-result="$($PY "$SDLC/tools/instructions_block.py" "$WORK/CLAUDE.md" "$BACKUPS/CLAUDE.md.$STAMP" <<EOF
+result="$($PY "$SYSTEM/tools/instructions_block.py" "$WORK/CLAUDE.md" "$BACKUPS/CLAUDE.md.$STAMP" <<EOF
 @$NAME/AGENTS.md
 @$NAME/personal/profile.md
 @$NAME/personal/preferences.md
@@ -22,18 +23,18 @@ EOF
 # with the same name as one of the system's is left alone, with a warning.
 mkdir -p "$WORK/.claude/skills"
 linked=0; copied=0
-for dir in "$SDLC"/skills/*/; do
+for dir in "$SYSTEM"/skills/*/; do
   [ -f "$dir/SKILL.md" ] || continue
   skill="$(basename "$dir")"
   dest="$WORK/.claude/skills/$skill"
-  set +e; sdlc_skill "$dir" "$dest" "../../$NAME/skills/$skill"; r=$?; set -e
+  set +e; gate_skill "$dir" "$dest" "../../$NAME/skills/$skill"; r=$?; set -e
   case "$r" in
     0) if [ -L "$dest" ]; then linked=$((linked + 1)); else copied=$((copied + 1)); fi ;;
     2) echo "! .claude/skills/$skill in the working folder is not $NAME's; left untouched. Rename yours to use the one from $NAME." ;;
     *) echo "! Could not install the skill $skill" ;;
   esac
 done
-for skill in $(sdlc_prune_skills "$SDLC" "$WORK/.claude/skills"); do
+for skill in $(gate_prune_skills "$SYSTEM" "$WORK/.claude/skills"); do
   echo "OK  skill $skill removed: $NAME no longer has it"
 done
 [ "$copied" = 0 ] || echo "OK  $copied skills copied, as links are not available here; each session refreshes them"
@@ -41,7 +42,7 @@ done
 # Guards and base permission rules, merged into the working folder's settings.
 # shellcheck disable=SC2086
 $PY - "$WORK/.claude/settings.json" "$NAME" "$PY" "$BACKUPS/.claude__settings.json.$STAMP" \
-  "$SDLC/adapters/claude-code/settings.json" <<'PY'
+  "$SYSTEM/adapters/claude-code/settings.json" <<'PY'
 import io, json, os, shutil, sys
 path, name, py, backup, base_path = sys.argv[1:6]
 try:

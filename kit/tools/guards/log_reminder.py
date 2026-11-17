@@ -21,7 +21,8 @@ import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LOG = os.path.join(ROOT, "personal", "sessions")
-GRANTS = os.environ.get("SDLC_GRANTS_DIR") or os.path.join(ROOT, "personal", "grants")
+GRANTS = (os.environ.get("GATE_GRANTS_DIR") or os.environ.get("SDLC_GRANTS_DIR")
+          or os.path.join(ROOT, "personal", "grants"))
 OK = re.compile(r"^(ok|okay|okey|go ahead|proceed|approved|do it|dale|adelante|procede|hazlo|confirmo|"
                 r"autorizo|apruebo|de acuerdo)(\W|$)|^(yes|s[ií])\s*[,.!]*\s*$", re.I)
 
@@ -38,7 +39,8 @@ def record_pass(raw):
         os.environ.get("USER_PROMPT", "")
     if not is_ok(str(prompt)):
         return
-    session = str(event.get("session_id") or event.get("sessionId") or os.environ.get("SDLC_SESSION", ""))
+    session = str(event.get("session_id") or event.get("sessionId") or os.environ.get("GATE_SESSION")
+                  or os.environ.get("SDLC_SESSION", ""))
     os.makedirs(GRANTS, exist_ok=True)
     path = os.path.join(GRANTS, re.sub(r"[^A-Za-z0-9_.-]", "_", session or "default") + ".pass")
     with open(path, "w", encoding="utf-8") as f:

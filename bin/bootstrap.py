@@ -8,7 +8,7 @@ Four subcommands:
     bootstrap.py names <short name> [--beyond-software]
                                    propose names for the organisation's system, so the
                                    orchestrator picks one before scaffolding it
-    bootstrap.py sdlc <working folder>/<system name> [--assistant <id>] [--org <short name>]
+    bootstrap.py system <working folder>/<system name> [--assistant <id>] [--org <short name>]
                       [--name "<display name>"] [--reach software|beyond-software]
                                    create the organisation's system repository; the folder name
                                    is the system's name
@@ -16,7 +16,8 @@ Four subcommands:
     bootstrap.py config <path>     drop .gate/config.yml into a project
 
 `names` comes first: the system is called whatever the orchestrator decides, and the folder,
-the repository and every import take that name. `sdlc` is where the build starts: it writes the whole skeleton that
+the repository and every import take that name. `system` (`sdlc` in older guides, still
+accepted) is where the build starts: it writes the whole skeleton that
 /establish then fills in from the interview. Create it where it will live, inside the
 working folder people open the assistant in, because the installer wires that folder, with the empty catalog inside it,
 the neutral guards and the adapter for the chosen assistant (claude-code,
@@ -142,7 +143,7 @@ that also reviews the departures below.
 
 | GATE | Here |
 | --- | --- |
-| Section 2, the orchestrator and `/establish` | This repository, `sdlc.yml`, `GOVERNANCE.md` |
+| Section 2, the orchestrator and `/establish` | This repository, `system.yml`, `GOVERNANCE.md` |
 | `/onboard` | `skills/onboard`, `tools/install.sh`, `tools/guides/` |
 | Permissions principle | `method/permissions.md`, `tools/guards/permissions.py` |
 | Environment-enforced controls | `tools/guards/`, `adapters/`, protected main branch |
@@ -211,7 +212,7 @@ def suggest_names(org, beyond):
     print("The orchestrator decides. The name becomes the folder, the repository and the prefix")
     print("of every import, so pick it before scaffolding:")
     print()
-    print("  python3 bin/bootstrap.py sdlc ~/Projects/%s/<name> --org %s%s"
+    print("  python3 bin/bootstrap.py system ~/Projects/%s/<name> --org %s%s"
           % (org, org, " --reach beyond-software" if beyond else ""))
     print()
     print("Renaming later is possible with tools/rename.sh, but every person runs it once.")
@@ -229,7 +230,7 @@ def gate_version():
     return v or "to be defined"
 
 
-def scaffold_sdlc(target, assistant, org, display="", reach=""):
+def scaffold_system(target, assistant, org, display="", reach=""):
     if os.path.exists(target) and os.listdir(target):
         print("x %s exists and is not empty. Refusing to write over it." % target)
         return 1
@@ -241,7 +242,8 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
         print("x '%s' is not a usable system name: lowercase letters, digits and hyphens only." % system)
         print("  See the proposals with: python3 bin/bootstrap.py names <short name>")
         return 1
-    reach = reach or ("beyond-software" if system.startswith("ai-office-") or system.endswith("-ai-office") else "software")
+    beyond = system.startswith("ai-office-") or system.endswith("-ai-office")
+    reach = reach or ("beyond-software" if beyond else "software")
     if reach not in REACH:
         print("x unknown reach '%s'. One of: %s" % (reach, ", ".join(REACH)))
         return 1
@@ -262,7 +264,7 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
         written += 1
 
     version = gate_version()
-    config = io.open(os.path.join(HERE, "templates", "sdlc.yml"), encoding="utf-8").read()
+    config = io.open(os.path.join(HERE, "templates", "system.yml"), encoding="utf-8").read()
     config = re.sub(r'^(  version:) ""', r'\1 "%s"' % version, config, count=1, flags=re.M)
     config = re.sub(r'^(organisation:\n  name:) ""', lambda m: '%s "%s"' % (m.group(1), display), config, count=1, flags=re.M)
     config = re.sub(r'^(  short_name:) ""', r'\1 "%s"' % org, config, count=1, flags=re.M)
@@ -270,7 +272,7 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
     config = re.sub(r'^(  reach:) ""', r'\1 "%s"' % reach, config, count=1, flags=re.M)
     config = re.sub(r'^(  - id:) ""(\s+# claude-code)', r'\1 "%s"\2' % assistant, config, count=1, flags=re.M)
     extra = {
-        "sdlc.yml": config,
+        "system.yml": config,
         "README.md": SYSTEM_README.format(system=system, name=display, reach=REACH[reach]),
         "ONBOARDING.md": SYSTEM_ONBOARDING.format(org=org),
         "GATE.md": SYSTEM_GATE_MAP.format(version=version),
@@ -477,14 +479,14 @@ def option(name, default=""):
 
 
 def main():
-    if len(sys.argv) < 3 or sys.argv[1] not in ("names", "sdlc", "catalog", "config"):
+    if len(sys.argv) < 3 or sys.argv[1] not in ("names", "system", "sdlc", "catalog", "config"):
         print(__doc__.strip())
         return 2
     action, path = sys.argv[1], sys.argv[2]
     if action == "names":
         return suggest_names(path, "--beyond-software" in sys.argv)
-    if action == "sdlc":
-        return scaffold_sdlc(path, option("--assistant", "other"), option("--org"), option("--name"),
+    if action in ("system", "sdlc"):
+        return scaffold_system(path, option("--assistant", "other"), option("--org"), option("--name"),
                              option("--reach"))
     if action == "catalog":
         return scaffold_catalog(path)

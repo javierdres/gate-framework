@@ -25,7 +25,7 @@ ssh-keygen -q -t ed25519 -N "" -f "$T/a" -C a@x
 ssh-keygen -q -t ed25519 -N "" -f "$T/b" -C b@x
 git init -q --bare "$T/srv.git"
 cp "$HOOK" "$T/srv.git/hooks/update" && chmod +x "$T/srv.git/hooks/update"
-git -C "$T/srv.git" config sdlc.formulation true
+git -C "$T/srv.git" config gate.formulation true
 git clone -q "$T/srv.git" "$T/w" 2>/dev/null
 cd "$T/w" && git checkout -q -b main
 
@@ -38,7 +38,7 @@ git add . && git commit -qm init
 echo "  formulation"
 expect accept "a signed push while the repository is in formulation"
 git push -q origin main 2>/dev/null
-git -C "$T/srv.git" config sdlc.formulation false
+git -C "$T/srv.git" config gate.formulation false
 
 echo "  operation"
 echo x > f && git add f && git commit -qm direct
@@ -70,5 +70,14 @@ expect reject "an unsigned commit"
 # origin/main now holds the accepted merge; moving it back to its first parent rewrites history.
 if git push -q --force origin origin/main~1:main 2>/dev/null; then echo "  ✗  a history rewrite"; fail=1
 else echo "  ✓  a history rewrite"; fi
+
+echo "  older key"
+git -C "$T/srv.git" config --unset gate.formulation
+git -C "$T/srv.git" config sdlc.formulation true
+echo z > h && git add h && git commit -qm direct
+expect accept "sdlc.formulation still lifts the review when gate.formulation is not set"
+git -C "$T/srv.git" config gate.formulation false
+echo w > i && git add i && git commit -qm direct
+expect reject "gate.formulation wins over the older key"
 
 exit $fail
