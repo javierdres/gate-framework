@@ -2,7 +2,14 @@
 
 Findings that review raised and the team rejected, with the reason. The review skills read this
 file before raising anything, so they do not raise the same thing again. Recording one needs no
-approval: whoever rejects a finding writes the reason.
+approval: whoever rejects a finding writes the reason. If it cost an approval, nobody would
+record one.
+
+In the layout by scope (see `scopes.md`), each scope keeps its own `false-positives.md` beside
+its rules, in this same format, and this file holds only what belongs to no single scope.
+
+A false positive is one finding rejected in one context. What the organisation decided, as a
+standard, not to adopt at all goes to [`not-adopted.md`](not-adopted.md) instead.
 
 The rejection usually happens in a product repository and this record lives in the SDLC, so the
 entry goes as its own small change to the SDLC, linked from the review thread where the finding

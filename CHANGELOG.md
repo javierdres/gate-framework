@@ -3,6 +3,51 @@
 What changed in GATE, and why. An organisation's SDLC pins a commit; this file says what moving
 to a newer one brings.
 
+## 2026-11-17 · What a working SDLC learned, back in GATE
+
+An organisation has run an SDLC built on GATE every day for months, across product, building,
+operations and leadership. What it learned, in its catalog, its tooling and its method, comes
+back here as patterns, without its names, products or data, so the next organisation does not
+pay for the same lessons again.
+
+**A catalog can start from lessons someone else paid for.** `kit/catalog/seeds/` holds 64
+optional seeds by scope: 15 lessons from incidents and audits, and 49 baselines from a standard
+measured against real fixes. Each carries the lesson behind it. During `/establish` the
+orchestrator picks some, and `catalog/bin/adopt_seed.py` copies each into `rules/` as a candidate
+with the organisation's own id, to wait for its custodian. Nobody's catalog is touched by a seed
+nobody adopted. The catalog also gains a third severity, `recommended`; soft rules that are fixed
+or deferred with a ticket; the criterion that a rule blocks only when its check is automated or
+it causes a business defect no tool detects; a layout by scope with groups resolved by remote
+path; verification and detection fields; rules that apply by project profile; exceptions that
+expire; a record of what was not adopted; and a pipeline gate for any platform that freezes debt
+by counting it against the target branch. `/harvest` resolves the threads a commit already
+addressed before harvesting, and turns a rule a reviewer still flags by hand into a candidate to
+automate.
+
+**Tooling proven in daily use.** The session start guard never hangs on the network, moves the
+default branch forward without switching branches, touches nothing when local changes collide
+with what arrives, and lists the new SDLC versions with their "What to do"; scaffolded SDLCs now
+start with their own `CHANGELOG.md` in that format. Each assistant's installation carries a
+fingerprint, and the status line keeps asking for a reinstall until it happens. The installer
+checks requirements before touching anything, keeps backups in `personal/backups/`, writes
+between name-independent markers and never overwrites a skill of the person's.
+`tools/adapters_check.py` catches an adapter that dropped a guard, and Kiro gets an adapter, still
+to be verified. Approving a change request always asks. Assistants that can only block take the
+person's typed OK as a single-use pass. Identity goes through a chain of sources that never takes
+a bot for a person. The access check runs in parallel under a hard deadline. `e2e/` becomes a
+runnable skeleton with an effects guard that is strict by default.
+
+**Method.** A new principle: nobody is observed. The SDLC never records how a person uses the
+assistant nor reads their prompts, and adoption is measured from shared work. GATE.md adds how to
+measure the effect honestly, per audience and month by month, after a first total showed an
+improvement that did not exist. A new optional contract, `/pulse`, gives leadership a read-only
+view with the same yardstick for everyone and never a risk label on a person. An organisation may
+allow an autonomous session mode (`permissions.autonomous_allowed`, off by default) that the
+assistant can never grant itself. Session start is imported rather than linked, the style guide
+gains a language-neutral sentence rule, the chat-client package gets a real template, pilots with
+business roles set no targets for those people, and the define, specify, self-review, guide and
+onboard contracts are sharpened.
+
 ## 2026-11-17 · Each organisation names its own system
 
 An organisation that took the method beyond software found the name `sdlc-<org>` no longer said

@@ -97,7 +97,7 @@ escriben una vez en formatos neutrales. Lo propio de cada asistente vive en su a
 
 ## Las skills
 
-Tres de fundación, una de apoyo, catorce de ciclo y dos transversales. Cada una declara en su frontmatter quién
+Tres de fundación, dos de apoyo, catorce de ciclo y dos transversales. Cada una declara en su frontmatter quién
 la gatilla, a quién gatilla, qué gate tiene, quién lo habilita, qué escribe fuera y qué consulta.
 
 ```

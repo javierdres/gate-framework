@@ -34,6 +34,10 @@ everyone else.
 | Custodian of product | Approves product rules, product context and product skills |
 | Product owner of each product | Decides what is built in their product and validates its business rules and use cases |
 
+A person in a business role who takes part in a pilot gets no targets, deadlines or tasks from
+the SDLC. They use it at their own pace, and what they report is applied. The pilot is recorded
+in `PLAN.md` by role.
+
 ## What can change and who approves it
 
 | Part | Anyone may change it by change request | Approves |

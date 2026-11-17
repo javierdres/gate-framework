@@ -4,27 +4,46 @@
 #
 # Installs the organisation's SDLC in the person's working folder, for the assistant they use.
 #
-#   tools/install.sh <assistant>      claude-code | gemini-cli | kiro | codex | other
+#   tools/install.sh [<assistant>]    claude-code | gemini-cli | kiro | codex | other
 #
-# Idempotent: running it twice changes nothing the second time. Backs up whatever it modifies.
-# Stops if the SDLC repository sits loose in the home folder.
+# Without an argument, the assistant is the one this runs inside, told by its environment.
+# Idempotent: running it twice changes nothing the second time. Checks the requirements before
+# touching anything, and keeps a copy of whatever it changes in personal/backups/.
 set -euo pipefail
 
-ASSISTANT="${1:-}"
 SDLC="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$(dirname "$SDLC")"
 NAME="$(basename "$SDLC")"
 STAMP="$(date +%Y%m%d%H%M%S)"
+BACKUPS="$SDLC/personal/backups"
+. "$SDLC/tools/lib.sh"
 
-if [ -z "$ASSISTANT" ]; then
-  sed -n '4,9p' "$0" | sed 's/^# \{0,1\}//'
+ASSISTANT="${1:-$(sdlc_assistant)}"
+case "$ASSISTANT" in
+  -h|--help) sed -n '4,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  "") sed -n '4,11p' "$0" | sed 's/^# \{0,1\}//'
+      echo "x Could not tell which assistant this is. Name it: tools/install.sh <assistant>"
+      exit 2 ;;
+esac
+if ! printf '%s' "$ASSISTANT" | grep -Eq '^[a-z0-9][a-z0-9-]*$'; then
+  echo "x '$ASSISTANT' is not an assistant id: lowercase letters, digits and hyphens."
   exit 2
 fi
-if [ "$WORK" = "$HOME" ]; then
-  echo "x $NAME sits loose in the home folder. Move it into a working folder first,"
+
+# 0. Before touching anything.
+if [ "$WORK" = "$HOME" ] || [ "$WORK" = "/" ]; then
+  echo "x $NAME sits loose in $WORK. Move it into a working folder first,"
   echo "  for example ~/Projects/<org>/$NAME, and run this again from there."
   exit 1
 fi
+missing=""
+for c in git ssh; do command -v "$c" >/dev/null 2>&1 || missing="$missing $c"; done
+PY="$(sdlc_python)" || missing="$missing python-3.8-or-later"
+if [ -n "$missing" ]; then
+  echo "x Missing on this machine:$missing. Install them and run this again; nothing was changed."
+  exit 1
+fi
+export SDLC WORK NAME STAMP BACKUPS PY PYTHONUTF8=1
 
 # The working folder inside another repository (a home folder under version control, say) makes
 # the assistant treat every working folder below it as one project, and some assistants share
@@ -37,43 +56,60 @@ if [ -n "$ENCLOSING" ]; then
   echo "  repository if it was not meant to be there."
 fi
 
-backup() { if [ -e "$1" ]; then cp -p "$1" "$1.bak-$STAMP"; fi; }
-
-# 1. personal/: profile, preferences, grants and log. Ignored by version control.
-mkdir -p "$SDLC/personal/sessions" "$SDLC/personal/grants"
-chmod 700 "$SDLC/personal/grants"
+# 1. personal/: profile, preferences, grants, log and backups. Ignored by version control.
+mkdir -p "$SDLC/personal/sessions" "$SDLC/personal/grants" "$BACKUPS"
+chmod 700 "$SDLC/personal/grants" "$BACKUPS"
 [ -e "$SDLC/personal/profile.md" ] || : > "$SDLC/personal/profile.md"
 [ -e "$SDLC/personal/preferences.md" ] || printf '# My preferences\n' > "$SDLC/personal/preferences.md"
 [ -e "$SDLC/personal/sessions/README.md" ] || printf '# Work log\n\n## Open\n<!-- sdlc:open -->\n\n## By topic\n' \
   > "$SDLC/personal/sessions/README.md"
 grep -qx 'personal/' "$SDLC/.gitignore" 2>/dev/null || echo 'personal/' >> "$SDLC/.gitignore"
 
-# 2. The working folder's AGENTS.md, without touching what it already has.
-MARK="<!-- sdlc:$NAME -->"
-if ! grep -qF "$MARK" "$WORK/AGENTS.md" 2>/dev/null; then
-  backup "$WORK/AGENTS.md"
-  {
-    echo ""
-    echo "$MARK"
-    echo "Read and follow $NAME/AGENTS.md, the organisation's SDLC, in every session."
-    echo "The person's profile is in $NAME/personal/profile.md and their preferences in"
-    echo "$NAME/personal/preferences.md."
-  } >> "$WORK/AGENTS.md"
-fi
+# Older installers left their backups next to the person's files: they move to personal/backups/.
+moved=0
+for f in "$WORK"/*.bak-* "$WORK"/.*/*.bak-*; do
+  [ -f "$f" ] || continue
+  rel="${f#"$WORK"/}"
+  mv "$f" "$BACKUPS/$(printf '%s' "$rel" | sed 's#/#__#g')" && moved=$((moved + 1))
+done
+[ "$moved" = 0 ] || echo "OK  $moved older backups moved to $NAME/personal/backups/"
+
+# 2. The working folder's AGENTS.md. The block between the sdlc markers belongs to the SDLC and
+#    is rewritten on every install; whatever is outside it belongs to the person.
+# shellcheck disable=SC2086
+result="$($PY "$SDLC/tools/instructions_block.py" "$WORK/AGENTS.md" "$BACKUPS/AGENTS.md.$STAMP" <<EOF
+Read and follow $NAME/AGENTS.md, the organisation's SDLC, in every session.
+The person's profile is in $NAME/personal/profile.md and their preferences in
+$NAME/personal/preferences.md.
+EOF
+)"
+[ "$result" = unchanged ] || echo "OK  AGENTS.md in the working folder: SDLC block $result"
 
 # 3. The adapter for the person's assistant.
 ADAPTER="$SDLC/adapters/$ASSISTANT/install.sh"
-if [ -x "$ADAPTER" ]; then
-  SDLC="$SDLC" WORK="$WORK" NAME="$NAME" STAMP="$STAMP" "$ADAPTER"
+if [ -f "$ADAPTER" ]; then
+  bash "$ADAPTER"
 else
   echo "! No automatic adapter for '$ASSISTANT' yet."
   echo "  Follow $NAME/adapters/README.md to wire instructions, skills and guards,"
   echo "  then run the final verification."
 fi
 
-# 4. The stamp the session start guard compares against, to tell when this install is outdated.
-COMMIT="$(git -C "$SDLC" log -1 --format=%H -- skills adapters tools/install.sh tools/guards 2>/dev/null || true)"
-printf '%s %s\n' "${COMMIT:-unknown}" "$ASSISTANT" > "$SDLC/personal/.installed"
+# 4. Credentials carry the organisation's name (tools/clients/README.md).
+if [ -f "$SDLC/tools/clients/credentials" ]; then
+  # shellcheck disable=SC2046
+  for n in $(sdlc_migrate_credentials "$SDLC" $(grep -v '^[[:space:]]*#' "$SDLC/tools/clients/credentials")); do
+    echo "OK  credential ~/.$n moved to the organisation's name; the old name links to it"
+  done
+fi
+
+# 5. The fingerprint the session start guard compares against, to tell when this install is
+#    outdated. personal/.installed keeps the last one in the older form, which rename.sh reads.
+# shellcheck disable=SC2086
+FP="$($PY "$SDLC/tools/guards/session_start.py" --fingerprint "$ASSISTANT")"
+printf '%s\n' "$FP" > "$SDLC/personal/.installed-$ASSISTANT"
+printf '%s %s\n' "$FP" "$ASSISTANT" > "$SDLC/personal/.installed"
+rm -f "$SDLC/personal/.reinstall-needed"
 
 echo "OK  $NAME installed in $WORK for $ASSISTANT"
 echo "    Open your assistant in $WORK (not inside $NAME) and say hello."

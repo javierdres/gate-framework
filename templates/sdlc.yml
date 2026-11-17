@@ -57,6 +57,19 @@ identity:
   #   command: "gh api user --jq .login"
   #   command: "glab api user --hostname gitlab.example.com | python3 -c \"import json, sys; print(json.load(sys.stdin)['username'])\""
   command: ""
+  # When the platform cannot answer, a command that prints the person's account on
+  # the tracker. Without either, the assistant verifies through the tracker
+  # connector before showing any menu.
+  tracker_command: ""
+  # Accounts that are never taken for a person. Empty means the default: a name
+  # with "[bot]" or ending in "-bot".
+  bot_pattern: ""
+
+permissions:
+  # Whether a person may put a session in autonomous mode: the SDLC stops asking
+  # and the assistant's own permission mode decides. Off unless the orchestrator
+  # turns it on; the assistant can never grant it to itself.
+  autonomous_allowed: false
 
 tools:
   code_platform:

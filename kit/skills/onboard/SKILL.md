@@ -53,16 +53,28 @@ person, such as "SDLC remote reachable" while the orchestrator has not pushed th
 reported as pending with who it depends on, not as their problem. Then, for each access
 missing, one at a time: give the steps of its guide in `tools/guides/`, wait, and verify only
 that one before the next. Prefer company login and connectors over hand-made tokens, with the
-least privilege that works and an expiry. When an access depends on someone else, say who to
+least privilege that works and an expiry. A personal token is only for what a connector cannot
+do, such as a view that reads hundreds of tickets at once; everything else goes through the
+connector with the person's own identity. When an access depends on someone else, say who to
 ask and carry on with the rest.
+
+**Their repositories.** If the person works on specific products, offer to clone those
+products' repositories into the working folder, next to the SDLC, reading them from
+`products/<product>/`. Cloning needs their confirmation.
 
 Whatever the person has to run outside the assistant is given step by step: how to open the
 terminal, what to paste, what they will see, how to know it worked and what to do if it fails.
 
 ## 5. Welcome
 
-A short live demonstration on the person's own data: one of their tickets, or a repository of
-their product, read through the SDLC. Then add `ready: <today>` to `personal/profile.md`.
+When the access check is green, or what is missing depends on someone else and is recorded, run
+`guide` in its "welcome" mode. It shows on the person's own data what the SDLC does for them,
+and adds `ready: <today>` to `personal/profile.md`.
+
+## When something stops working
+
+The person can run this skill again whenever they want. Run the full check, show only what is
+✗ or ⚠, and resume from that stage. Showing everything again buries the one line that matters.
 
 ## Never
 

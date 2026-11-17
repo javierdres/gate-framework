@@ -11,6 +11,7 @@ loses the warning without knowing. Each end-to-end test runs it with a throwaway
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -84,6 +85,63 @@ class EndToEnd(unittest.TestCase):
         home = tempfile.mkdtemp()
         self.assertEqual(self.run_guard(home, ["status"], "not json"), "\n")
         self.assertEqual(self.run_guard(home, ["check"], "not json"), "")
+
+
+class Notices(unittest.TestCase):
+    """The SDLC's notices under the usage: only when there is one, never blocking the line."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.home = tempfile.mkdtemp()
+        guards = os.path.join(self.root, "tools", "guards")
+        os.makedirs(guards)
+        os.makedirs(os.path.join(self.root, "personal", "grants"))
+        for name in ("usage.py", "permissions.py"):
+            shutil.copy(os.path.join(os.path.dirname(GUARD), name), guards)
+
+    def tearDown(self):
+        shutil.rmtree(self.root)
+        shutil.rmtree(self.home)
+
+    def put(self, rel, text):
+        path = os.path.join(self.root, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(text)
+
+    def status(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("SDLC_")}
+        env["HOME"] = self.home
+        p = subprocess.run([sys.executable, os.path.join(self.root, "tools", "guards", "usage.py"), "status"],
+                           input=json.dumps({"model": {"display_name": "Opus"}, "session_id": "s1"}),
+                           capture_output=True, text=True, env=env)
+        return plain(p.stdout).rstrip("\n").split("\n")
+
+    def test_nothing_to_say_is_one_line(self):
+        self.assertEqual(self.status(), ["Opus"])
+
+    def test_reinstall_and_grants(self):
+        self.put("personal/.reinstall-needed", "claude-code\n")
+        self.put("personal/grants/s1.json", json.dumps({"repo": ["/x/repo-a"], "tracker": ["ABC"]}))
+        self.assertEqual(self.status()[1], "SDLC: reinstall needed · authorised: repo-a, ABC")
+
+    def test_autonomous_mode_only_where_the_organisation_allows_it(self):
+        self.put("personal/grants/s1.json", json.dumps({"repo": [], "tracker": [], "autonomous": True}))
+        self.assertEqual(self.status(), ["Opus"])
+        self.put("sdlc.yml", "permissions:\n  autonomous_allowed: true\n")
+        self.assertEqual(self.status()[1], "autonomous mode")
+
+    def test_extension_runs_in_the_background_behind_a_cache(self):
+        self.put("tools/notices.py", "import time\ntime.sleep(0.5)\nprint('2 reviews waiting')\n")
+        start = time.time()
+        self.assertEqual(self.status(), ["Opus"])
+        self.assertLess(time.time() - start, 0.5 + 2, "the status line waited for the extension")
+        for _ in range(50):
+            lines = self.status()
+            if len(lines) > 1:
+                break
+            time.sleep(0.2)
+        self.assertEqual(lines[1], "2 reviews waiting")
 
 
 if __name__ == "__main__":

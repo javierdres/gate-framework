@@ -1,7 +1,9 @@
-# profile	name	command
+# profile	name	command	configured (optional)
 # One check per line, separated by tabs. Profile ids are the ones in method/profiles.md.
 # `requirements`: what has to be on the machine before installing; runs first, on its own.
 # `all`: the access everyone needs, checked together with each profile's own.
+# `configured`: a cheap local test that the access is set up (the credential file exists, a
+# login is stored). With it, a failing check reads "configured but not answering".
 # /establish replaces the examples with the checks of this organisation.
 requirements	git installed	command -v git
 requirements	Python 3 installed	command -v python3

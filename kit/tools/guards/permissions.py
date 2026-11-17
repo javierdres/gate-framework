@@ -7,14 +7,29 @@
     permissions.py grant <session> repo <path>          authorise a repository for a session
     permissions.py grant <session> tracker <KEY>        authorise a tracker project
     permissions.py show <session>
-    permissions.py revoke <session> [repo <path> | tracker <KEY>]
+    permissions.py grant <session> autonomous           autonomous mode, only where sdlc.yml allows it
+    permissions.py revoke <session> [repo <path> | tracker <KEY> | autonomous]
 
 Three levels. Local work is not this guard's business and passes untouched. Outward writes ask
 until their scope is authorised for the session. A short list always asks, whatever was
 authorised: pushes to the default branch or to a remote the repository does not declare;
-forced, mirrored, pruning, deleting and all-branch pushes; merges; deletions; infrastructure
-tools, except their read-only subcommands; credentials; and anything that touches the
-authorisations themselves.
+forced, mirrored, pruning, deleting and all-branch pushes; merges; approving a change request,
+which a person gives and never the assistant; deletions; infrastructure tools, except their
+read-only subcommands; credentials; and anything that touches the authorisations themselves.
+
+Authorising a repository also records its path on the code platform, taken from its origin
+(`group/sub/name`, whatever the host), so a change request or an API write that names the
+repository instead of running inside it (`gh pr create -R`, `glab mr create --repo`,
+`gh api repos/<owner>/<name>/...`, `glab api projects/<group%2Fname>/...`) is covered too. The
+home folder is never authorised as a repository, even when it is one.
+
+Autonomous mode is an opt-in of the organisation: `permissions.autonomous_allowed: true` in
+sdlc.yml. Only then, and only when the person asks for it explicitly, `grant <session>
+autonomous` records it, and from there the guard protects nothing but the authorisations
+themselves; the assistant's own permission mode decides the rest, merges and deletions
+included. Granting goes through the person's confirmation like any other grant, so the assistant
+can never give it to itself, and if the organisation withdraws the opt-in, a recorded grant
+stops counting.
 
 The guard is conservative by design. A session authorisation only covers a simple command the
 guard fully understands: a push or a change request that is the whole of its segment. A write
@@ -28,6 +43,23 @@ Output formats:
     json    {"decision": "allow|ask|deny", "reason": "..."} for adapters to map
     exit    exit 0 to let through; exit 2 with the reason on stderr when it asks, for
             assistants that cannot ask and only understand blocking
+
+Assistants that can only block get the person's OK another way. Their per-message guard runs
+`log_reminder.py --passes`, which records a pass when the person's message is an OK ("ok",
+"go ahead", "dale"...). With `--format exit`, the next action that would ask spends the pass and
+goes through: one OK, one action, valid for 15 minutes and deleted when used or found stale.
+Registering or revoking an authorisation can use the pass, since the person's OK was for that;
+writing the authorisations or the passes directly, or recording an OK on the person's behalf, is
+blocked even with one.
+
+Tool names from other assistants are brought to one classification first: shell tools
+(execute_bash, run_shell_command...) or any tool whose input carries a `command` are shell
+commands; file tools (fs_write, write_file, str_replace...) are file writes; and connector tools
+named `server___tool`, `server/tool`, `@server/tool` or `mcp_server_tool` are read as
+`mcp__server__tool`.
+
+Environment: SDLC_GRANTS_DIR moves the grants folder and SDLC_CONFIG the sdlc.yml it reads,
+both for tests.
 """
 import io
 import json
@@ -37,11 +69,26 @@ import shlex
 import subprocess
 import sys
 import time
+from urllib.parse import unquote
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GRANTS = os.environ.get("SDLC_GRANTS_DIR") or os.path.join(ROOT, "personal", "grants")
+CONFIG = os.environ.get("SDLC_CONFIG") or os.path.join(ROOT, "sdlc.yml")
 TTL = 3 * 24 * 3600
+PASS_TTL = 15 * 60
 FORMATS = ("claude", "json", "exit")
+
+# What changes the authorisations or gives an OK in the person's name. Judged before anything
+# else, so nothing chained to it hides it; it asks even in autonomous mode, and a pass never
+# covers it.
+# Level "person": writing the grants or the passes directly; nothing covers it, not even a pass.
+# Level "authorise": the grant and revoke commands; a pass, the person's typed OK, covers them.
+GRANTS_TOUCH = [
+    (r"personal/grants\b", "person", "the authorisations can only change through the person's own confirmation"),
+    (r"log_reminder\.py\b", "person", "an OK can only come from the person"),
+    (r"permissions\.py\b.*\b(grant|revoke)\b", "authorise", "an authorisation must pass the person's own confirmation"),
+]
+PROTECTED = ("person", "authorise")
 
 # Judged on the command with its quotes and backslashes removed, so quoting cannot hide them.
 NEVER = [
@@ -52,8 +99,10 @@ NEVER = [
     (r"\b(cdk\s+deploy|serverless\s+deploy|sam\s+deploy)\b", "infrastructure or production tool"),
     (r"\b(token|tokens|personal_access_tokens|deploy[-_]keys?)\b.*\b(create|new|add)\b", "credentials"),
     (r"\b(gh|glab)\s+auth\s+token\b", "credentials"),
-    (r"permissions\.py\b.*\b(grant|revoke)\b", "an authorisation must pass the person's own confirmation"),
-    (r"personal/grants\b", "the authorisations can only change through the person's own confirmation"),
+    (r"\bgh\s+pr\s+review\b.*(--approve|(^|\s)-a\b)", "approval of a change request"),
+    (r"\bglab\s+mr\s+(approve|unapprove|revoke)\b", "approval of a change request"),
+    (r"\b(gh|glab|curl)\b.*\breviews\b.*\bapprove\b", "approval of a change request"),
+    (r"(\b(gh|glab|curl)\b|tools/clients/).*/(un)?approve\b", "approval of a change request"),
 ]
 # Infrastructure tools always ask, except for the subcommands below, which only read. Reading a
 # secret is still credentials, and asks.
@@ -101,7 +150,12 @@ DESTRUCTIVE = re.compile(r"(merge|delete|remove|destroy|archive|executedestructi
 TRACKER_TOOL = re.compile(r"(jira|issue|ticket|tracker|linear|youtrack|shortcut|clickup)", re.I)
 CODE_TOOL = re.compile(r"(github|gitlab|bitbucket|pull_?request|merge_?request|\bpr\b|\bmr\b|repo|branch|commit)", re.I)
 FILE_TOOLS = ("write", "edit", "multiedit", "notebookedit", "str_replace_editor", "create_file", "replace",
-              "write_file")
+              "write_file", "fs_write", "str_replace", "edit_file", "append", "append_file", "fs_append",
+              "write_to_file")
+FILE_HINT = re.compile(r"(write|append|replace|edit|create|patch)", re.I)
+PATH_KEYS = ("file_path", "path", "notebook_path", "filePath", "target_file")
+SHELL_TOOLS = ("bash", "shell", "execute_bash", "executebash", "run_shell_command", "run_command",
+               "execute_command", "run_terminal_cmd", "shell_command", "terminal", "exec")
 PUSH_DANGER = {"--force": "forced push", "-f": "forced push", "--force-with-lease": "forced push",
                "--force-if-includes": "forced push", "--mirror": "mirrored push",
                "--prune": "pruning push", "--delete": "deleting push", "-d": "deleting push",
@@ -127,11 +181,12 @@ def purge():
 def load(session):
     p = grants_path(session)
     if not session or not os.path.exists(p):
-        return {"repo": [], "tracker": []}
+        return {"repo": [], "tracker": [], "platforms": {}}
     with io.open(p, encoding="utf-8") as f:
         data = json.load(f)
     data.setdefault("repo", [])
     data.setdefault("tracker", [])
+    data.setdefault("platforms", {})
     return data
 
 
@@ -141,6 +196,55 @@ def save(session, data):
     with io.open(path, "w", encoding="utf-8") as f:
         f.write(json.dumps(data, indent=2))
     os.chmod(path, 0o600)
+
+
+def pass_path(session):
+    return os.path.join(GRANTS, re.sub(r"[^A-Za-z0-9_.-]", "_", session or "default") + ".pass")
+
+
+def spend_pass(session):
+    """True when the person's OK for one action is waiting and fresh. Used or stale, it goes."""
+    p = pass_path(session)
+    try:
+        with io.open(p, encoding="utf-8") as f:
+            stamp = float(f.read().strip() or 0)
+    except (OSError, ValueError):
+        stamp = 0
+    try:
+        os.remove(p)
+    except OSError:
+        return False
+    return 0 <= time.time() - stamp <= PASS_TTL
+
+
+def config_value(key, section):
+    """A flat read of one key of one section of sdlc.yml: enough for the opt-in this guard needs."""
+    try:
+        with io.open(CONFIG, encoding="utf-8") as f:
+            text = f.read()
+    except Exception:
+        return ""
+    m = re.search(r"^%s:[^\n]*\n((?:[ \t]+.*\n?|\s*\n)*)" % re.escape(section), text, re.M)
+    m = re.search(r"^\s*%s:[ \t]*(.*)$" % re.escape(key), m.group(1), re.M) if m else None
+    if not m:
+        return ""
+    return m.group(1).split("#", 1)[0].strip().strip("\"'")
+
+
+def autonomous_allowed():
+    return config_value("autonomous_allowed", "permissions").lower() in ("true", "yes", "on")
+
+
+def home():
+    return os.path.realpath(os.path.expanduser("~"))
+
+
+def platform_path(url):
+    """`group/sub/name` from an origin URL, whatever the host: scp-like, https or ssh://."""
+    url = (url or "").strip().rstrip("/")
+    url = url[:-4] if url.endswith(".git") else url
+    m = re.match(r"^[a-z][a-z0-9+.-]*://[^/]+/(.+)$", url, re.I) or re.match(r"^[^/:@]+@[^:/]+:(.+)$", url)
+    return m.group(1).strip("/") if m else ""
 
 
 # ───────────────────────────── git helpers ─────────────────────────────
@@ -230,6 +334,25 @@ def classify_push(tokens, where):
     return ("watched", "outward write to a repository", ("repo", repo))
 
 
+def named_repository(tokens):
+    """The repository a code platform command names instead of running inside it, as
+    ("platform", "group/name"): `-R`/`--repo`, or the path of an API call."""
+    for i, t in enumerate(tokens):
+        if t in ("-R", "--repo") and i + 1 < len(tokens):
+            return ("platform", tokens[i + 1].strip("/"))
+        if t.startswith("--repo="):
+            return ("platform", t.split("=", 1)[1].strip("/"))
+    if len(tokens) > 1 and tokens[1] == "api":
+        for t in tokens[2:]:
+            m = re.match(r"^/?repos/([^/\s]+/[^/\s?]+)", t)
+            if m:
+                return ("platform", m.group(1))
+            m = re.match(r"^/?projects/([^/\s?]+)", t)
+            if m:
+                return ("platform", unquote(m.group(1)))
+    return None
+
+
 def classify_segment(segment, where):
     """Return ((level, reason, scope), new working directory)."""
     tokens = words(segment)
@@ -252,13 +375,14 @@ def classify_segment(segment, where):
         if rest and rest[0] == "push":
             return classify_push(rest[1:], where), where
     if first in ("gh", "glab"):
+        scope = named_repository(tokens) or ("repo", toplevel(where))
         if re.search(r"\b(pr|mr)\s+create\b", segment):
-            return ("watched", "opening a change request", ("repo", toplevel(where))), where
+            return ("watched", "opening a change request", scope), where
         if len(tokens) > 1 and tokens[1] == "api" and (WRITE_METHOD.search(segment) or IMPLICIT_POST.search(segment)):
-            return ("watched", "write through the code platform API", ("repo", toplevel(where))), where
+            return ("watched", "write through the code platform API", scope), where
         if len(tokens) > 1 and tokens[1] not in ("api", "auth", "status", "browse", "help", "version") and \
                 re.search(r"\b(create|edit|close|reopen|comment|review|ready|merge|delete|transfer|archive|lock)\b", segment):
-            return ("watched", "write to the code platform", ("repo", toplevel(where))), where
+            return ("watched", "write to the code platform", scope), where
     if first == "curl" and (WRITE_METHOD.search(segment) or CURL_DATA.search(segment)):
         return ("watched", "write to an external API", None), where
     return ("local", "", None), where
@@ -301,6 +425,12 @@ def client_verdicts(flat):
 
 def classify_shell(command, cwd):
     flat = re.sub(r"['\"\\]", "", command)
+    grants_dir = os.path.realpath(GRANTS)
+    if grants_dir in flat or GRANTS in flat:
+        return [("person", "the authorisations can only change through the person's own confirmation", None)]
+    for pattern, level, why in GRANTS_TOUCH:
+        if re.search(pattern, flat, re.I):
+            return [(level, why, None)]
     for pattern, why in NEVER:
         if re.search(pattern, flat, re.I):
             return [("never", why, None)]
@@ -318,16 +448,55 @@ def classify_shell(command, cwd):
     return verdicts + client_verdicts(flat)
 
 
+def normalise(event):
+    """(tool, args) in one vocabulary, whatever assistant sent the event: shell commands carry a
+    `command`, file writes are named like the file tools above and connector tools like
+    `mcp__server__tool`."""
+    tool = str(event.get("tool_name") or event.get("toolName") or event.get("tool") or "")
+    args = event.get("tool_input") or event.get("toolInput") or event.get("args") or {}
+    if isinstance(args, str):
+        try:
+            parsed = json.loads(args)
+        except ValueError:
+            parsed = None
+        args = parsed if isinstance(parsed, dict) else {"command": args}
+    if not isinstance(args, dict):
+        return tool, None
+    lname = tool.lower()
+    if lname.startswith("mcp__"):
+        return tool, args
+    if lname in SHELL_TOOLS and not isinstance(args.get("command"), str):
+        for key in ("cmd", "script", "commandLine", "command_line"):
+            if isinstance(args.get(key), str):
+                return "Bash", dict(args, command=args[key])
+    if isinstance(args.get("command"), str):
+        return "Bash", args
+    path = next((args[k] for k in PATH_KEYS if isinstance(args.get(k), str) and args.get(k)), None)
+    looks_like_file = FILE_HINT.search(lname) and ("file" in lname or lname.startswith("fs_"))
+    if (lname in FILE_TOOLS or looks_like_file) and path and "/" not in tool and "___" not in tool:
+        return "Write", dict(args, file_path=path)
+    m = re.match(r"^@?([\w.-]+)(?:___|/)([\w.-]+)$", tool)
+    if m:
+        return "mcp__%s__%s" % (m.group(1), m.group(2)), args
+    m = re.match(r"^mcp_([a-z0-9-]+)_(\w+)$", tool, re.I)
+    if m:
+        return "mcp__%s__%s" % (m.group(1), m.group(2)), args
+    return tool, args
+
+
 def classify_tool(name, args):
     lname = name.lower()
     base = lname.rsplit("__", 1)[-1]
     if base in FILE_TOOLS or lname in FILE_TOOLS:
-        path = str(args.get("file_path") or args.get("path") or args.get("notebook_path") or "")
-        if "personal/grants" in path.replace("\\", "/") or os.path.realpath(path).startswith(os.path.realpath(GRANTS)):
-            return ("never", "the authorisations can only change through the person's own confirmation", None)
+        path = str(next((args[k] for k in PATH_KEYS if args.get(k)), ""))
+        real = os.path.realpath(path) if path else ""
+        if "personal/grants" in path.replace("\\", "/") or (real and real.startswith(os.path.realpath(GRANTS))):
+            return ("person", "the authorisations can only change through the person's own confirmation", None)
         return ("local", "", None)
     if not lname.startswith("mcp__"):
         return ("local", "", None)
+    if "approve" in base:
+        return ("never", "approval of a change request through a connector", None)
     if DESTRUCTIVE.search(base):
         return ("never", "a merge or deletion through a connector", None)
     if READ_VERBS.search(base) and not WRITE_VERBS.search(re.sub(r"read|execute", "", base)):
@@ -346,15 +515,23 @@ def classify_tool(name, args):
     return ("watched", "write through a connector", None)
 
 
-def decide(event):
+def covered(scope, grants):
+    kind, value = scope
+    if not value or value == home():
+        return False
+    if kind == "platform":
+        return value in grants.get("platforms", {}).values()
+    return value in grants.get(kind, [])
+
+
+def judge(event):
+    """(decision, reason, level). decision is allow, ask or None; level says what an ask
+    protects: "person" and "authorise" for the authorisations, "never", or "watched"."""
     if not isinstance(event, dict) or not event:
-        return "ask", "The guard received no action to judge, so it asks."
-    tool = event.get("tool_name") or event.get("toolName") or event.get("tool") or ""
-    args = event.get("tool_input") or event.get("toolInput") or event.get("args") or {}
-    if isinstance(args, str):
-        args = {"command": args}
-    if not isinstance(args, dict):
-        return "ask", "The guard could not read the action's arguments, so it asks."
+        return "ask", "The guard received no action to judge, so it asks.", "never"
+    tool, args = normalise(event)
+    if args is None:
+        return "ask", "The guard could not read the action's arguments, so it asks.", "never"
     session = str(event.get("session_id") or event.get("sessionId") or os.environ.get("SDLC_SESSION", ""))
     cwd = event.get("cwd") or os.getcwd()
     grants = load(session)
@@ -363,28 +540,44 @@ def decide(event):
     if command:
         verdicts = classify_shell(str(command), cwd)
     else:
-        verdicts = [classify_tool(str(tool), args)]
+        verdicts = [classify_tool(tool, args)]
 
+    for level, reason, _ in verdicts:
+        if level in PROTECTED:
+            return "ask", "Always asks: %s." % reason, level
+    if grants.get("autonomous") is True and autonomous_allowed():
+        # The person chose autonomous mode where the organisation allows it: the assistant's own
+        # permission mode decides everything but the authorisations.
+        return None, "", None
     pending = []
     for level, reason, scope in verdicts:
         if level == "never":
-            return "ask", "Always asks: %s." % reason
+            return "ask", "Always asks: %s." % reason, "never"
         if level == "watched":
-            if scope and scope[1] and scope[1] in grants.get(scope[0], []):
+            if scope and covered(scope, grants):
                 continue
             pending.append((reason, scope))
     if not pending:
         if any(v[0] == "watched" for v in verdicts):
-            return "allow", "Every outward write in this command is authorised for the session."
-        return None, ""
+            return "allow", "Every outward write in this command is authorised for the session.", None
+        return None, "", None
     reason, scope = pending[0]
-    if scope and scope[1]:
+    reason = reason[:1].upper() + reason[1:]
+    if scope and scope[0] == "platform" and scope[1]:
+        return "ask", "%s in %s. To authorise it for the session, authorise its local clone: permissions.py " \
+            "grant %s repo <path>" % (reason, scope[1], session or "<session>"), "watched"
+    if scope and scope[1] and scope[1] != home():
         hint = "permissions.py grant %s %s %s" % (session or "<session>", scope[0], scope[1])
-        return "ask", "%s. To authorise it for the session: %s" % (reason[:1].upper() + reason[1:], hint)
-    return "ask", "%s, outside any authorised scope." % (reason[:1].upper() + reason[1:])
+        return "ask", "%s. To authorise it for the session: %s" % (reason, hint), "watched"
+    return "ask", "%s, outside any authorised scope." % reason, "watched"
 
 
-def emit(decision, reason, fmt):
+def decide(event):
+    decision, reason, _ = judge(event)
+    return decision, reason
+
+
+def emit(decision, reason, fmt, level=None):
     if decision is None:
         return 0
     if fmt == "claude":
@@ -398,12 +591,16 @@ def emit(decision, reason, fmt):
         return 0
     if decision == "allow":
         return 0
-    sys.stderr.write("Needs the person's OK. %s\n" % reason)
+    if level == "person":
+        sys.stderr.write("Only the person can do this, not even with an OK: %s Leave it to them.\n" % reason)
+        return 2
+    sys.stderr.write("Needs the person's OK. %s Show the person what you are about to do and ask them to "
+                     "reply \"ok\"; with their reply, try again. One OK covers one action.\n" % reason)
     return 2
 
 
 def check(argv):
-    fmt = "exit"
+    fmt, level, session = "exit", "never", ""
     try:
         if "--format" in argv:
             i = argv.index("--format")
@@ -414,14 +611,58 @@ def check(argv):
             pass
         raw = sys.stdin.read()
         event = json.loads(raw) if raw.strip() else {}
-        decision, reason = decide(event)
+        decision, reason, level = judge(event)
+        if isinstance(event, dict):
+            session = str(event.get("session_id") or event.get("sessionId") or os.environ.get("SDLC_SESSION", ""))
     except Exception as e:
-        decision, reason = "ask", "The guard could not decide (%s), so it asks." % type(e).__name__
+        decision, reason, level = "ask", "The guard could not decide (%s), so it asks." % type(e).__name__, None
+    # An assistant that can only block gets the person's OK as a pass: it covers one action.
+    if fmt == "exit" and decision == "ask" and level in ("watched", "never", "authorise"):
+        try:
+            if spend_pass(session):
+                print("The person's OK was used for this action. %s" % reason)
+                return 0
+        except Exception:
+            pass
     try:
-        return emit(decision, reason, fmt)
+        return emit(decision, reason, fmt, level)
     except Exception:
         sys.stderr.write("Needs the person's OK. The guard could not answer.\n")
         return 2
+
+
+def grant(session, data, kind, value):
+    if kind == "autonomous":
+        if not autonomous_allowed():
+            print("x autonomous mode is not enabled for this organisation: sdlc.yml has no "
+                  "permissions.autonomous_allowed: true. Every outward write keeps asking.")
+            return 1
+        data["autonomous"] = True
+        save(session, data)
+        print("OK  autonomous mode for session %s: the guard only protects the authorisations; the "
+              "assistant's own permission mode decides the rest" % session)
+        return 0
+    if kind == "repo":
+        top = toplevel(os.path.expanduser(value))
+        if not top:
+            print("x not a repository: %s" % value)
+            return 1
+        if top == home():
+            print("x %s is the home folder: it is never authorised as a repository" % top)
+            return 1
+        if top not in data["repo"]:
+            data["repo"].append(top)
+        path = platform_path(git(["remote", "get-url", "origin"], top))
+        if path:
+            data["platforms"][top] = path
+        value = top
+    else:
+        value = value.upper()
+        if value not in data[kind]:
+            data[kind].append(value)
+    save(session, data)
+    print("OK  %s %s authorised for session %s" % (kind, value, session))
+    return 0
 
 
 def main(argv):
@@ -438,23 +679,22 @@ def main(argv):
     data = load(session)
     if action == "show":
         print(json.dumps(data, indent=2))
+        if data.get("autonomous") is True:
+            print("autonomous mode: %s" % ("active" if autonomous_allowed() else
+                                           "recorded, but sdlc.yml no longer allows it, so it does not count"))
         return 0
-    if action == "grant" and len(argv) == 4 and argv[2] in ("repo", "tracker"):
-        kind, value = argv[2], argv[3]
-        value = toplevel(os.path.expanduser(value)) if kind == "repo" else value.upper()
-        if not value:
-            print("x not a repository: %s" % argv[3])
-            return 1
-        if value not in data[kind]:
-            data[kind].append(value)
-        save(session, data)
-        print("OK  %s %s authorised for session %s" % (kind, value, session))
-        return 0
+    if action == "grant" and (len(argv) == 4 and argv[2] in ("repo", "tracker") or argv[2:] == ["autonomous"]):
+        return grant(session, data, argv[2], argv[3] if len(argv) == 4 else None)
     if action == "revoke":
-        if len(argv) == 4 and argv[2] in ("repo", "tracker"):
+        if argv[2:] == ["autonomous"]:
+            data.pop("autonomous", None)
+            save(session, data)
+        elif len(argv) == 4 and argv[2] in ("repo", "tracker"):
             kind = argv[2]
-            value = toplevel(os.path.expanduser(argv[3])) if kind == "repo" else argv[3].upper()
+            value = (toplevel(os.path.expanduser(argv[3])) or os.path.realpath(argv[3])) if kind == "repo" \
+                else argv[3].upper()
             data[kind] = [v for v in data[kind] if v != value]
+            data["platforms"].pop(value, None)
             save(session, data)
         elif os.path.exists(grants_path(session)):
             os.remove(grants_path(session))

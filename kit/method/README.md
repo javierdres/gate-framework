@@ -40,10 +40,10 @@ impact, build and pre-review, review, deployment, operations, learning.>
 | File | What it says |
 | --- | --- |
 | [`profiles.md`](profiles.md) | What each profile gets, configures, reads, uses, and how it knows it is ready |
-| [`permissions.md`](permissions.md) | The three levels of approval, and session authorisations |
+| [`permissions.md`](permissions.md) | The three levels of approval, session authorisations and, if the organisation allows it, autonomous mode |
 | [`sessions.md`](sessions.md) | The person's log |
 | [`session-start.md`](session-start.md) | What the assistant does when a session opens |
-| [`style.md`](style.md) | How documents and terminal output are written |
+| [`style.md`](style.md) | How documents, sentences and terminal output are written |
 | `flows/` | One diagram per profile |
-| `chat-client/` | The package for roles that work outside the terminal |
+| `chat-client/` | The package for roles that work outside the terminal, built from GATE's `templates/chat-client.md` |
 | `templates/` | Dossier, ticket, postmortem, decision record |

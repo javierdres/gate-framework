@@ -26,12 +26,15 @@ An open dossier. Access to product documentation and to the record of past decis
 - Flags ambiguity instead of resolving it: a statement that admits two readings comes back with both.
 - Classifies the data involved: personal, health, financial, or regulated under any applicable rule.
 - Looks for precedent: earlier tickets, decisions already taken, related incidents, catalog rules that apply to the domain.
+- Checks the product's business rules in force. When the request changes one, it says so in plain words: that is a product decision, not a technical detail, and it has to be taken by product before anyone builds.
+- Keeps the team's ticket format and the product owner's own wording. When the product owner already writes a certain way, it starts from that and completes what is missing. A product owner who sees their text replaced stops bringing it.
 
 ## What it does NOT do
 
 - Does not design the solution.
 - Does not estimate or prioritise.
 - Does not move to stage 2 without a data classification.
+- Does not create anything in the tracker without the product owner's confirmation.
 
 ## Gate
 

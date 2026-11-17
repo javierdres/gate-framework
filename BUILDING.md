@@ -43,8 +43,8 @@ Instructions for the assistant building the SDLC:
 - **Nothing goes into the assistant's global configuration.** Instructions, skills and guards
   are installed in the working folder, so this SDLC never collides with another one on the same
   machine (GATE section 8). Credential files carry the organisation in their name.
-- The catalog starts empty, apart from examples marked as such. It fills with what happens to
-  this team.
+- The catalog starts empty, or with the GATE seeds the orchestrator chooses. Each seed enters as
+  a candidate that its custodian still has to approve. It fills with what happens to this team.
 - At the end, run the verification in section 11 and report what passed, what did not and why.
 
 ---
@@ -64,7 +64,8 @@ Instructions for the assistant building the SDLC:
   each person may use, both tied to verifiable identities.
 - The method as the organisation runs it: profiles, permissions, the person's log, session
   start, templates.
-- An empty standards catalog, by scope, with its false-positive record.
+- A standards catalog by scope, empty or with the seeds the orchestrator chose, with its
+  false-positive record and its record of what was not adopted.
 - A folder per pilot product, with its context, its business rules and its catalog of use
   cases.
 - Tools: an installer, an access checker, the guards, small API clients and step-by-step access
@@ -115,9 +116,17 @@ Every guard follows the same contract, whatever assistant calls it.
   Where it only understands exit codes, `allow` is exit 0 and `deny` is exit 2 with the reason
   on standard error. Where it has no way to ask, `ask` becomes `deny` with a reason that tells
   the person how to authorise the action and run it again.
+- **Assistants that cannot show a confirmation.** The assistant shows the person what it is
+  about to do and asks them to answer OK. The per-message guard records the person's next typed
+  OK as a pass for one watched action, valid for fifteen minutes and used once. Writing to the
+  authorisations, or typing an OK on the person's behalf, is always blocked. Without this, a
+  person on an assistant whose hooks can only allow or block had no way to approve a single
+  write.
 
 `bin/bootstrap.py sdlc` writes a working reference guard, `tools/guards/permissions.py`, with
-session-scoped authorisations and the list of actions that are never delegated. It is
+session-scoped authorisations, the list of actions that are never delegated, and the autonomous
+mode the organisation may allow in `sdlc.yml` (`permissions.autonomous_allowed`, off by
+default). It is
 conservative: an authorisation covers only a simple command it reads completely, and a write
 inside `sh -c`, `eval`, a subshell or a command substitution always asks. It also watches the
 assistant's file tools, so not even the authorisations themselves can be written without the
@@ -139,7 +148,7 @@ version in `sdlc.yml`.
 |---|---|---|---|
 | Claude Code | `CLAUDE.md` in the working folder importing `@<system>/AGENTS.md` | Linked or copied into `.claude/skills/` | `.claude/settings.json`: `SessionStart`, `UserPromptSubmit`, `PreToolUse` |
 | Gemini CLI | `GEMINI.md`, or `AGENTS.md` set as the context file name in settings | Its skills folder, in the same `SKILL.md` format | `.gemini/settings.json`: the before-tool and session events. Hooks may need enabling |
-| Kiro | A steering file in `.kiro/steering/` that points to `AGENTS.md` | `.kiro/skills/` | Kiro CLI hooks on pre-tool use and session start; names differ between major versions |
+| Kiro | A steering file in `.kiro/steering/` that points to `AGENTS.md` | `.kiro/skills/` | `.kiro/hooks/`: session start, each message and pre-tool use, block-only. Automated by `adapters/kiro/install.sh`, version to verify |
 | Codex CLI | Reads `AGENTS.md` natively | Its skills folder, in the same format | Its hook configuration, where the installed version supports it |
 | Any other | Whatever file it loads every session, pointing to `AGENTS.md` | Whatever it loads on demand | Its pre-action mechanism, or the platform fallback above |
 
@@ -152,10 +161,33 @@ documentation, not yet verified on a real installation. If you verify one, contr
 
 People who do not work in a terminal, product most often, use a **chat client** with a project
 or workspace: the instructions for their role, the context files they need and a connector to
-the tracker. The SDLC keeps that package in `method/chat-client/` and says what to copy where.
+the tracker. The SDLC keeps that package in `method/chat-client/` and says what to copy where;
+[`templates/chat-client.md`](templates/chat-client.md) is its starting point. The instructions
+mirror `define`. The knowledge is one file set per product, and it is a copy: whenever its
+source changes, it is uploaded again. The tracker connector runs with the person's own
+identity. Reading code, if the organisation wants it, takes a personal read-only token with an
+expiry. Whatever cannot be checked from there becomes a question for the handover.
 
 An organisation may run several assistants over the same SDLC. Each gets its own folder under
-`adapters/`, and the installer wires whichever the person uses.
+`adapters/`, and the installer wires whichever the person uses. A check in the pipeline fails
+when a change to what one assistant loads (the instructions and their imports, the guards, the
+skills) leaves another adapter behind, and the lagging adapter is fixed in the same change
+request. Without it, the second assistant quietly runs on rules the first has already left
+behind.
+
+That check is `tools/adapters_check.py`: it installs a throwaway copy with each adapter and
+verifies that every guard is registered on its event, every skill is found and a second install
+changes nothing. Every adapter keeps the same conventions, so that holds. The instructions sit
+between `<!-- sdlc:begin -->` and `<!-- sdlc:end -->` and are rewritten on every install. Guards
+are found again by their script name and replaced in place. Hooks go through the working folder
+and never break a session when the script is missing. Skills are linked, or copied and marked
+where links fail. Whatever is replaced is copied to `personal/backups/` first. Renaming the
+system then needs no rewriting, because installing again is enough.
+
+Kiro has an adapter in `adapters/kiro/`, taken from its public documentation and still to be
+verified on a real installation. Its hooks can only let an action through or block it, so the
+person gives their OK by answering "ok". The per-message guard records it and the next watched
+write uses it: one OK per action, for fifteen minutes.
 
 ---
 
@@ -177,6 +209,7 @@ to the SDLC repository.
 | Rule scopes | Cross-cutting, product, security, operations, plus one per technical layer the team actually has |
 | Formulation exit criteria and review date | The four criteria in GATE.md section 2, reviewed four to six weeks after the build |
 | Language and writing standard | The organisation's language. Industry terms stay in English when that is how the team says them |
+| Autonomous mode | Not allowed: `permissions.autonomous_allowed: false` in `sdlc.yml`. When allowed, a person may ask for it explicitly for one session |
 | Where automated flows live | In the SDLC repository, so no product repository has to change during adoption. Product repositories are read only |
 | Out of scope | Whatever the orchestrator names in the interview, plus later phases until the first one works |
 
@@ -258,19 +291,25 @@ into a throwaway one, `/tmp/try/<system>` for example, rather than somewhere fix
 │   ├── GOVERNANCE.md         roles, who approves what, who holds each role
 │   ├── CODEOWNERS            governance translated to the code platform
 │   ├── GATE.md               the GATE version implemented and where this SDLC departs
+│   ├── CHANGELOG.md          what each version brought, why, and what to do
 │   ├── gate-reference/       read-only copy of GATE: framework, this guide, contracts
 │   ├── method/               cycle, profiles, permissions, log, session start,
 │   │   ├── flows/            writing style, one diagram per profile
 │   │   ├── chat-client/      the package for roles that work outside the terminal
 │   │   └── templates/        dossier, ticket, postmortem, decision record
 │   ├── catalog/              written by bin/bootstrap.py, empty of rules
-│   │   ├── README.md         rule format, severities and scopes
-│   │   ├── scopes.md         each scope and its custodian
+│   │   ├── README.md         rule format, severities, scopes, the versioned-standard pattern
+│   │   ├── scopes.md         each scope's prefix, version and custodian; groups by remote
 │   │   ├── rules/hard/       blocking rules, each with its scope
-│   │   ├── rules/soft/       suggestions, each with its scope
-│   │   ├── calibration/      false-positives.md, with no approval needed
-│   │   ├── bin/              format validator and catalog generator
-│   │   └── tests/            the validator and generator, in both directions
+│   │   ├── rules/soft/       required rules: fixed, or deferred with a ticket
+│   │   ├── rules/recommended/ suggestions
+│   │   ├── seeds/            optional GATE rules, that count only once adopted
+│   │   ├── calibration/      false-positives.md (no approval) and not-adopted.md
+│   │   ├── ci/               the pipeline gate that freezes debt, on any platform
+│   │   ├── exceptions.md     project, change and line exceptions, with expiry
+│   │   ├── project-profile.md the block each project declares in its instructions
+│   │   ├── bin/              validator, generator, adopt_seed.py, applicable.py
+│   │   └── tests/            all of the above, in both directions
 │   ├── products/
 │   │   ├── README.md         index of products and of their use-case catalogs
 │   │   ├── _template/        README.md · business-rules.md · use-cases.md · incidents/
@@ -303,23 +342,33 @@ The templates in [`templates/`](templates/) give the literal starting point for 
 **`AGENTS.md` of the repository.** Loaded every session, so it is short. One line with the
 purpose and the principle: the assistant prepares, people decide. A pointer to the plan: when
 something proposed does not fit it, the assistant says so and offers to record it as out of
-scope. The session start, included or referenced. A one-table map: where each thing is, what
+scope. The session start, imported rather than linked, so the menu loads in every session:
+some assistants do not follow links. A one-table map: where each thing is, what
 question it answers, when to read it. And the rules that always apply: approval before writing
 and its levels; verify before asserting; the single source of truth for production; check
 before creating; consult the catalog before proposing a pattern; nothing merges without an
 approval in force; credentials never in a repository or in the chat; check the repository root
 before any destructive version-control operation; when an access is missing, say which and go
 on with what can be done; whatever a person runs outside the assistant is given step by step;
-write by roles; run the harvest when a review closes; keep the log without being asked; the
-writing standard for documents.
+write by roles, never by names; nobody is observed; run the harvest when a review closes; keep
+the log without being asked; everyone who decides gets the document written for them; and the
+sentence rule: one claim per sentence or a connector that says the relation. If the SDLC runs on
+more than one assistant, a change to what one loads is checked against the other adapters.
 
-**Session start (`method/session-start.md`).** A direct request is handled without a menu. If
-setup is unfinished, the start guard says at which stage, and `/onboard` continues from there.
-Without a profile, a numbered profile menu inside a code block, with an option to work without
-the flow and two to learn about the SDLC. With a profile, a greeting with name and profile, and
-the tasks that profile enables: product, building, review, operations and support, leadership,
-other. Before starting, the assistant summarises what it understood and waits. If the person
-greets without a request, it mentions in one line what is still open in their log.
+**Session start (`method/session-start.md`).** The only copy of the menu. A direct request is
+handled without a menu, except that unfinished requirements or installation come first even
+then, because without them the guards are not running. From the profile stage on, pending setup
+is offered, not imposed. Opened inside the SDLC repository rather than the working folder, the
+assistant asks to reopen it there. If the start guard could not verify the person, the
+assistant verifies them through the tracker connector before any menu. Without a profile, a
+numbered profile menu inside a code block, with an option to work without the flow and two to
+learn about the SDLC. With a profile, a greeting with name and profile, and the tasks that
+profile enables: product, building, review, operations and support, leadership, other. Only
+enabled profiles and tasks appear, and the options that remain keep their numbers. A declared
+profile that is not enabled is ignored, and the assistant offers to fix it. With a question
+tool limited to four options, it shows the four that best fit the profile. Before starting,
+the assistant summarises what it understood and waits. If the person greets without a request,
+it mentions in one line what is still open in their log.
 
 **Profiles (`method/profiles.md`).** It opens with the list of profile ids, the only names a
 profile has anywhere in the SDLC: in `GOVERNANCE.md`, `personal/profile.md`,
@@ -337,11 +386,15 @@ assistant's own permission mode: reading, editing, running tests, local commits,
 systems. Outward writes ask until a scope is authorised: push, opening a change request,
 creating, editing, commenting on or moving tickets; at the first approval in a repository or a
 tracker project, the assistant asks whether to authorise it for the rest of the session. Some
-actions always ask, whatever was authorised: production, merges, forced pushes or pushes that
-delete branches, deletions, generating credentials, and any command that chains an authorised
-write with others that are not. The authorisation lives in `personal/grants/`, is registered
-through a command that passes the assistant's own confirmation, so it cannot authorise itself,
-and expires with the session.
+actions always ask, whatever was authorised: production, merges, approving a change request,
+forced pushes or pushes that delete branches, deletions, generating credentials, and any command
+that chains an authorised write with others that are not. The authorisation lives in
+`personal/grants/`, is registered through a command that passes the assistant's own
+confirmation, so it cannot authorise itself, and expires with the session. If the organisation
+allows it, a fourth level: **autonomous mode**, which a person asks for explicitly for one
+session. The SDLC then stops asking and the assistant's own permission mode decides. The
+assistant can never grant it to itself, and the platform's protected branches and approvals
+still apply.
 
 **The log (`method/sessions.md`).** When the assistant writes: a decision, a closed step, a
 discard, something critical, a pending item, a pause. One file per topic and start date. A
@@ -350,7 +403,12 @@ belong there: rules go to the catalog, product context to its folder, whatever c
 to its ticket.
 
 **Writing style (`method/style.md`).** For documents meant for people: short sentences, plain
-language, written for whoever decides, nothing the reader does not know. For the terminal:
+language, written for whoever decides, nothing the reader does not know, and no metric cards or
+decorative headers in a document for someone who decides. For sentences, in any language: one
+claim per sentence or a connector that says the relation; never two claims glued with a comma
+and "and" or "but"; never an add-on hung after a comma; a title says one thing; common nouns in
+lowercase; reread for literal translations. Examples in the organisation's own language are
+added by the organisation. For the terminal:
 anything visual inside a code block, at most 62 columns, box-drawing characters and simple
 symbols (✓ ✗ ⚠ ↺ ▸), no emoji, one component per idea.
 
@@ -365,7 +423,8 @@ by every custodian; each scope by its custodian; each product by its product own
 custodian of the affected layer; tools by operations; skills by the profile they serve; false
 positives with no approval at all. How a rule is born and the monthly harvest. The table of who
 holds each role today and the table of profiles per person, with their verifiable identity:
-the only two tables in the repository with names.
+the only two tables in the repository with names. A person in a business role who takes part in
+a pilot gets no targets or deadlines; what they report is applied.
 
 `CODEOWNERS` enforces whatever the code platform can. Where "every custodian" must approve and
 the platform accepts any single listed owner (GitHub's code owners work that way; GitLab's
@@ -373,12 +432,18 @@ approval rules can require each one), the change request template carries one li
 custodian whose approval is needed, and whoever merges checks every line is ticked by that
 person. `GOVERNANCE.md` says which mechanism the organisation uses.
 
-**Catalog (`catalog/`).** Written whole by `bin/bootstrap.py`: the rule format, two severities
-(hard rules block, soft rules suggest), the validator, the generated `catalog.json` and the
-false-positive record, empty of rules on purpose. Every rule declares its `scope`
-(cross-cutting, product, security, operations, or a technical layer) and `scopes.md` names the
-custodian of each. A rule starts as a candidate and is reported as a recommendation until its
-custodian approves it; a deprecated rule is never deleted and its id is never reused.
+**Catalog (`catalog/`).** Written whole by `bin/bootstrap.py`: the rule format, three
+severities (hard rules block, soft rules are fixed before merging or deferred with a ticket,
+recommended rules suggest), the validator, the generated `catalog.json`, the false-positive
+record and the record of what was not adopted, empty of rules on purpose. A rule is hard only
+when its check is automated or when breaking it causes a business defect no tool detects. Every
+rule declares its `scope` (cross-cutting, product, security, operations, a technical layer, or a
+group of repositories that share a platform). `scopes.md` names each scope's custodian and id
+prefix and, when the scope is a versioned standard, its version; while that version is 0.x
+nothing in the scope blocks. A rule starts as a candidate and is reported as a suggestion until
+its custodian approves it. A deprecated rule is never deleted and its id is never reused. The
+catalog also carries GATE's optional seeds, a gate for project pipelines that freezes debt
+instead of softening it, the exception mechanism and the project profile template.
 
 **Products (`products/`).** An index of products, the status of their use-case catalogs and
 whom to ask per domain. A template with three files: the product's context (what it is, where
@@ -387,8 +452,18 @@ validated or pending validation; and its catalog of use cases. A product's folde
 when someone works on it, not before.
 
 **Plan (`PLAN.md`).** The objective in two sentences, the vision by profile and phase, how
-everyone will know it works and the review date, what is done, what comes next in order with an
-owner and a closing condition, what is out of scope, and the pending decisions with who decides.
+everyone will know it works and the review date, the pilots, what is done, what comes next in
+order with an owner and a closing condition, what is out of scope, and the pending decisions
+with who decides. "How we will know it works" carries the monthly reading per audience and the
+rules for reading it honestly from GATE.md section 11. "Out of scope" always carries one line
+that is never removed: recording how people use the assistant, or reading their prompts, even
+to measure adoption.
+
+**`CHANGELOG.md`.** The SDLC's own changelog: one entry per version, with what changed, why, and
+a "What to do" line for whoever already has it installed, even when the answer is "nothing".
+Every change to the SDLC adds its entry. The session start guard announces the versions an
+update brought, with their "What to do", so nobody has to read the history to know they must
+reinstall.
 
 **`GATE.md` of the SDLC.** The GATE commit it implements, and a short map of which stage or
 principle each part implements and where it departs from the framework, each departure with its
@@ -419,11 +494,18 @@ verified identity) and products, saved in `personal/profile.md`. Access: explain
 profile needs and why, then set up each missing access one at a time with its guide, and verify
 only that one; prefer company login and connectors over hand-made tokens. Welcome: a live
 demonstration on the person's own data, and mark setup as done. Never ask for or accept a
-credential in the chat; if one is pasted, ask the person to revoke it.
+credential in the chat; if one is pasted, ask the person to revoke it. A personal token only
+where a connector cannot do the job, such as bulk reads. It offers to clone the repositories of
+the person's products into the working folder. Run again later, it shows only what fails or
+warns and resumes from that stage.
 
 **`guide`** explains the SDLC: why use it rather than the bare assistant, a five-minute walk
 through it for the person's profile, and what that profile can ask for today, checked against
-their local configuration.
+their local configuration. A skill whose own prerequisites do not exist yet shows as built on
+first use, not as an error, and a personal credential close to its expiry is mentioned before
+it fails. Its welcome mode closes `onboard` with a read-only demonstration per profile on the
+person's real data; it never shows invented data as theirs. `bootstrap.py` writes a first
+version in `skills/guide/`.
 
 **`save`** stores something where it belongs. Personal things go to preferences, the log or the
 person's own skills. Team things go to the right folder (a rule to the catalog, a discard to its
@@ -441,8 +523,13 @@ data, dependencies, priority), and shows both readings when there are two. It ch
 business rules in force, similar tickets, and the code if there is access. It writes acceptance
 criteria as Given, When, Then, one per behaviour. It proposes the use cases the requirement adds
 or changes and asks the product owner to validate each one. It shows a "ready for development"
-checklist, drafts the ticket in the team's format, creates it only on confirmation, and prepares
-the handover. It must also work from a chat client with a tracker connector. When the product
+checklist, drafts the ticket in the team's format and from the product owner's own wording, and
+creates it only on confirmation. A request that changes a business rule is called out as a
+product decision. New use cases go into the ticket without an id; the id is assigned when they
+enter the catalog, so tickets in flight never collide. It prepares the handover: one or two
+suggested assignees, each with a reason from the product's context and the code's history, and
+assigning is a second confirmation. The handover ends only when the builder confirms, recording
+who took it and what changed. A gap that keeps recurring becomes a candidate product rule. It must also work from a chat client with a tracker connector. When the product
 owner works only there, the validated cases live in the ticket, and whoever builds the change
 adds them to the product's catalog with that ticket as their origin. In phase one the ticket
 also carries the dossier: `method/templates/ticket.md` has a section per stage.
@@ -453,12 +540,17 @@ not raised again. It reads the diff against the base, the layer, the product, th
 dossier; applies the cross-cutting, layer, security and product rules with their discards
 (candidates as recommendations); runs lint, tests and the automated flows the change touches;
 sweeps for secrets, personal data in logs and unvalidated input; checks each criterion of the
-ticket. "What the change introduced" means the lines it adds or modifies, including an old
+ticket. It applies the rules scoped to the code-platform group of the repository (the longest
+prefix of the remote's path), and if reviewers check against a source outside the catalog it
+reads that same source or says in the first line that it could not. A vendored copy of a
+platform guide older than the one in force is reported first. A decision the repository
+declares about itself is not a violation. If lint or tests could not run, the first line of the
+report says so. "What the change introduced" means the lines it adds or modifies, including an old
 problem on a line it modifies; something serious seen in passing on an untouched line, such as a
 secret, goes privately to the security custodian instead. It reports in order: what would block,
 recommendations, questions for product, and what
-has no rule but deserves a look. It offers to fix one at a time and hands rule-less patterns to
-`harvest`.
+has no rule but deserves a look. It offers to fix one at a time, hands rule-less patterns to
+`harvest`, and reminds the author that a push after an approval clears it.
 
 **`e2e`** implements the automated part of `/verify` and the release regression of `/deploy`.
 Five modes: gather a product's use cases (proposed until the product owner validates them),
@@ -483,11 +575,19 @@ per scope to its custodian. It also prepares the monthly harvest.
 `review`, `operate`, `postmortem`, `refine`, `design` and `validate-outcome` are recorded in the
 plan as pending and built when phase one works with real people. Until `postmortem` exists,
 every incident still closes with a postmortem written from `method/templates/postmortem.md`,
-kept in `products/<product>/incidents/`, with its root cause handed to `harvest`. A leadership
-view of the team,
-reading the tracker and the code platform, is optional and belongs to the third phase; it reads
-only, measures everyone with the same yardstick, and treats a number as a place to look, never
-as a verdict on a person.
+kept in `products/<product>/incidents/`, with its root cause handed to `harvest`.
+
+**`pulse`**, the leadership view, is optional and belongs to the third phase. It implements the
+`/pulse` contract. It reads the tracker and the code platform and never writes. Closed tickets
+never measure a person; everyone is measured on the same four dimensions (what they wrote, on
+how many days, what they shipped, what they reviewed). A number says where to look, not whom
+to blame, and every piece of advice is one concrete action tied to a data point. Odd numbers are
+checked at the source before they are reported, and missing data is reported as a gap. Its
+health view works from critical functions the leader declares (holder and backup), coverage
+chains and problems that persist across saved readings; it never labels a person as a flight,
+burnout or low-performance risk, and shows after-hours work for the team only. A private
+personal view compares nobody. The version for management names roles, not people. The effect
+of the SDLC is read with the rules of GATE.md section 11, from shared work only.
 
 ---
 
@@ -495,12 +595,16 @@ as a verdict on a person.
 
 | Piece | What it does |
 |---|---|
-| Installer | Idempotent, with a backup. Creates `personal/` with profile, preferences and log; writes the working folder's `AGENTS.md` without touching what it already has; links the skills where the assistant looks for them, or copies them where links do not work; writes the adapter for the person's assistant. Stops if the repository sits loose in the home folder |
-| Session start guard | Brings the main branch up to date, reports the pending setup stage, verifies the identity and hands over the enabled profiles, checks access, detects an outdated installation, and hands over the log path with what is open |
-| Per-message guard | A short reminder to update the log when the message moved something forward |
+| Installer | Checks the requirements first (git, ssh, a Python 3.8 or later that actually runs) and stops before touching anything. Idempotent. Creates `personal/` with profile, preferences and log. Writes its blocks between the sdlc markers in the working folder's instruction files. Links the skills, or copies them where links fail, never overwrites a skill of the person's with the same name and removes those the SDLC no longer has. Merges the guards and the base rules that always ask, leaves settings that are not valid JSON untouched and keeps a copy of whatever it changes in `personal/backups/`. Without an argument, it detects the assistant it runs in. Stamps a fingerprint per assistant. Stops if the repository sits loose in the home folder |
+| Session start guard | Brings the main branch up to date, reports the pending setup stage, verifies the identity and hands over the enabled profiles, checks access, detects an outdated installation, announces the SDLC versions the update brought with their "What to do", and hands over the log path with what is open. It never hangs on the network. It moves the default branch forward without switching branches, and sets local changes aside only when they do not touch the incoming files; otherwise it touches nothing and says why. When the fingerprint of skills, installer or adapter changed, it asks for a reinstall, which the assistant may run with the person's OK. It says so when the assistant was opened inside the SDLC, and verifies identity through a chain (code platform, tracker command, then the tracker connector) that never takes a bot account for a person |
+| Status line | Where the assistant has one, a line of SDLC notices that appears only when there is something to say: the installation lags the repository and needs reinstalling, change requests wait for the person's review, the authorisations in force for the session (or autonomous mode), a personal token close to its expiry. Anything that needs the network is refreshed in the background and cached, never on each redraw. Notices that depended on the assistant remembering to say them at the greeting got lost. The organisation's own notices come from `tools/notices.py`, run in the background behind a cache |
+| Per-message guard | A short reminder to update the log when the message moved something forward. Where the assistant can only block, it also records the person's typed OK as a single-use pass |
 | Usage guard | Where the assistant meters use in windows and exposes them, shows how much of each window is used and when it resets, and warns once when a window will run out before it resets at the current pace: the assistant suggests a lighter model and runs its subagents on one, and suggests the most capable model again after the reset. `tools/guards/usage.py` is the reference |
-| Permissions guard | Before every watched write, reads the session's authorisations and answers allow or ask. Production, merges and deletions always ask; infrastructure tools ask except for their read-only subcommands. On any error, asks |
+| Permissions guard | Before every watched write, reads the session's authorisations and answers allow or ask. Production, merges and deletions always ask; infrastructure tools ask except for their read-only subcommands. On any error, asks. Approving a change request always asks |
 | Access checker | `requirements` checks only what the machine needs before installing; a profile checks requirements, the access everyone needs (`all`) and its own, and shows them with the status component |
+| Access checker, at session start | Runs every check at once under a hard deadline and stops whatever is still running with all it started. A check whose local "configured" test passes reports "configured but not answering". Several profiles get the union of their checks |
+| Adapter check | `tools/adapters_check.py` installs a throwaway copy with each adapter and fails when a guard, a skill or idempotence is missing |
+| Shared shell functions | `tools/lib.sh` is the one place for what differs between macOS, Linux and Windows: finding Python, linking or copying skills, detecting the assistant, backups and credential names |
 | API clients | One per system (code platform, tracker, observability), without dependencies, reading the credential from the person's home. The HTTP method goes first, `tools/clients/<system>.sh GET <path>`, so the permissions guard lets GET and HEAD through and asks for anything else; a GraphQL client takes `QUERY` or `MUTATION` instead |
 | Access guides | One per system, step by step: how to create the credential with the least privilege and an expiry, where to keep it, how to check it works |
 
@@ -518,14 +622,17 @@ standard library, with no dependencies.
    <working folder>/<system> --assistant <id> --org <short name> --name "<display name>"`
    writes it: the structure,
    the base files from the templates, the empty catalog with its validator, the four guards,
-   the installer, a copy of GATE in `gate-reference/`, first versions of the `establish` and
-   `onboard` skills and, for Claude Code, its adapter with both skills already registered.
+   the installer, a copy of GATE in `gate-reference/`, first versions of the `establish`,
+   `onboard` and `guide` skills and, for Claude Code, its adapter with `establish` and `onboard`
+   already registered.
    `/establish` fills in and writes the rest.
 2. The interview, with its summary confirmed. Nothing below starts before it.
 3. `sdlc.yml`, `GOVERNANCE.md`, `CODEOWNERS` and `PLAN.md`, from the interview.
 4. The method: README, profiles, permissions, log, style, session start, flows, templates, and
    the chat-client package if a role needs it.
-5. The empty catalog, with its format, its scopes and its false-positive record.
+5. The catalog, with its format, its scopes, its false-positive record and the seeds the
+   orchestrator chose, adopted as candidates with `catalog/bin/adopt_seed.py`. When a chosen
+   seed's scope is missing, add the scope first.
 6. The product template and the folders of the pilot products named in the interview. Any
    other product gets its folder from the template when someone first works on it.
 7. `AGENTS.md` of the repository, and `GATE.md` with the version and the first departures.
@@ -534,9 +641,10 @@ standard library, with no dependencies.
    the step is reported as skipped in the final verification, with the reason.
 8. Installer, guards, access checker, API clients and access guides.
 9. The adapter for the chosen assistant.
-10. The entry skills: `onboard`, `guide` and `save`.
+10. The entry skills: `onboard`, `guide` and `save`. The first two adapt the versions the
+    skeleton wrote.
 11. The phase one skills: `define`, `self-review`, `harvest`, and `e2e` with its runner.
-12. README and ONBOARDING.
+12. README, ONBOARDING and the first entry of `CHANGELOG.md`.
 13. The final verification. When it closes, write today's date in `built` in `sdlc.yml`.
 
 ---
@@ -559,6 +667,9 @@ standard library, with no dependencies.
   ○  Production and merges ask even when authorised
   ○  A failing guard asks instead of letting through
   ○  The guard and catalog tests pass
+  ○  Approving a change request asks even when authorised
+  ○  Autonomous mode is refused unless sdlc.yml allows it
+  ○  With a second assistant, the adapter drift check passes
   ○  Session start reports identity, profiles and access
   ○  define produces a test ticket ready for development
   ○  self-review reviews a test change against the catalog
@@ -566,6 +677,8 @@ standard library, with no dependencies.
   ○  e2e refuses to run against a host not allowed
   ○  The log writes itself after a decision
   ○  GATE.md names the commit implemented
+  ○  A second install changes nothing and leaves no backup in the working folder
+  ○  Session start offers to reinstall after a skill or adapter change
 ```
 
 Report each point with ✓, ✗ or –. A ✗ says what is missing and who it depends on. A – marks a
@@ -632,4 +745,13 @@ updates the pinned commit and reviews the map of departures. Nothing updates on 
 with nothing that belongs to the organisation. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **How do we know it is working?** By the formulation exit criteria on their review date. If none
-is met, review the approach before building more.
+is met, review the approach before building more. After that, by the monthly reading per
+audience in GATE.md section 11, with its rules for not fooling yourself.
+
+**Can we measure adoption by how people use the assistant?** No. The SDLC never records when or
+how someone uses it, and never reads their prompts. Adoption shows in shared work, aggregated,
+and in a voluntary survey.
+
+**Can someone leave the assistant working while they are away?** Only if the organisation allows
+autonomous mode in `sdlc.yml`, and only when the person asks for it for that session. The
+platform's protected branches and approvals still hold.

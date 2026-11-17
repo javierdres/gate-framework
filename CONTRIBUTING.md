@@ -25,8 +25,13 @@ missing, add it with what it cost.
 
 ## What does not belong here
 
-Specific standard rules. The catalog belongs to each organisation and lives in its own SDLC:
-this framework defines how it is fed, not what it says.
+Specific standard rules, except as seeds. The catalog belongs to each organisation and lives in
+its own SDLC: this framework defines how it is fed, not what it says. What GATE does accept is a
+seed in `kit/catalog/seeds/`: an optional rule an organisation can choose to adopt as a
+candidate, carrying a lesson someone can trace, such as an incident, an audit or a measured
+pattern of fixes, told as a pattern without the organisation's names or data. A seed with no
+traceable lesson does not get in, however sensible it sounds. Run
+`python3 kit/catalog/bin/adopt_seed.py --check` before proposing one.
 
 Ceremonies, cadence or estimation. GATE describes the journey of a piece of work and who clears
 each step; how you organise the team sits outside.
@@ -51,10 +56,18 @@ anything.
 ```
 python3 kit/tools/guards/tests/test_permissions.py
 python3 kit/tools/guards/tests/test_session_start.py
+python3 kit/tools/guards/tests/test_usage.py
 python3 kit/catalog/tests/test_catalog.py
+python3 kit/tools/tests/test_use_cases_index.py
+python3 kit/tools/adapters_check.py
 bash kit/tools/server-hooks/tests/test_update.sh
 bash kit/tools/tests/test_rename.sh
+bash kit/tools/tests/test_install.sh
+sh kit/e2e/run-unit-tests.sh
 ```
+
+Run them in a terminal, not inside an assistant session: some scripts refuse to run there, and
+the assistant's environment variables change what the installer detects.
 
 ```
 python3 bin/bootstrap.py sdlc /tmp/sdlc-test --assistant claude-code --org test

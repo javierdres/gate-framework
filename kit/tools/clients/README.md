@@ -14,3 +14,14 @@ tracker authorisation for `ABC` covers it.
 Name each credential file after the organisation and the system, for example
 `~/.<org>-tracker-key`, never a generic `~/.tracker-key`. The same person may carry another
 organisation's SDLC on the same machine, and a generic name makes the two read each other's keys.
+
+Scripts read a credential through `sdlc_credential` in `tools/lib.sh`, which takes the
+organisation's name first and the generic one as a fallback, so an older installation keeps
+working. List the credential names in `tools/clients/credentials`: the installer moves a file
+still under the generic name to the organisation's and leaves a link at the old name, so the
+person's own tools that read it keep working. On Windows nothing moves; the fallback is enough.
+
+```bash
+. "$SDLC/tools/lib.sh"
+KEY_FILE="$(sdlc_credential "$SDLC" tracker-key)"    # ~/.<org>-tracker-key, else ~/.tracker-key
+```

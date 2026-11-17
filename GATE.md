@@ -131,7 +131,10 @@ that was chosen:
   repository's API clients where it does not.
 
 An organisation can run more than one assistant over the same SDLC. Each one gets its adapter,
-while the method, the catalog and the products stay single.
+while the method, the catalog and the products stay single. A check in the pipeline fails when
+a change to what one assistant loads leaves another adapter behind, and the lagging adapter is
+fixed in the same change request. Without that check, the second assistant quietly runs on
+rules the first one has already left behind.
 
 The choice is recorded in the SDLC's configuration and in its governance, with the version it
 was verified against. Changing assistant later is a decision like any other: the orchestrator
@@ -315,8 +318,17 @@ an alert. By default all of it is shown first and executed on explicit approval.
 first approval in a scope, such as one repository or one tracker project, the person may
 authorise that scope for the rest of the session. The assistant can never authorise itself,
 and the authorisation ends with the session. A short list is never delegated, whatever was
-authorised: production, merges, deletions, rewriting history, and anything to do with
-credentials.
+authorised: production, merges, approving a change request, deletions, rewriting history, and
+anything to do with credentials. An approval is a person's judgement on someone else's work; an
+assistant that approves turns the reviewer gate into a ceremony.
+
+The only exception is the organisation's to grant. If its configuration allows an autonomous
+mode, a person may ask for it explicitly, for one session, to leave work running and find it
+done when they return. The SDLC then stops asking, short list included, and the assistant's own
+permission mode decides. The assistant can never switch it on for itself, and the platform's
+protections still hold: protected branches and mandatory approvals do not move. It is off unless
+the organisation decides otherwise. It exists because people left long work running and came
+back to a session stopped at its first question, and then learned to work around the SDLC.
 
 **What must hold is enforced by the environment, not by the prompt.** An instruction fades
 over a long session, the same way a person forgets to run a command. Permissions, session start
@@ -334,6 +346,13 @@ checked out. If it could not be checked, that gets said.
 **Roles, not names.** Every document names the role. Names live in a single table, and a
 person is identified by their verified account, never by what they type. When someone rotates,
 one row changes and nothing else.
+
+**Nobody is observed.** The SDLC never records when or how a person uses the assistant, and
+never reads or stores their prompts or conversations, not even to measure adoption. Adoption
+and impact are measured only from work that is already shared, such as changes, reviews and
+tickets, aggregated and never by person, plus a voluntary survey. If a question can only be
+answered by watching people, it is not measured. A team that feels watched stops using the
+assistant where it matters, or uses it where nobody can see.
 
 **Nobody does another person's part.** What depends on someone else is asked of them, in the
 ticket where it lives, and the work carries on with what is one's own. Doing it for them hides
@@ -409,7 +428,7 @@ A requirement that collides with a rule in force is caught before the first line
 
 ## 6. The skills, named
 
-Three foundation skills, one support skill, fourteen cycle skills and two cross-cutting ones. The names are GATE's
+Three foundation skills, two support skills, fourteen cycle skills and two cross-cutting ones. The names are GATE's
 proposal; what is not negotiable is each one's contract: who triggers it, what it takes in,
 what it delivers, and where it stops to ask.
 
@@ -447,6 +466,7 @@ someone decides.
 | `/onboard` | Foundation | **Person**, or `/establish` for the first one | A person ready to work: profile, access verified, a first demonstration | Nothing shared |
 | `/guide` | Foundation | **Person**, or `/onboard` at the welcome | What the SDLC does for that profile, and what the person can ask for today | Nothing |
 | `/save` | Support | **Person** | Something worth keeping, put where whoever looks for it will find it | The SDLC repository, by change request |
+| `/pulse` | Support, optional | **Person** | What the team works on, what is blocked and who unblocks it, the team's health, and whether the SDLC changed the work | Nothing |
 | `/init` | 0 | **Person** | Dossier opened and classified by type of work | Ticket |
 | `/define` | 1 | `/init` | Problem, context, data classification | Ticket |
 | `/specify` | 2 | `/define` | Acceptance and compliance criteria | Ticket |
@@ -473,9 +493,9 @@ someone tests (`/verify`) and when someone deploys (`/deploy`). The framework ch
 else in the cycle.
 
 Outside it, a person also starts the skills that do not belong to a stage: `/establish` once,
-when an organisation builds its SDLC; `/onboard` once per person; `/guide` and `/save` whenever
-they want; and `/harvest` when they close a review held outside the assistant, until `/review`
-is adopted and triggers it on its own.
+when an organisation builds its SDLC; `/onboard` once per person; `/guide`, `/save` and, once
+the organisation adopts it, `/pulse` whenever they want; and `/harvest` when they close a review
+held outside the assistant, until `/review` is adopted and triggers it on its own.
 
 That matters because **mechanisms that depend on a person remembering to invoke them do not
 happen**. The classic symptom is an empty standards catalog next to changes carrying hundreds
@@ -1221,6 +1241,37 @@ bottleneck to is no longer being exercised.
 
 **The SDLC itself.** The formulation exit criteria from section 2, checked on their review
 date. Until they are met, the organisation has a project in construction, not an SDLC in use.
+
+### Measuring the effect honestly
+
+Measure month by month, before and after adoption, for each audience. Builders: rounds of
+review after the first one, and reverts or urgent fixes that reach production. Reviewers: time
+to the first review, how often a comment cites a rule, and changes merged without review.
+Product: tickets with acceptance criteria, questions asked once the work has started, and
+reopened tickets. Leadership: all of it, said in one business sentence. The baseline comes from
+the history the tracker and the code platform already hold, so nothing new is recorded to get
+it.
+
+The first total an organisation runs tends to show an improvement that does not exist. These
+rules come from one that did, and they apply to every reading:
+
+- **No adoption, no effect to attribute.** Compare the domains that adopted the SDLC with those
+  that did not. If both improve alike, the cause is something else.
+- **The SDLC's own work is not the organisation's.** Its repository and its board stay out of
+  the totals. That is where the orchestrator works with the assistant every day, and mixing it
+  in inflates any gain.
+- **One month is not a trend.** It takes three months in a row in the same direction. A month
+  with few changes in a domain is not read on its own.
+- **It gets worse first.** New rules raise review rounds and rule citations for a while, because
+  review gets stricter. Still rising after three months is a regression.
+- **People and process move the numbers more than the SDLC.** Before attributing a change, look
+  for someone who joined or left, a new reviewer or a new branching flow, and name it.
+- **What was not read does not count.** A month with more than a tenth of its data unread is
+  left out.
+- **Never by person.** The reading names nobody. A domain of one or two people is those people:
+  merge it with others or leave it out.
+- **Who adopted is said by the team.** It comes from the shared work, the voluntary survey and
+  what the orchestrator knows, never from what people do with the assistant.
 
 ---
 

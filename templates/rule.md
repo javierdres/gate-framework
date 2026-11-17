@@ -6,6 +6,8 @@ status: candidate
 scope: [cross-cutting]
 projects: [cross-cutting]
 tags: []
+verification: auto
+detected_by: pipeline
 origin:
   - The review thread, incident or postmortem it came from, told as a pattern
 approved_by: []
@@ -33,7 +35,12 @@ What breaks if it is not followed. Real impact, not "it is bad practice".
 ## How it is checked
 
 The heuristic a person or an agent uses to check this rule against a change. Concrete and
-runnable:
+runnable. `verification` says whether a tool checks it today (`auto`), a tool is identified
+and queued (`auto-backlog`) or a person or agent applies explicit criteria (`manual`).
+`detected_by` says who sees it first when it is missing: the `pipeline`, `self-review` or the
+person who `review`s the change. A hard rule with a manual check carries the
+`business-defect` tag: it blocks only because breaking it causes a business defect no tool
+detects.
 
 ```bash
 grep -rn "forbidden_pattern" --include="*.ext" .
@@ -44,7 +51,13 @@ If the check has known false positives, say so here.
 ## Exceptions
 
 Cases where the rule does not apply, and why. A hard rule needs this section; if there are
-none, write "None. This is a hard rule." A soft rule may leave it out.
+none, write "None. This is a hard rule." A soft rule may leave it out. A rule that never
+admits a project, change or line exception (see `exceptions.md`) also says
+`waivable: false` in its frontmatter.
+
+Optional frontmatter, when the rule only applies to some projects: `applies_when`, a list of
+conditions on the project profile (`data.store != none`, `kind ~ worker`). See
+`project-profile.md`.
 
 ## Evidence
 

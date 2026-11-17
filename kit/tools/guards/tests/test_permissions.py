@@ -13,6 +13,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -282,6 +283,199 @@ class Guard(unittest.TestCase):
     def test_claude_format(self):
         _, out, _ = self.run_guard(self.bash("gh pr merge 1"), fmt="claude")
         self.assertEqual(out["hookSpecificOutput"]["permissionDecision"], "ask")
+
+
+REMINDER = os.path.join(os.path.dirname(HERE), "log_reminder.py")
+
+
+class Ported(unittest.TestCase):
+    """Autonomous mode, approvals, passes, other assistants' tool names, the home folder and
+    repositories named by their platform path."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.grants = os.path.join(self.tmp, "grants")
+        self.config = os.path.join(self.tmp, "sdlc.yml")
+        self.repo = os.path.realpath(os.path.join(self.tmp, "repo-a"))
+        os.makedirs(self.repo)
+        sh(["git", "init", "-q", "-b", "main"], self.repo)
+        sh(["git", "remote", "add", "origin", "git@code.example.com:grp/sub/repo-a.git"], self.repo)
+        sh(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "x"], self.repo)
+        sh(["git", "checkout", "-q", "-b", "feature/x"], self.repo)
+        self.env = dict(os.environ, SDLC_GRANTS_DIR=self.grants, SDLC_CONFIG=self.config)
+
+    def allow_autonomous(self, value):
+        with open(self.config, "w") as f:
+            f.write("system:\n  name: x\npermissions:\n  autonomous_allowed: %s   # opt-in\n" % value)
+
+    def cli(self, *args, env=None):
+        return subprocess.run([sys.executable, GUARD] + list(args), capture_output=True, text=True,
+                              env=env or self.env)
+
+    def guard(self, event, fmt="json"):
+        p = subprocess.run([sys.executable, GUARD, "check", "--format", fmt], input=json.dumps(event),
+                           capture_output=True, text=True, env=self.env)
+        out = json.loads(p.stdout) if p.stdout.strip().startswith("{") else None
+        return p.returncode, out, p.stdout + p.stderr
+
+    def bash(self, command, session="s", cwd=None):
+        return {"tool_name": "Bash", "tool_input": {"command": command}, "session_id": session,
+                "cwd": cwd or self.repo}
+
+    def decision(self, event):
+        out = self.guard(event)[1]
+        return (out or {}).get("decision"), (out or {}).get("reason", "")
+
+    # (a) autonomous mode is the organisation's opt-in, and never covers the grants
+    def test_autonomous_needs_the_opt_in(self):
+        p = self.cli("grant", "s", "autonomous")
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("not enabled", p.stdout)
+        self.allow_autonomous("false")
+        self.assertEqual(self.cli("grant", "s", "autonomous").returncode, 1)
+        self.allow_autonomous("true")
+        self.assertEqual(self.cli("grant", "s", "autonomous").returncode, 0)
+        for c in ("gh pr merge 1", "git push origin main", "terraform apply", "git push origin feature/x"):
+            self.assertEqual(self.decision(self.bash(c)), (None, ""), c)
+        for c in ("python3 tools/guards/permissions.py grant s repo .", "python3 tools/guards/permissions.py revoke s",
+                  "echo 1 > personal/grants/s.pass", "python3 tools/guards/log_reminder.py --passes"):
+            self.assertEqual(self.decision(self.bash(c))[0], "ask", c)
+        write = {"tool_name": "Write", "tool_input": {"file_path": os.path.join(self.grants, "s.json")}, "session_id": "s"}
+        self.assertEqual(self.decision(write)[0], "ask")
+        self.assertIn("autonomous mode: active", self.cli("show", "s").stdout)
+        # withdrawn by the organisation, a recorded grant stops counting
+        self.allow_autonomous("false")
+        self.assertEqual(self.decision(self.bash("gh pr merge 1"))[0], "ask")
+        self.assertIn("no longer allows", self.cli("show", "s").stdout)
+        self.allow_autonomous("true")
+        self.cli("revoke", "s", "autonomous")
+        self.assertEqual(self.decision(self.bash("gh pr merge 1"))[0], "ask")
+
+    def test_granting_autonomous_always_asks(self):
+        self.allow_autonomous("true")
+        d, r = self.decision(self.bash("python3 tools/guards/permissions.py grant s autonomous"))
+        self.assertEqual(d, "ask")
+        self.assertIn("Always asks", r)
+
+    # (b) an approval is a person's, never the assistant's
+    def test_approvals_always_ask(self):
+        self.cli("grant", "s", "repo", self.repo)
+        for c in ("gh pr review 3 --approve", "gh pr review 3 -a", "glab mr approve 3", "glab mr revoke 3",
+                  "gh api -X POST repos/grp/repo-a/pulls/3/reviews -f event=APPROVE",
+                  "glab api -X POST projects/grp%2Fsub%2Frepo-a/merge_requests/3/approve",
+                  "curl -X POST https://code.example.com/api/v4/projects/1/merge_requests/3/approve"):
+            d, r = self.decision(self.bash(c))
+            self.assertEqual(d, "ask", c)
+            self.assertIn("approval", r, c)
+        out = self.guard({"tool_name": "mcp__github__approve_pull_request", "tool_input": {}, "session_id": "s"})[1]
+        self.assertIn("approval", out["reason"])
+        self.assertEqual(self.decision(self.bash("gh pr review 3 --comment -b x"))[0], "allow")
+
+    # (c) assistants that can only block: one OK, one action
+    def reminder(self, prompt, session="s"):
+        p = subprocess.run([sys.executable, REMINDER, "--passes"], capture_output=True, text=True, env=self.env,
+                           input=json.dumps({"session_id": session, "prompt": prompt}))
+        self.assertIn("Log:", p.stdout)
+        return os.path.exists(os.path.join(self.grants, session + ".pass"))
+
+    def test_a_pass_covers_one_action(self):
+        code, _, err = self.guard(self.bash("git push origin feature/x"), fmt="exit")
+        self.assertEqual(code, 2)
+        self.assertIn('reply "ok"', err)
+        for prompt in ("si quieres, revisa primero", "yes but first explain", "nope", "ok " + "x" * 90):
+            self.assertFalse(self.reminder(prompt), prompt)
+        for prompt in ("ok", "OK, go", "Dale", "sí", "yes!", "go ahead please"):
+            self.assertTrue(self.reminder(prompt), prompt)
+        code, _, out = self.guard(self.bash("git push origin feature/x"), fmt="exit")
+        self.assertEqual(code, 0)
+        self.assertIn("OK was used", out)
+        self.assertEqual(self.guard(self.bash("git push origin feature/x"), fmt="exit")[0], 2)
+        # the pass only works in exit format; elsewhere the assistant asks on screen
+        self.reminder("ok")
+        self.assertEqual(self.decision(self.bash("git push origin feature/x"))[0], "ask")
+
+    def test_a_pass_never_touches_the_grants_but_covers_a_grant(self):
+        self.reminder("ok")
+        write = {"tool_name": "fs_write", "tool_input": {"path": os.path.join(self.grants, "s.json")}, "session_id": "s"}
+        code, _, err = self.guard(write, fmt="exit")
+        self.assertEqual(code, 2)
+        self.assertIn("Only the person", err)
+        code, _, err = self.guard(self.bash("python3 tools/guards/log_reminder.py --passes"), fmt="exit")
+        self.assertEqual(code, 2)
+        self.assertIn("Only the person", err)
+        self.assertTrue(os.path.exists(os.path.join(self.grants, "s.pass")), "a refused action spends nothing")
+        code, _, _ = self.guard(self.bash("python3 tools/guards/permissions.py grant s repo ."), fmt="exit")
+        self.assertEqual(code, 0, "the person's OK to an authorisation covers the command")
+
+    def test_a_stale_pass_is_dropped(self):
+        os.makedirs(self.grants, exist_ok=True)
+        with open(os.path.join(self.grants, "s.pass"), "w") as f:
+            f.write("%d\n" % (time.time() - 16 * 60))
+        self.assertEqual(self.guard(self.bash("git push origin feature/x"), fmt="exit")[0], 2)
+        self.assertFalse(os.path.exists(os.path.join(self.grants, "s.pass")))
+
+    # (d) other assistants' tool names
+    def test_other_assistants_tool_names(self):
+        cases = [
+            ({"tool_name": "execute_bash", "tool_input": {"command": "gh pr merge 1"}}, "ask", "merge"),
+            ({"tool_name": "run_shell_command", "tool_input": json.dumps({"command": "git push origin main"})},
+             "ask", "default branch"),
+            ({"tool_name": "shell", "tool_input": {"cmd": "glab mr merge 1"}}, "ask", "merge"),
+            ({"tool_name": "fs_write", "tool_input": {"path": "/x/personal/grants/s.json"}}, "ask", "authorisations"),
+            ({"tool_name": "str_replace", "tool_input": {"path": "/x/README.md"}}, None, None),
+            ({"tool_name": "github___merge_pull_request", "tool_input": {}}, "ask", "merge"),
+            ({"tool_name": "@linear/save_issue", "tool_input": {"teamKey": "LIN"}}, "ask", "tracker LIN"),
+            ({"tool_name": "linear/list_issues", "tool_input": {}}, None, None),
+            ({"tool_name": "mcp_linear_list_issues", "tool_input": {}}, None, None),
+            ({"tool_name": "mcp_github_create_pull_request", "tool_input": {}}, "ask", "connector"),
+        ]
+        for event, decision, why in cases:
+            event = dict(event, session_id="s", cwd=self.repo)
+            d, r = self.decision(event)
+            self.assertEqual(d, decision, event["tool_name"])
+            if why:
+                self.assertIn(why, r, event["tool_name"])
+
+    # (e) the home folder is never a repository to authorise
+    def test_home_folder_is_never_authorised(self):
+        home = os.path.realpath(os.path.join(self.tmp, "home"))
+        os.makedirs(home)
+        sh(["git", "init", "-q"], home)
+        p = self.cli("grant", "s", "repo", home, env=dict(self.env, HOME=home))
+        self.assertEqual(p.returncode, 1)
+        self.assertIn("home folder", p.stdout)
+        os.makedirs(self.grants, exist_ok=True)
+        with open(os.path.join(self.grants, "s.json"), "w") as f:
+            json.dump({"repo": [home]}, f)
+        p = subprocess.run([sys.executable, GUARD, "check", "--format", "json"], capture_output=True, text=True,
+                           input=json.dumps(self.bash("git push origin x", cwd=home)), env=dict(self.env, HOME=home))
+        self.assertEqual(json.loads(p.stdout)["decision"], "ask")
+
+    # (f) a repository named by its platform path matches the authorised clone
+    def test_platform_path_matches_the_authorised_clone(self):
+        sys.path.insert(0, os.path.dirname(HERE))
+        import permissions
+        for url, path in (("git@code.example.com:grp/sub/name.git", "grp/sub/name"),
+                          ("https://code.example.com/grp/sub/name", "grp/sub/name"),
+                          ("https://code.example.com/grp/name.git/", "grp/name"),
+                          ("ssh://git@code.example.com:2222/grp/name.git", "grp/name"), ("", "")):
+            self.assertEqual(permissions.platform_path(url), path, url)
+        elsewhere = tempfile.mkdtemp()
+        allowed = ("glab mr create --repo grp/sub/repo-a --fill", "glab mr create -R grp/sub/repo-a",
+                   "glab api -X POST projects/grp%2Fsub%2Frepo-a/merge_requests -f title=x",
+                   "gh pr create --repo=grp/sub/repo-a")
+        for c in allowed:
+            self.assertEqual(self.decision(self.bash(c, cwd=elsewhere))[0], "ask", c)
+        self.cli("grant", "s", "repo", self.repo)
+        self.assertIn('"grp/sub/repo-a"', self.cli("show", "s").stdout)
+        for c in allowed:
+            self.assertEqual(self.decision(self.bash(c, cwd=elsewhere))[0], "allow", c)
+        for c in ("glab mr create -R grp/other", "gh api -X POST repos/grp/other/pulls -f x=1",
+                  "glab api -X PUT projects/grp%2Fsub%2Frepo-a/merge_requests/1/merge",
+                  "glab api -X DELETE projects/grp%2Fsub%2Frepo-a"):
+            self.assertEqual(self.decision(self.bash(c, cwd=elsewhere))[0], "ask", c)
+        self.cli("revoke", "s", "repo", self.repo)
+        self.assertNotIn("repo-a", self.cli("show", "s").stdout)
 
 
 if __name__ == "__main__":

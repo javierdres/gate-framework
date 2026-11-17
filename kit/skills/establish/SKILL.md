@@ -89,7 +89,10 @@ other than the orchestrator.
 
 ## Never
 
-- Never write rules into the catalog. It starts empty, apart from examples marked as such.
+- Never write rules into the catalog other than the seeds the orchestrator chose. Offer them
+  with `python3 catalog/bin/adopt_seed.py --list`, adopt only the ones the orchestrator picks
+  with `catalog/bin/adopt_seed.py <seed ids>`, and they enter as candidates that wait for their
+  custodian. Without a choice, the catalog starts empty.
 - Never choose the system's name, the assistant, the roles, the profiles or the scope. You
   propose; the orchestrator decides.
 - Never publish anything to a shared system (push, change request, ticket) without the

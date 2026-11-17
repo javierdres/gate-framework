@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(gh pr merge *)",
+      "Bash(glab mr merge *)",
+      "Bash(gh pr review --approve*)",
+      "Bash(glab mr approve *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(gh auth token*)",
+      "Bash(glab auth token*)"
+    ]
+  }
+}

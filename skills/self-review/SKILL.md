@@ -24,7 +24,11 @@ A branch ready. Access to every repository the change touches.
 
 - Identifies the ticket from the branch and pulls its definition without editing it.
 - Determines every repository the change touches and checks none was left half done.
-- Runs linters and static analysis. A syntax error is blocking.
+- Runs linters and static analysis. A syntax error is blocking. If lint or tests could not run, the first line of the report says so, with the reason, so nobody reads a clean report as a green one.
+- Applies the same rules the human reviewer will apply. If reviewers check against a source outside the catalog, such as a team page or a platform guide, it reads that same source; if it cannot, the first line of the report says it was not consulted.
+- Adds the rules scoped to the code-platform group the repository belongs to, taking the longest prefix of the remote's path. A group with its own platform rules gets them whatever the layer or product.
+- Reports first a vendored copy of a platform guide that is older than the one in force, because the rest of the change was built on that copy.
+- Treats a decision the repository declares about itself, in its own instructions or README, as legitimate rather than as a violation.
 - Checks every claim about project conventions against the actual code.
 - Runs a full hard-rule pass if the change touches authentication, authorisation, tenant isolation, or the data stage 1 classified as sensitive.
 - Cross-checks the artefacts that travel together: migrations with their changelog entry, instrumentation with the plan, documentation with the code it describes.
@@ -33,6 +37,7 @@ A branch ready. Access to every repository the change touches.
 - Runs the automated flows of the use cases the change touches, and checks that the cases the ticket added are in the product's catalog and automated.
 - Drafts the change proposal and the functional verification script.
 - Hands whatever has no rule but deserves one to /harvest, as a suggestion.
+- Reminds the author that someone else reviews the change, and that a push after an approval clears it.
 
 ## What it does NOT do
 

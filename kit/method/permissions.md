@@ -31,11 +31,43 @@ after three days.
 ## Always asks
 
 Whatever was authorised: pushes to the default branch, forced, mirrored or pruning pushes and
-pushes that delete branches, merges (they need the reviewer's approval in force), deletions on
+pushes that delete branches, merges (they need the reviewer's approval in force), approving a
+change request (an approval is a person's judgement, never the assistant's), deletions on
 the code platform or the tracker, infrastructure tools except their read-only subcommands
 (`kubectl get`, `kubectl logs`, `helm status` and the like; reading a secret still asks),
 generating credentials, and any command
 that chains an authorised write with others that are not.
+
+## Assistants that cannot show a confirmation
+
+Some assistants' hooks can only let an action through or block it. There, what would ask is
+blocked, and the assistant shows the person what it is about to do and asks them to answer OK.
+The per-message guard records the person's next typed OK, and the next watched write uses it:
+one OK, one action, valid for fifteen minutes. Authorising a scope for the session works the
+same way and also needs that OK. Writing to the authorisations, or typing an OK on the person's
+behalf, is always blocked.
+
+## Autonomous mode
+
+For leaving work running and finding it done on return. It exists only if the organisation
+allows it in `sdlc.yml` (`permissions.autonomous_allowed: true`); it is off by default. When it
+is allowed and the person asks for it explicitly, for this session, the assistant registers it:
+
+```bash
+python3 tools/guards/permissions.py grant <session> autonomous
+python3 tools/guards/permissions.py revoke <session> autonomous
+```
+
+From then on the SDLC asks for nothing, not even the list above: whatever the assistant's own
+permission mode decides is what happens. The guard still keeps the assistant from authorising
+itself, so registering any authorisation and touching `personal/grants/` keep asking. Like any
+authorisation, it lasts for that session only.
+
+It removes the SDLC's questions, not the assistant's, and not the platform's: protected
+branches and mandatory approvals still apply. What is not an approval stays the same: verify
+before asserting, never duplicate, keep credentials out of repositories, and report what was
+done and what was not. On return, the person finds in their log and their tickets what
+happened.
 
 ## How it works
 

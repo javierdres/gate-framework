@@ -8,7 +8,7 @@ instructions. Each one implements a contract from GATE's `skills/`.
 | --- | --- | --- | --- |
 | `establish` | `/establish` | Foundation | first version, from GATE |
 | `onboard` | `/onboard` | Entry | first version, from GATE; adapt it |
-| `guide` | Explains the SDLC to each profile | Entry | pending |
+| `guide` | `/guide` | Entry | first version, from GATE; adapt it |
 | `save` | Keeps something where it belongs | Entry | pending |
 | `define` | `/define` and `/specify` | 1 | pending |
 | `self-review` | `/self-review` | 1 | pending |
@@ -17,6 +17,7 @@ instructions. Each one implements a contract from GATE's `skills/`.
 | `review` | `/review` | 2 | later |
 | `operate` | `/operate` | 2 | later |
 | `postmortem` | `/postmortem` | 2 | later |
+| `pulse` | `/pulse`, the leadership view | 3 | optional, later |
 
 A skill enters here when a whole role uses it in any product, it does not depend on one
 person's data or access, and it carries its own documentation. A skill for one product goes in

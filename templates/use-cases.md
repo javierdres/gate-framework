@@ -14,8 +14,13 @@ An identifier is never reused or renumbered.
 
 ## Cases
 
+When the catalog outgrows one file, the detail moves to `use-cases/NN-<module>.md` and
+`tools/use_cases_index.py` rewrites what sits between the markers.
+
+<!-- use-cases:begin -->
 | ID | Case | Role | Modules | Status | Flow |
 | --- | --- | --- | --- | --- | --- |
+<!-- use-cases:end -->
 
 ### XXX-UC-01 · <Name of the case>
 

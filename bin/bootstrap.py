@@ -94,6 +94,7 @@ SDLC_TEMPLATES = {
     "method/templates/profile.md": "profile.md",
     "method/templates/ticket.md": "ticket.md",
     "method/templates/rule.md": "rule.md",
+    "method/chat-client/README.md": "chat-client.md",
 }
 SDLC_INCIDENTS = """# Incidents
 
@@ -273,11 +274,13 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
         "README.md": SDLC_README.format(system=system, name=display, reach=REACH[reach]),
         "ONBOARDING.md": SDLC_ONBOARDING.format(org=org),
         "GATE.md": SDLC_GATE_MAP.format(version=version),
+        "CHANGELOG.md": io.open(os.path.join(HERE, "templates", "changelog.md"), encoding="utf-8").read()
+        .replace("<Organisation>", display).replace("<gate version>", version)
+        .replace("<YYYY-MM-DD>", __import__("datetime").date.today().isoformat()),
         "CODEOWNERS": "# Translates GOVERNANCE.md. During formulation, the orchestrator owns everything.\n* @<orchestrator>\n",
         ".gitignore": "personal/\n__pycache__/\n.DS_Store\n",
         "method/flows/.gitkeep": "",
         "products/_template/incidents/README.md": SDLC_INCIDENTS,
-        "method/chat-client/README.md": "# Chat-client package\n\nInstructions and context files for roles that work outside the terminal, and where to copy each one.\n",
     }
     for rel, content in extra.items():
         path = os.path.join(target, rel)
@@ -308,19 +311,23 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
         io.open(os.path.join(target, "CLAUDE.md"), "w", encoding="utf-8").write("@AGENTS.md\n")
         # The guards are active from the very first session opened inside the SDLC, before the
         # installer runs: paths are relative to the project Claude Code was opened in.
+        # Same form as the installer writes in the working folder (adapters/claude-code/install.sh).
         guard = 'python3 "$CLAUDE_PROJECT_DIR/tools/guards/%s"'
+        hook = lambda command, timeout: {"type": "command", "command": command, "timeout": timeout, "shell": "bash"}
+        tolerant = lambda script, args="": "%s%s 2>/dev/null || true" % (guard % script, args)
         settings = {"hooks": {
-            "SessionStart": [{"hooks": [{"type": "command", "command": guard % "session_start.py"}]}],
-            "UserPromptSubmit": [{"hooks": [{"type": "command", "command": guard % "log_reminder.py"}]},
-                                 {"hooks": [{"type": "command", "command": (guard % "usage.py") + " check --format claude"}]}],
+            "SessionStart": [{"hooks": [hook(tolerant("session_start.py"), 30)]}],
+            "UserPromptSubmit": [{"hooks": [hook(tolerant("log_reminder.py"), 5)]},
+                                 {"hooks": [hook(tolerant("usage.py", " check --format claude"), 5)]}],
             "PreToolUse": [{"matcher": "Bash|mcp__.*|Write|Edit|MultiEdit|NotebookEdit",
-                            "hooks": [{"type": "command", "command": (guard % "permissions.py") + " check --format claude"}]}],
+                            "hooks": [hook('[ -f "$CLAUDE_PROJECT_DIR/tools/guards/permissions.py" ] || exit 0; '
+                                           + (guard % "permissions.py") + " check --format claude", 10)]}],
         }}
         os.makedirs(os.path.join(target, ".claude"), exist_ok=True)
         io.open(os.path.join(target, ".claude", "settings.json"), "w", encoding="utf-8").write(
             json.dumps(settings, indent=2) + "\n")
         os.makedirs(os.path.join(target, ".claude", "skills"), exist_ok=True)
-        for name in ("establish", "onboard"):
+        for name in ("establish", "onboard", "guide"):
             link = os.path.join(target, ".claude", "skills", name)
             try:
                 os.symlink(os.path.join("..", "..", "skills", name), link)
@@ -328,7 +335,7 @@ def scaffold_sdlc(target, assistant, org, display="", reach=""):
                 src = os.path.join(target, "skills", name, "SKILL.md")
                 os.makedirs(link, exist_ok=True)
                 io.open(os.path.join(link, "SKILL.md"), "wb").write(io.open(src, "rb").read())
-        written += 2
+        written += 3
 
     print("OK  %s, the system of %s, scaffolded at %s (%d files, GATE %s, assistant %s)"
           % (system, display, target, written, version, assistant))

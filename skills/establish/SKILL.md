@@ -15,8 +15,9 @@ consults: []
 ## Purpose
 
 Take an orchestrator from GATE to a working SDLC of their own organisation: a repository with
-its method, its empty catalog, its products, its skills, its guards and the way each person
-gets in, running on the AI assistant the orchestrator chose. It follows
+its method, its catalog (empty, or seeded with the GATE rules the orchestrator adopts), its
+products, its skills, its guards and the way each person gets in, running on the AI assistant
+the orchestrator chose. It follows
 [BUILDING.md](../../BUILDING.md) from top to bottom.
 
 ## Preconditions
@@ -59,7 +60,7 @@ A place to create the SDLC repository on the organisation's code platform.
 
 ## What it does NOT do
 
-- Does not write rules into the catalog. It starts empty, apart from examples marked as such.
+- Does not write rules into the catalog, except the GATE seeds the orchestrator chose, which enter as candidates and wait for their custodian. Without a choice, the catalog starts empty.
 - Does not choose the system's name, the assistant, the roles, the profiles or the scope. It
   proposes; the orchestrator decides.
 - Does not publish anything to a shared system without the orchestrator's approval.

@@ -22,10 +22,21 @@ prints what it can and check says nothing.
 
 Only `windows()` knows the assistant's status format. An adapter for another assistant that
 exposes its usage maps it there; one that does not, simply has no usage line.
+
+Under the usage, the status line shows the SDLC's notices, only when there is one: the
+installation needs running again, what the person authorised for this session, autonomous mode.
+An organisation adds its own (change requests waiting for the person's review, a token about to
+expire) with tools/notices.py: any script that prints one line. It may call the network, so it
+never runs inside the status line: it runs in the background, at most every NOTICES_EVERY
+seconds, and the status line reads the line it left in a cache.
+
+    usage.py notices-refresh        what the background run does; not for people
 """
+import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 
@@ -34,6 +45,11 @@ MARKS = os.path.expanduser("~/.cache/gate-usage")
 FRESH = 1800            # older state says nothing about this session
 EARLY = 0.1             # no projection before 10% of a window has passed
 LIGHT = ("haiku", "sonnet")  # model names that already use less; adapt to the assistant
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+NOTICES = os.path.join(ROOT, "tools", "notices.py")
+NOTICES_CACHE = os.path.expanduser("~/.cache/gate-notices-%s.json" % hashlib.sha1(ROOT.encode("utf-8")).hexdigest()[:12])
+NOTICES_EVERY = 600     # seconds between background runs of tools/notices.py
+NOTICES_LOCK = 120      # a run younger than this is still under way
 GREEN, YELLOW, RED, DIM, END = "\033[32m", "\033[33m", "\033[31m", "\033[2m", "\033[0m"
 
 
@@ -106,6 +122,85 @@ def record(status, now):
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(state, f)
     os.replace(tmp, STATE)
+
+
+def granted(session):
+    """What the person authorised for this session, read through the permissions guard."""
+    if not session:
+        return None
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import permissions
+    try:
+        with open(permissions.grants_path(session), encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if data.get("autonomous") is True and permissions.autonomous_allowed():
+        return YELLOW + "autonomous mode" + END
+    names = [os.path.basename(str(r).rstrip("/\\")) for r in data.get("repo") or []] + list(data.get("tracker") or [])
+    names = [n for n in names if n]
+    return "authorised: %s" % ", ".join(names) if names else None
+
+
+def refresh_notices(now):
+    """Starts tools/notices.py in the background when the cache is stale and no run is under way.
+    Whatever it brings shows from the next refresh on."""
+    try:
+        with open(NOTICES_CACHE, encoding="utf-8") as f:
+            ts = json.load(f).get("ts", 0)
+    except (OSError, ValueError):
+        ts = 0
+    try:
+        running = now - os.path.getmtime(NOTICES_CACHE + ".lock") < NOTICES_LOCK
+    except OSError:
+        running = False
+    if now - ts < NOTICES_EVERY or running:
+        return
+    try:
+        os.makedirs(os.path.dirname(NOTICES_CACHE), exist_ok=True)
+        open(NOTICES_CACHE + ".lock", "w").close()
+        detach = {"creationflags": 0x00000008} if os.name == "nt" else {"start_new_session": True}
+        subprocess.Popen([sys.executable, os.path.abspath(__file__), "notices-refresh"], stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **detach)
+    except Exception:
+        pass
+
+
+def notices_refresh():
+    line = ""
+    try:
+        p = subprocess.run([sys.executable, NOTICES], capture_output=True, text=True, timeout=60,
+                           stdin=subprocess.DEVNULL, cwd=ROOT)
+        line = " · ".join(l.strip() for l in p.stdout.splitlines() if l.strip()) if p.returncode == 0 else ""
+    except Exception:
+        pass
+    tmp = "%s.%d.tmp" % (NOTICES_CACHE, os.getpid())
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"ts": time.time(), "line": line}, f)
+    os.replace(tmp, NOTICES_CACHE)
+    try:
+        os.remove(NOTICES_CACHE + ".lock")
+    except OSError:
+        pass
+
+
+def notices(status, now):
+    """The SDLC's notices line, or an empty string when there is nothing to say."""
+    parts = []
+    if os.path.exists(os.path.join(ROOT, "personal", ".reinstall-needed")):
+        parts.append(YELLOW + "SDLC: reinstall needed" + END)
+    try:
+        parts.append(granted(str(status.get("session_id") or "")))
+    except Exception:
+        pass
+    if os.path.isfile(NOTICES):
+        refresh_notices(now)
+        try:
+            with open(NOTICES_CACHE, encoding="utf-8") as f:
+                parts.append(json.load(f).get("line"))
+        except (OSError, ValueError):
+            pass
+    return " · ".join(p for p in parts if p)
 
 
 def decide(state, mark):
@@ -192,9 +287,12 @@ def main():
         if mode == "check":
             check(raw, fmt, now)
             return
+        if mode == "notices-refresh":
+            notices_refresh()
+            return
         status = json.loads(raw)
         status = status if isinstance(status, dict) else {}
-        print(status_line(status, now))
+        print("\n".join(l for l in (status_line(status, now), notices(status, now)) if l))
         record(status, now)
     except Exception:
         if mode != "check":

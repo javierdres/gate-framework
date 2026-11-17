@@ -96,7 +96,7 @@ formats. What is specific to an assistant lives in its adapter.
 
 ## The skills
 
-Three foundation skills, one support skill, fourteen cycle skills and two cross-cutting ones. Each declares in its
+Three foundation skills, two support skills, fourteen cycle skills and two cross-cutting ones. Each declares in its
 frontmatter who triggers it, what it triggers, which gate it has, who owns that gate, what it
 writes outside and what it consults.
 
